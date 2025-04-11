@@ -1,0 +1,11 @@
+svd download:
+https://github.com/espressif/svd/releases
+
+hardware design:
+https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32c6/index.html
+
+api hal
+https://docs.espressif.com/projects/esp-idf/en/latest/esp32c6/api-reference/index.html
+
+
+

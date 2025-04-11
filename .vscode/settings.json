@@ -1,0 +1,18 @@
+{
+  "C_Cpp.intelliSenseEngine": "default",
+  "idf.espIdfPathWin": "c:\\.Programy\\esp-idf\\v5.4.1\\esp-idf",
+  "idf.toolsPathWin": "c:\\.Programy\\esp-idf\\IDF_TOOLS",
+  "idf.pythonInstallPath": "c:\\.Programy\\esp-idf\\IDF_TOOLS\\tools\\idf-python\\3.11.2\\python.exe",
+  "idf.customExtraVars": {
+      "IDF_TARGET": "esp32c6"
+  },
+  "idf.openOcdConfigs": [
+      "board/esp32c6-builtin.cfg"
+  ],
+  "idf.flashType": "JTAG",
+  "files.associations": {
+        "*.h": "c",
+        "*.c": "c"
+},
+"idf.portWin": "COM6"
+}
