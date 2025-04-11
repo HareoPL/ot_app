@@ -11,8 +11,9 @@
   ],
   "idf.flashType": "JTAG",
   "files.associations": {
-        "*.h": "c",
-        "*.c": "c"
+    "*.h": "c",
+    "*.c": "c",
+    "atomic": "c"
 },
 "idf.portWin": "COM6"
 }
