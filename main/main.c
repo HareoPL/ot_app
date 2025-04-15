@@ -1,71 +1,84 @@
-/*
- * SPDX-FileCopyrightText: 2021-2024 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: Unlicense OR CC0-1.0
+/**
+ * @file main.c
+ * @author Jan Łukaszewicz (pldevluk@gmail.com)
+ * @brief 
+ * @version 0.1
+ * @date 14-04-2025
+ * 
+ * @copyright The MIT License (MIT) Copyright (c) 2025 
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
+ * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
+ * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
+ * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
+ * 
  */
-#include <string.h>
-#include <math.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
-#include "driver/rmt_tx.h"
 
-#define RMT_LED_STRIP_RESOLUTION_HZ (10 * 1000 * 1000) // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
-#define RMT_LED_STRIP_GPIO_NUM      8
-
-#define EXAMPLE_LED_NUMBERS         3
-
-#define EXAMPLE_FRAME_DURATION_MS   400
-
-#define RMT_TIME_03_US              (0.3 * RMT_LED_STRIP_RESOLUTION_HZ / 1000000) // T=0.3us
-#define RMT_TIME_09_US              (0.9 * RMT_LED_STRIP_RESOLUTION_HZ / 1000000) // T=0.9us
+#include "main.h"
+#include "ws2812b_fx.h"
+#include "ws2812b_if_RMT.h"
 
 
-static uint8_t led_strip_pixels[EXAMPLE_LED_NUMBERS * 3];
 
-rmt_channel_handle_t tx_chan = NULL;
-rmt_encoder_handle_t encoder  = NULL;
+void print_task_list(TimerHandle_t xTimer); 
+void sysTick(TimerHandle_t xTimer); 
 
-rmt_transmit_config_t transmit_cfg = 
-{
-    .loop_count = 0,
-    .flags.eot_level = 0
-};
+char buffer[512];
 
 void app_main(void)
 {
-    rmt_bytes_encoder_config_t bytes_encoder_cfg = 
-    {
-        .bit0 = {.duration0 = RMT_TIME_03_US, .level0 = 1, .duration1 = RMT_TIME_09_US, .level1 = 0}, // 0.3µs HIGH + 0.9µs LOW
-        .bit1 = {.duration0 = RMT_TIME_09_US, .level0 = 1, .duration1 = RMT_TIME_03_US, .level1 = 0}, // 0.9µs HIGH + 0.3µs LOW
-    };
-    ESP_ERROR_CHECK(rmt_new_bytes_encoder(&bytes_encoder_cfg, &encoder));
+    TimerHandle_t print_task_listTimer = xTimerCreate("print_task_listTimer", pdMS_TO_TICKS(1000), pdTRUE, NULL, print_task_list); // 1s
+    xTimerStart(print_task_listTimer, 0);
 
-    rmt_tx_channel_config_t tx_chan_config = 
-    {
-        .clk_src = RMT_CLK_SRC_DEFAULT, // select source clock
-        .gpio_num = RMT_LED_STRIP_GPIO_NUM,
-        .mem_block_symbols = 64, // increase the block size can make the LED less flickering
-        .resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ,
-        .trans_queue_depth = 4, // set the number of transactions that can be pending in the background
-    };
-    ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &tx_chan));
+    TimerHandle_t sysTickTimer = xTimerCreate("sysTickTimer", pdMS_TO_TICKS(1), pdTRUE, NULL, sysTick); // 1ms
+    xTimerStart(sysTickTimer, 0);
 
-    ESP_ERROR_CHECK(rmt_enable(tx_chan));
+    ws2812b_if_init();
+    WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);
+    
+    WS2812BFX_SetSpeed(0, 100);	// Speed of segment 0
+    WS2812BFX_SetColorRGB(0, 5,0,0);	// Set color 0
+    WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	// Set mode segment 0
 
-
-    for (int led = 0; led < EXAMPLE_LED_NUMBERS; led++) 
-    {
-        led_strip_pixels[led * 3 + 0] = 0; // GREEN
-        led_strip_pixels[led * 3 + 1] = 0; // RED
-        led_strip_pixels[led * 3 + 2] = 5; // BLUE
-    }
+    WS2812BFX_Start(0);	// Start segment 0
 
     while (1) 
     {
-        ESP_ERROR_CHECK(rmt_transmit(tx_chan, encoder, led_strip_pixels, sizeof(led_strip_pixels), &transmit_cfg));
-        ESP_ERROR_CHECK(rmt_tx_wait_all_done(tx_chan, portMAX_DELAY));
-
-        vTaskDelay(pdMS_TO_TICKS(EXAMPLE_FRAME_DURATION_MS));
+        WS2812BFX_Callback();	// FX effects calllback
+        vTaskDelay(pdMS_TO_TICKS(1));
     }
+}
+
+/****************************************************
+ *  freeRtos hooks
+ */
+void vApplicationTickHook(void) // calling from Irq
+{
+    
+}
+
+void vApplicationIdleHook(void)
+{
+
+}
+
+/****************************************************
+ *  freeRtos timmers
+ */
+void sysTick(TimerHandle_t xTimer)
+{
+    WS2812BFX_SysTickCallback();
+}
+
+void print_task_list(TimerHandle_t xTimer)
+{
+    vTaskList(buffer);
+    printf("Task Name\tState\tPrio\tStack\tNum\n");
+    printf("%s\n", buffer);
 }

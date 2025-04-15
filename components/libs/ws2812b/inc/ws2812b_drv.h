@@ -1,9 +1,9 @@
 /**
- * @file main.h
+ * @file ws2812b_drv.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief 
+ * @brief driver for ws2812b
  * @version 0.1
- * @date 08-04-2025
+ * @date 15-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,15 +19,27 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MAIN_H_
-#define MAIN_H_
+#ifndef WS2812B_DRV_H_
+#define WS2812B_DRV_H_
 
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
-#include "sdkconfig.h"
+#include "stdint.h"
 
+typedef struct
+{
+	uint8_t green, red, blue;
+} ws2812b_color;
 
+typedef struct 
+{   
+    void (*Refresh)(void);
+    uint8_t  (*sine8)(uint8_t x);
+    uint8_t* (*GetPixels)(void);
+    uint32_t (*GetColor)(int16_t DiodeID);
+    uint16_t (*GetNumberOfLeds)(void);
 
-#endif  /* MAIN_H_ */
+    void (*SetOneDiode)(int16_t DiodeID, uint32_t color);
+    void (*SetOneDiodeRGB)(int16_t DiodeID, uint8_t R, uint8_t G, uint8_t B);
+    void (*SetDiodeColorStruct)(int16_t DiodeID, ws2812b_color colorStruct);
+}ws2812b_drv_t;
+
+#endif  /* WS2812B_DRV_H_ */

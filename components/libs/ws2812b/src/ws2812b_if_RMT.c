@@ -1,7 +1,7 @@
 /**
  * @file ws2812b_if_RMT.c
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief 
+ * @brief ws2812b interface for esp32-c6 using RMT 
  * @version 0.1
  * @date 14-04-2025
  * 
@@ -23,9 +23,15 @@
 #include "main.h"
 #include "ws2812b_if_RMT.h"
 #include "driver/rmt_tx.h"
-// for test
+
+// for ws2812b_if_simpleTest()
+#define WS2812B_IF_RED		((uint32_t)0x050000)
+#define WS2812B_IF_GREEN	((uint32_t)0x000500)
+#define WS2812B_IF_BLUE	    ((uint32_t)0x000005)
+#define WS2812B_IF_BLACK	((uint32_t)0x000000)
 static uint8_t ws2812b_if_state;
 static uint8_t ws2812b_if_ledNumber;
+
 
 static ws2812b_color wsLedBuffer[WS2812B_IF_LEDS];
 
@@ -33,19 +39,35 @@ static rmt_channel_handle_t tx_chan = NULL;
 static rmt_encoder_handle_t encoder  = NULL;
 static rmt_transmit_config_t transmit_cfg = {.loop_count = 0, .flags.eot_level = 0};
 
-uint8_t* ws2812b_if_getPixels(void);
-void ws2812b_if_refresh(void);
-uint32_t ws2812b_if_getColor(int16_t DiodeID);
-void ws2812b_if_setOneDiodeRGB(int16_t DiodeID, uint8_t R, uint8_t G, uint8_t B);
-void ws2812b_if_setOneDiode(int16_t DiodeID, uint32_t color);
-uint16_t ws2812b_if_getNumberOfLeds(void);
-void ws2812b_if_setDiodeColorStruct(int16_t DiodeID, ws2812b_color colorStruct);
 
-// ws2812b_drv_t ws2812b_if_RMT_Drv = {
+static void WS2812B_if_Refresh(void);
+static uint8_t WS2812B_if_sine8(uint8_t x);
+static uint8_t* WS2812B_if_GetPixels(void);
+static uint32_t WS2812B_if_GetColor(int16_t DiodeID);
+static uint16_t ws2812b_if_getNumberOfLeds(void);
 
-// };
+static void WS2812B_if_SetOneDiode(int16_t DiodeID, uint32_t color);
+static void WS2812B_if_SetOneDiodeRGB(int16_t DiodeID, uint8_t R, uint8_t G, uint8_t B);
+static void WS2812B_if_SetDiodeColorStruct(int16_t DiodeID, ws2812b_color colorStruct);
 
-void ws2812b_if_setDiodeColorStruct(int16_t DiodeID, ws2812b_color colorStruct)
+
+ws2812b_drv_t ws2812b_if_DrvRMT = {
+    WS2812B_if_Refresh,
+    WS2812B_if_sine8,
+    WS2812B_if_GetPixels,
+    WS2812B_if_GetColor,
+    ws2812b_if_getNumberOfLeds,
+
+    WS2812B_if_SetOneDiode,
+    WS2812B_if_SetOneDiodeRGB,
+    WS2812B_if_SetDiodeColorStruct
+};
+
+ws2812b_drv_t *ws2812b_if_getDrvRMT(void)
+{
+    return &ws2812b_if_DrvRMT;
+}
+void WS2812B_if_SetDiodeColorStruct(int16_t DiodeID, ws2812b_color colorStruct)
 {
     wsLedBuffer[DiodeID] = colorStruct;
 }
@@ -55,7 +77,7 @@ uint16_t ws2812b_if_getNumberOfLeds(void)
     return WS2812B_IF_LEDS;
 }
 
-void ws2812b_if_setOneDiode(int16_t DiodeID, uint32_t color)
+void WS2812B_if_SetOneDiode(int16_t DiodeID, uint32_t color)
 {
     if(DiodeID >= WS2812B_IF_LEDS || DiodeID < 0) return; // Escape if we try to set diode out of chain.
 
@@ -64,7 +86,7 @@ void ws2812b_if_setOneDiode(int16_t DiodeID, uint32_t color)
 	wsLedBuffer[DiodeID].blue = (color & 0x000000FF);
 }
 
-void ws2812b_if_setOneDiodeRGB(int16_t DiodeID, uint8_t R, uint8_t G, uint8_t B)
+void WS2812B_if_SetOneDiodeRGB(int16_t DiodeID, uint8_t R, uint8_t G, uint8_t B)
 {
 	uint32_t color = 0;
 
@@ -72,10 +94,10 @@ void ws2812b_if_setOneDiodeRGB(int16_t DiodeID, uint8_t R, uint8_t G, uint8_t B)
 	color |= (G << 8);
 	color |= (B);
 
-	ws2812b_if_setOneDiode(DiodeID, color);
+	WS2812B_if_SetOneDiode(DiodeID, color);
 }
 
-uint32_t ws2812b_if_getColor(int16_t DiodeID)
+uint32_t WS2812B_if_GetColor(int16_t DiodeID)
 {
 	uint32_t color = 0;
 	
@@ -84,12 +106,12 @@ uint32_t ws2812b_if_getColor(int16_t DiodeID)
 	color |= (wsLedBuffer[DiodeID].blue);
 	return color;
 }
-uint8_t* ws2812b_if_getPixels(void)
+uint8_t* WS2812B_if_GetPixels(void)
 {
     return (uint8_t*)wsLedBuffer;
 }
 
-void ws2812b_if_refresh(void)
+void WS2812B_if_Refresh(void)
 {
     ESP_ERROR_CHECK(rmt_transmit(tx_chan, encoder, wsLedBuffer, sizeof(wsLedBuffer), &transmit_cfg));
     // ESP_ERROR_CHECK(rmt_tx_wait_all_done(tx_chan, portMAX_DELAY));
@@ -100,7 +122,7 @@ void ws2812b_if_setAllDiodes(uint32_t color)
 {
 	for(int8_t i = 0; i < WS2812B_IF_LEDS; i++)
     {
-        ws2812b_if_setOneDiode(i, color);
+        WS2812B_if_SetOneDiode(i, color);
     }
 }
 
@@ -124,8 +146,8 @@ void ws2812b_if_simpleTest(void)
    }
 
    ws2812b_if_setAllDiodes(WS2812B_IF_BLACK); 
-   ws2812b_if_setOneDiode(ws2812b_if_ledNumber, color);
-   ws2812b_if_refresh();
+   WS2812B_if_SetOneDiode(ws2812b_if_ledNumber, color);
+   WS2812B_if_Refresh();
 
    ws2812b_if_ledNumber++;
 
@@ -161,15 +183,6 @@ void ws2812b_if_init(void)
     ESP_ERROR_CHECK(rmt_new_tx_channel(&tx_chan_config, &tx_chan));
 
     ESP_ERROR_CHECK(rmt_enable(tx_chan));
-
-
-    for (int led = 0; led < WS2812B_IF_LEDS; led++) 
-    {
-        wsLedBuffer[0].blue = 0;
-        wsLedBuffer[0].green = 0;
-        wsLedBuffer[0].red = 5;
-    }
-
 }
 
 
@@ -210,12 +223,12 @@ static const uint8_t _sineTable[256] = {
 	182,184,186,188,191,193,195,197,199,202,204,206,209,211,213,215,
 	218,220,223,225,227,230,232,235,237,240,242,245,247,250,252,255};
   
-  uint8_t WS2812B_sine8(uint8_t x)
+  uint8_t WS2812B_if_sine8(uint8_t x)
   {
 	  return _sineTable[x];
   }
   
-  uint8_t WS2812B_gamma8(uint8_t x)
+  uint8_t ws2812b_if_gamma8(uint8_t x)
   {
 	  return _gammaTable[x];
   }

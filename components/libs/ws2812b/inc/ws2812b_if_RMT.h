@@ -1,9 +1,10 @@
 /**
- * @file main.h
+ * @file ws2812b_if_RMT.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief 
+ * @brief ws2812b interface for esp32-c6 using RMT 
+ * 
  * @version 0.1
- * @date 08-04-2025
+ * @date 15-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,15 +20,24 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MAIN_H_
-#define MAIN_H_
+#ifndef WS2812B_IF_RMT_H_
+#define WS2812B_IF_RMT_H_
 
-#include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
-#include "sdkconfig.h"
+#include "ws2812b_drv.h"
+
+#define WS2812B_IF_LEDS             5
+
+#define RMT_LED_STRIP_GPIO_NUM      8
+#define RMT_LED_STRIP_RESOLUTION_HZ (10 * 1000 * 1000) // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
+
+#define RMT_TIME_03_US              (0.3 * RMT_LED_STRIP_RESOLUTION_HZ / 1000000) // T=0.3us
+#define RMT_TIME_09_US              (0.9 * RMT_LED_STRIP_RESOLUTION_HZ / 1000000) // T=0.9us
 
 
+ws2812b_drv_t *ws2812b_if_getDrvRMT(void);
 
-#endif  /* MAIN_H_ */
+void ws2812b_if_init(void);
+void ws2812b_if_simpleTest(void); // add to your task with osDelay
+
+
+#endif  /* WS2812B_IF_RMT_H_ */
