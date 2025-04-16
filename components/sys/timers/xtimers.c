@@ -1,9 +1,9 @@
 /**
- * @file main.c
+ * @file xtimers.c
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief 
+ * @brief  freeRtos timmers
  * @version 0.1
- * @date 14-04-2025
+ * @date 15-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,44 +19,47 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-
 #include "main.h"
-#include "ws2812b_fx.h"
-#include "ws2812b_if_RMT.h"
 #include "xtimers.h"
+#include "ws2812b_fx.h"
+
+static TimerHandle_t xTim_print_task_listTimer;
+static TimerHandle_t xTim_sysTick;
+
+static char xTim_printBufferTaskList[512];
+
+void xTim_printTaskList(TimerHandle_t xTimer); 
+void xTim_sysTickMS(TimerHandle_t xTimer); 
 
 
-void app_main(void)
+void xTim_Init(void)
 {
-    xTim_Init();                                // init freeRTOS soft timers
-    xTim_printTaskListEnable();                 // enable freeRTOS task list
-
-    ws2812b_if_init();                          // init interface - RMT
-    WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);  // init ws leds
+    xTim_print_task_listTimer = xTimerCreate("print_task_listTimer", pdMS_TO_TICKS(1000), pdTRUE, NULL, xTim_printTaskList); // 1s
     
-    WS2812BFX_SetSpeed(0, 100);	                // Speed of segment 0
-    WS2812BFX_SetColorRGB(0, 5,0,0);	        // Set color 0
-    WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	// Set mode segment 0
-    WS2812BFX_Start(0);	                        // Start segment 0
 
-    while (1) 
-    {
-        WS2812BFX_Callback();	                // FX effects calllback
-
-        vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog
-    }
+    xTim_sysTick = xTimerCreate("sysTickTimer", pdMS_TO_TICKS(1), pdTRUE, NULL, xTim_sysTickMS); // 1ms
+    xTimerStart(xTim_sysTick, 0);
 }
 
-/****************************************************
- *  freeRtos hooks
- */
-void vApplicationTickHook(void) // calling from IRQ
+
+void xTim_sysTickMS(TimerHandle_t xTimer)
 {
-    
+    WS2812BFX_SysTickCallback();
 }
 
-void vApplicationIdleHook(void) // the lowest freeRTOS priority
+void xTim_printTaskList(TimerHandle_t xTimer)
 {
-
+    vTaskList(xTim_printBufferTaskList);
+    printf("Task Name\tState\tPrio\tStack\tNum\n");
+    printf("%s\n", xTim_printBufferTaskList);
 }
 
+void xTim_printTaskListDisable(void)
+{
+    xTimerStop(xTim_print_task_listTimer, 0);
+}
+
+void xTim_printTaskListEnable(void)
+{
+    xTimerStart(xTim_print_task_listTimer, 0);
+}

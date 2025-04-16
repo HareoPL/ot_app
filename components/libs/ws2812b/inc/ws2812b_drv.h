@@ -1,9 +1,9 @@
 /**
- * @file main.c
+ * @file ws2812b_drv.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief 
+ * @brief driver for ws2812b
  * @version 0.1
- * @date 14-04-2025
+ * @date 15-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,44 +19,27 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
+#ifndef WS2812B_DRV_H_
+#define WS2812B_DRV_H_
 
-#include "main.h"
-#include "ws2812b_fx.h"
-#include "ws2812b_if_RMT.h"
-#include "xtimers.h"
+#include "stdint.h"
 
-
-void app_main(void)
+typedef struct
 {
-    xTim_Init();                                // init freeRTOS soft timers
-    xTim_printTaskListEnable();                 // enable freeRTOS task list
+	uint8_t green, red, blue;
+} ws2812b_color;
 
-    ws2812b_if_init();                          // init interface - RMT
-    WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);  // init ws leds
-    
-    WS2812BFX_SetSpeed(0, 100);	                // Speed of segment 0
-    WS2812BFX_SetColorRGB(0, 5,0,0);	        // Set color 0
-    WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	// Set mode segment 0
-    WS2812BFX_Start(0);	                        // Start segment 0
+typedef struct 
+{   
+    void (*Refresh)(void);
+    uint8_t  (*sine8)(uint8_t x);
+    uint8_t* (*GetPixels)(void);
+    uint32_t (*GetColor)(int16_t DiodeID);
+    uint16_t (*GetNumberOfLeds)(void);
 
-    while (1) 
-    {
-        WS2812BFX_Callback();	                // FX effects calllback
+    void (*SetOneDiode)(int16_t DiodeID, uint32_t color);
+    void (*SetOneDiodeRGB)(int16_t DiodeID, uint8_t R, uint8_t G, uint8_t B);
+    void (*SetDiodeColorStruct)(int16_t DiodeID, ws2812b_color colorStruct);
+}ws2812b_drv_t;
 
-        vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog
-    }
-}
-
-/****************************************************
- *  freeRtos hooks
- */
-void vApplicationTickHook(void) // calling from IRQ
-{
-    
-}
-
-void vApplicationIdleHook(void) // the lowest freeRTOS priority
-{
-
-}
-
+#endif  /* WS2812B_DRV_H_ */
