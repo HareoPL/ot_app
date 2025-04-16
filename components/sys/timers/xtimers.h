@@ -1,9 +1,9 @@
 /**
- * @file main.c
+ * @file xtimers.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 14-04-2025
+ * @date 15-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,44 +19,12 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
+#ifndef XTIMERS_H_
+#define XTIMERS_H_
 
-#include "main.h"
-#include "ws2812b_fx.h"
-#include "ws2812b_if_RMT.h"
-#include "xtimers.h"
+void xTim_Init(void);
 
+void xTim_printTaskListEnable(void);
+void xTim_printTaskListDisable(void);
 
-void app_main(void)
-{
-    xTim_Init();                                // init freeRTOS soft timers
-    xTim_printTaskListEnable();                 // enable freeRTOS task list
-
-    ws2812b_if_init();                          // init interface - RMT
-    WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);  // init ws leds
-    
-    WS2812BFX_SetSpeed(0, 100);	                // Speed of segment 0
-    WS2812BFX_SetColorRGB(0, 5,0,0);	        // Set color 0
-    WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	// Set mode segment 0
-    WS2812BFX_Start(0);	                        // Start segment 0
-
-    while (1) 
-    {
-        WS2812BFX_Callback();	                // FX effects calllback
-
-        vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog
-    }
-}
-
-/****************************************************
- *  freeRtos hooks
- */
-void vApplicationTickHook(void) // calling from IRQ
-{
-    
-}
-
-void vApplicationIdleHook(void) // the lowest freeRTOS priority
-{
-
-}
-
+#endif  /* XTIMERS_H_ */
