@@ -1,9 +1,9 @@
 /**
- * @file main.h
+ * @file spiffs.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 08-04-2025
+ * @date 17-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,20 +19,19 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MAIN_H_
-#define MAIN_H_
+#ifndef SPIFFS_H_
+#define SPIFFS_H_
 
-#include <stdio.h>
-#include "stdint.h"
+#include "main.h"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-
-#include "sdkconfig.h"
-
-#include "esp_log.h"
-#include "esp_err.h"
+#define SPIFFS_CHECK_ON_START
 
 
+esp_err_t spiffs_mount(void);
+esp_err_t spiffs_unmount(void);
 
-#endif  /* MAIN_H_ */
+esp_err_t spiffs_partitionSizeInfo(size_t *totalSize, size_t *usedSize);
+
+void spiffs_test(void);
+
+#endif  /* SPIFFS_H_ */

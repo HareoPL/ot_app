@@ -1,9 +1,9 @@
 /**
- * @file main.h
+ * @file wifi.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 08-04-2025
+ * @date 17-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,20 +19,16 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MAIN_H_
-#define MAIN_H_
-
-#include <stdio.h>
-#include "stdint.h"
-
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-
-#include "sdkconfig.h"
-
-#include "esp_log.h"
-#include "esp_err.h"
+#ifndef WIFI_H_
+#define WIFI_H_
 
 
+#define WIFI_AP_SSID            "MyESP32AP"
+#define WIFI_AP_PASS            "12345678"
+#define WIFI_AP_MAX_STA_CONN    4
+#define WIFI_AP_CHANNEL         1
 
-#endif  /* MAIN_H_ */
+
+void wifi_initSTA(void);
+void wifi_initAP(void);
+#endif  /* WIFI_H_ */
