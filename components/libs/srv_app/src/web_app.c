@@ -59,8 +59,18 @@ esp_err_t web_app_handlerURL_index(httpd_req_t *req)
             "</body></html>";
         httpd_resp_set_type(req, "text/html");
         httpd_resp_sendstr(req, resp);
-        spiffs_mount();
-        web_app_spiffsIsMounted = 1;
+
+        if(spiffs_mount() == ESP_OK)
+        {
+            web_app_spiffsIsMounted = 1;
+        }
+        else
+        {
+            ESP_LOGE(TAG, "spiffs ERROR:");
+            const char* resp = "<html><head></head><body> Initializing of SPIFFS ERROR.</body></html>";
+            httpd_resp_set_type(req, "text/html");
+            httpd_resp_sendstr(req, resp);
+        }
     }
 
     const char* filename = "/spiffs/index.html";

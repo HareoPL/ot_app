@@ -34,6 +34,8 @@ static esp_err_t errorStat;
 TaskHandle_t th_Spiffs = NULL;
 UBaseType_t stackFree_spiffsTask;
 
+static uint8_t spiffs_IsMounted = 0;
+
 static esp_vfs_spiffs_conf_t spiffsConf = {
     .base_path = "/spiffs",
     .partition_label = NULL,
@@ -64,33 +66,42 @@ esp_err_t spiffs_checkOnStart(void)
 
 esp_err_t spiffs_mount(void)
 {
-
-    ESP_LOGI(TAG, "Initializing SPIFFS");
-
-    errorStat = esp_vfs_spiffs_register(&spiffsConf);
-
-    if (errorStat != ESP_OK) 
+    if(spiffs_IsMounted == 0)
     {
-        if (errorStat == ESP_FAIL) 
+       ESP_LOGI(TAG, "Initializing SPIFFS");
+
+        errorStat = esp_vfs_spiffs_register(&spiffsConf);
+
+        if (errorStat != ESP_OK) 
         {
-            ESP_LOGE(TAG, "Failed to mount or format filesystem");
-        } 
-        else if (errorStat == ESP_ERR_NOT_FOUND) 
-        {
-            ESP_LOGE(TAG, "Failed to find SPIFFS partition");
-        } 
-        else 
-        {
-            ESP_LOGE(TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(errorStat));
+            if (errorStat == ESP_FAIL) 
+            {
+                ESP_LOGE(TAG, "Failed to mount or format filesystem");
+            } 
+            else if (errorStat == ESP_ERR_NOT_FOUND) 
+            {
+                ESP_LOGE(TAG, "Failed to find SPIFFS partition");
+            } 
+            else 
+            {
+                ESP_LOGE(TAG, "Failed to initialize SPIFFS (%s)", esp_err_to_name(errorStat));
+            }
+            return errorStat;
         }
-        return errorStat;
+
+        #ifdef SPIFFS_CHECK_ON_START
+        errorStat = spiffs_checkOnStart();
+        #endif
+
+        spiffs_IsMounted = 1;
+        return ESP_OK;
+    }
+    else
+    {
+        ESP_LOGI(TAG, "SPIFFS was mount");
     }
 
-    #ifdef SPIFFS_CHECK_ON_START
-     errorStat = spiffs_checkOnStart();
-    #endif
-
-    return errorStat;
+    return ESP_OK;
 }
 
 esp_err_t spiffs_partitionSizeInfo(size_t *totalSize, size_t *usedSize)
@@ -147,6 +158,7 @@ esp_err_t spiffs_unmount(void)
     }
     else
     {
+        spiffs_IsMounted = 0;
         ESP_LOGI(TAG, "SPIFFS unmounted");
     }
 
