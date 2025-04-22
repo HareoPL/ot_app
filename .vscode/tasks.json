@@ -1,7 +1,7 @@
 {
     "version": "2.0.0",
     "tasks": [
-        {   "label": "Build",
+        {   "label": "project build",
             "type": "process",
             "command": "powershell.exe",
             "args": [
@@ -23,7 +23,7 @@
             },
 
         },
-        {   "label": "project build & flash ",
+        {   "label": "project flash",
             "type": "process",
             "command": "powershell.exe",
             "args": [
@@ -31,7 +31,7 @@
                 "Bypass",
                 // "-NoExit",
                 "-Command",
-                "& { . ${config:idfTask.cfgCMD.path} -IdfId ${config:idfTask.cfgCMD.IdfId}; idf.py build; idf.py size; esptool.py --chip ${config:idf.customExtraVars.IDF_TARGET} --port ${config:idfTask.flash.jtagPort} --baud ${config:idfTask.flash.baud} --before=${config:idfTask.flash.before} --after=${config:idfTask.flash.after} --flash_mode ${config:idfTask.flash.mode} --flash_freq ${config:idfTask.flash.freq} --flash_size ${config:idfTask.flash.size} ${config:idfTask.flash.bootloader.adr} ${config:idfTask.flash.bootloader.path} ${config:idfTask.flash.app.adr} ${config:idfTask.flash.app.path} ${config:idfTask.flash.partitionTable.adr} ${config:idfTask.flash.partitionTable.path} ${config:idfTask.flash.otaDataInit.adr} ${config:idfTask.flash.otaDataInit.path}}"
+                "& { . ${config:idfTask.cfgCMD.path} -IdfId ${config:idfTask.cfgCMD.IdfId}; esptool.py --chip ${config:idf.customExtraVars.IDF_TARGET} --port ${config:idfTask.flash.jtagPort} --baud ${config:idfTask.flash.baud} --before=${config:idfTask.flash.before} --after=${config:idfTask.flash.after} --flash_mode ${config:idfTask.flash.mode} --flash_freq ${config:idfTask.flash.freq} --flash_size ${config:idfTask.flash.size} ${config:idfTask.flash.bootloader.adr} ${config:idfTask.flash.bootloader.path} ${config:idfTask.flash.app.adr} ${config:idfTask.flash.app.path} ${config:idfTask.flash.partitionTable.adr} ${config:idfTask.flash.partitionTable.path} ${config:idfTask.flash.otaDataInit.adr} ${config:idfTask.flash.otaDataInit.path}}"
             ],
             "presentation": {
                 "echo": true,
@@ -43,31 +43,20 @@
                 "kind": "build",
                 "isDefault": false
             },
-
         },
-        {   "label": "spiffs reBuild & flash",
-            "type": "process",
-            "command": "powershell.exe",
-            "args": [
-                "-ExecutionPolicy",
-                "Bypass",
-                // "-NoExit",
-                "-Command",
-                "& { . ${config:idfTask.cfgCMD.path} -IdfId ${config:idfTask.cfgCMD.IdfId}; mkdir build/spiffs; Remove-Item 'build/spiffs' -Recurse -Force -Confirm:$false; mkdir build/spiffs; python spiffsgen.py ${config:idfTask.build.spiffs.binSize} ${config:idfTask.build.spiffs.outPath} --page-size ${config:idfTask.build.spiffs.pageSize} --block-size ${config:idfTask.build.spiffs.blockSize} --obj-name-len ${config:idfTask.build.spiffs.objNameLen} --meta-len ${config:idfTask.build.spiffs.metaLen}; esptool.py --chip ${config:idf.customExtraVars.IDF_TARGET} --port ${config:idfTask.flash.jtagPort} --baud ${config:idfTask.flash.baud} --before=${config:idfTask.flash.before} --after=${config:idfTask.flash.after} --flash_mode ${config:idfTask.flash.mode} --flash_freq ${config:idfTask.flash.freq} --flash_size ${config:idfTask.flash.size} --compress ${config:idfTask.flash.spiffs.adr} ${config:idfTask.flash.spiffs.path}}"
+        {
+            "label": "project build & flash",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "project build",
+                "project flash"
             ],
-            "presentation": {
-                "echo": true,
-                "focus": true,
-                "panel": "new"
-            },
-            "problemMatcher": [],
             "group": {
-                "kind": "build",
-                "isDefault": false
-            },
-
+                "kind": "build"
+            }
         },
-        {   "label": "reBuildProject",
+        {   
+            "label": "project reBuild",
             "type": "process",
             "command": "powershell.exe",
             "args": [
@@ -87,18 +76,28 @@
                 "kind": "build",
                 "isDefault": false
             },
-
         },
-        // {
-        //     "label": "reBuildProject",
-        //     "dependsOrder": "sequence",
-        //     "dependsOn": [
-        //         "App Clean",
-        //         "App Build"
-        //     ],
-        //     "group": {
-        //         "kind": "build"
-        //     }
-        // },
+        {   
+            "label": "spiffs reBuild & flash",
+            "type": "process",
+            "command": "powershell.exe",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                // "-NoExit",
+                "-Command",
+                "& { . ${config:idfTask.cfgCMD.path} -IdfId ${config:idfTask.cfgCMD.IdfId}; mkdir build/spiffs; Remove-Item 'build/spiffs' -Recurse -Force -Confirm:$false; mkdir build/spiffs; python spiffsgen.py ${config:idfTask.build.spiffs.binSize} ${config:idfTask.build.spiffs.outPath} --page-size ${config:idfTask.build.spiffs.pageSize} --block-size ${config:idfTask.build.spiffs.blockSize} --obj-name-len ${config:idfTask.build.spiffs.objNameLen} --meta-len ${config:idfTask.build.spiffs.metaLen}; esptool.py --chip ${config:idf.customExtraVars.IDF_TARGET} --port ${config:idfTask.flash.jtagPort} --baud ${config:idfTask.flash.baud} --before=${config:idfTask.flash.before} --after=${config:idfTask.flash.after} --flash_mode ${config:idfTask.flash.mode} --flash_freq ${config:idfTask.flash.freq} --flash_size ${config:idfTask.flash.size} --compress ${config:idfTask.flash.spiffs.adr} ${config:idfTask.flash.spiffs.path}}"
+            ],
+            "presentation": {
+                "echo": true,
+                "focus": true,
+                "panel": "new"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+        },
     ]
 }
