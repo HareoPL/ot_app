@@ -43,7 +43,7 @@ void app_main(void)
     WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);  // init ws leds
     
     WS2812BFX_SetSpeed(0, 100);	                // Speed of segment 0
-    WS2812BFX_SetColorRGB(0, 5,0,0);	        // Set color 0
+    WS2812BFX_SetColorRGB(0, 0, 0, 128);	        // Set color 0
     WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	// Set mode segment 0
     WS2812BFX_Start(0);	                        // Start segment 0
 

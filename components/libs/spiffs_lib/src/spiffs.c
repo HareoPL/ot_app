@@ -28,7 +28,7 @@
 #include "esp_spiffs.h"
 
 
-static const char *TAG = "example";
+static const char *TAG = "spiffs_c";
 static esp_err_t errorStat;
 
 TaskHandle_t th_Spiffs = NULL;

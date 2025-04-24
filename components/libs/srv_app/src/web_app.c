@@ -132,11 +132,23 @@ esp_err_t web_app_handlerURL_index(httpd_req_t *req)
     return ret;
 }
 
+static esp_err_t web_app_handlerURLoptions_api(httpd_req_t *req)
+{
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Methods", "POST, GET, OPTIONS");
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Headers", "Content-Type");
+    httpd_resp_set_status(req, "204 No Content");
+    httpd_resp_send(req, NULL, 0);
+    return ESP_OK;
+}
 
 /******** api HANDLER */
 static esp_err_t web_app_handlerURL_api(httpd_req_t *req) 
 {
     int received;
+
+    // set CORS header 
+    httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
 
     // receive data
     received = httpd_req_recv(req, web_app_buffer, sizeof(web_app_buffer));
@@ -160,19 +172,55 @@ static esp_err_t web_app_handlerURL_api(httpd_req_t *req)
     }
 
     // Download values ​​from JSON
-    cJSON *sensor = cJSON_GetObjectItem(root, "sensor");
-    cJSON *value = cJSON_GetObjectItem(root, "value");
+    // cJSON *sensor = cJSON_GetObjectItem(root, "sensor");
+    // cJSON *value = cJSON_GetObjectItem(root, "value");
     
-    if (!cJSON_IsString(sensor) || !cJSON_IsNumber(value)) 
-    {
-        ESP_LOGE(TAG, "Incorrect JSON structure");
-        cJSON_Delete(root);
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No fields required");
-        return ESP_FAIL;
-    }
+    // if (!cJSON_IsString(sensor) || !cJSON_IsNumber(value)) 
+    // {
+    //     ESP_LOGE(TAG, "Incorrect JSON structure");
+    //     cJSON_Delete(root);
+    //     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No fields required");
+    //     return ESP_FAIL;
+    // }
 
-    ESP_LOGI(TAG, "receive: sensor=%s, value=%.2f", sensor->valuestring, value->valuedouble);
+    // ESP_LOGI(TAG, "receive: sensor=%s, value=%.2f", sensor->valuestring, value->valuedouble);
+   
+    /////////////////////////////
     
+    // Odczyt pól prostych
+    // const cJSON *sensor = cJSON_GetObjectItemCaseSensitive(root, "sensor");
+    // const cJSON *value = cJSON_GetObjectItemCaseSensitive(root, "value");
+    // const cJSON *unit = cJSON_GetObjectItemCaseSensitive(root, "unit");
+    // const cJSON *location = cJSON_GetObjectItemCaseSensitive(root, "location");
+    const cJSON *timestamp = cJSON_GetObjectItemCaseSensitive(root, "timestamp");
+
+    // Odczyt pól zagnieżdżonych (color, rgb)
+    const cJSON *color = cJSON_GetObjectItemCaseSensitive(root, "color");
+    const cJSON *hex = cJSON_GetObjectItemCaseSensitive(color, "hex");
+    const cJSON *rgb = cJSON_GetObjectItemCaseSensitive(color, "rgb");
+    const cJSON *r = cJSON_GetObjectItemCaseSensitive(rgb, "r");
+    const cJSON *g = cJSON_GetObjectItemCaseSensitive(rgb, "g");
+    const cJSON *b = cJSON_GetObjectItemCaseSensitive(rgb, "b");
+
+    // Przykładowe wypisanie wartości
+    // printf("Sensor: %s\n", cJSON_IsString(sensor) ? sensor->valuestring : "");
+    // printf("Value: %f\n", cJSON_IsNumber(value) ? value->valuedouble : 0);
+    // printf("Unit: %s\n", cJSON_IsString(unit) ? unit->valuestring : "");
+    // printf("Location: %s\n", cJSON_IsString(location) ? location->valuestring : "");
+    printf("Timestamp: %s\n", cJSON_IsString(timestamp) ? timestamp->valuestring : "");
+    printf("Color HEX: %s\n", cJSON_IsString(hex) ? hex->valuestring : "");
+    printf("Color RGB: (%d, %d, %d)\n",
+           cJSON_IsNumber(r) ? r->valueint : 0,
+           cJSON_IsNumber(g) ? g->valueint : 0,
+           cJSON_IsNumber(b) ? b->valueint : 0);
+
+    #include "ws2812b_fx.h"
+
+
+    WS2812BFX_SetColorRGB(0, r->valueint, g->valueint, b->valueint);
+    WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	 
+    ////////////////////////////
+
     // Return the answer
     httpd_resp_set_type(req, "application/json");
     const char *resp = "{\"status\": \"OK\"}";
@@ -198,6 +246,18 @@ static esp_err_t web_app_handlerURL_test(httpd_req_t *req)
 /************************************ 
  * Register URLS
  */ 
+
+void web_app_registerURLoptions_api(void)
+{
+    httpd_uri_t options_uri = {
+        .uri       = "/api",
+        .method    = HTTP_OPTIONS,
+        .handler   = web_app_handlerURLoptions_api,
+        .user_ctx  = NULL
+    };
+    httpd_register_uri_handler(web_app_server, &options_uri);
+}
+
 void web_app_registerURL_api(void)
 {
     httpd_uri_t post_uri = {
@@ -260,12 +320,13 @@ void web_app_registerURL_test(void)
 void web_app_startWebServer(void)
 {
     httpd_config_t web_app_config = HTTPD_DEFAULT_CONFIG();
-    // start_webserver();
+    web_app_config.max_open_sockets = 5; // increase limit of CORS socket
     
 
     if (httpd_start(&web_app_server, &web_app_config) == ESP_OK) 
     {
-        web_app_registerURL_api();  
+        web_app_registerURL_api(); 
+        web_app_registerURLoptions_api(); 
         web_app_registerURL_index();
         web_app_registerURL_test();
     }
