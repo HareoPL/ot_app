@@ -64,5 +64,6 @@
             },
         },
     },
+    "liveServer.settings.multiRootWorkspaceName": "esp32-c6",
 
 } // end of settings.json

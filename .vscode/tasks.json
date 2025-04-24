@@ -99,5 +99,27 @@
                 "isDefault": false
             },
         },
+        {   
+            "label": "terminal IDF",
+            "type": "process",
+            "command": "powershell.exe",
+            "args": [
+                "-ExecutionPolicy",
+                "Bypass",
+                "-NoExit",
+                "-Command",
+                "& { . ${config:idfTask.cfgCMD.path} -IdfId ${config:idfTask.cfgCMD.IdfId}; }"
+            ],
+            "presentation": {
+                "echo": true,
+                "focus": true,
+                "panel": "new"
+            },
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            },
+        },
     ]
 }
