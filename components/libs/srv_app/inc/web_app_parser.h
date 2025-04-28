@@ -22,27 +22,38 @@
 #ifndef WEB_APP_PARSER_H_
 #define WEB_APP_PARSER_H_
 
-#define WBP_MESSAGE_IJ      "Incorrect JSON"
-#define WBP_MESSAGE_NFR     "No fields required"
+#include "cJSON.h"
 
+#define WBPARSER_DEFAULT_CONFIG() \
+{ \
+    .taskStackSize     = (1024 * 3), \
+    .taskPriority      = tskIDLE_PRIORITY+1,\
+}
 typedef enum
 {
     WBP_OK = 0,
     WBP_ERROR,
+    WBP_ERROR_CALLOC,
+
 }wbp_state_t;
 
-// typedef struct
-// {
-//     char *buffer;
-
-//     cJSON *root;
-//     cJSON *obj ;
+typedef struct
+{
+    cJSON *root;
+    cJSON *obj;
     
-//     TaskHandle_t taskHandle;
-//     SemaphoreHandle_t semaphoreHandle;
-// }wbp_parser_t;
+    TaskHandle_t taskHandle;
+    SemaphoreHandle_t semaphoreHandle;
+}wbp_parser_t;
+
+typedef struct 
+{
+    uint32_t taskStackSize;
+    uint32_t taskPriority;
+    char *buffer;
+}wbp_parserConfig_t;
 
 void wbp_parseData(void);
-void wbp_initParser(void);
+wbp_state_t wbp_initParser(const wbp_parserConfig_t *config);
 
 #endif  /* WEB_APP_PARSER_H_ */

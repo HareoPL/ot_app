@@ -35,5 +35,7 @@
 
 #include "utils.h"
 
+#define DEBUG
+
 
 #endif  /* MAIN_H_ */

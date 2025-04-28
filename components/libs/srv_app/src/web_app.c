@@ -264,6 +264,9 @@ char *web_app_getBuffer(void)
 
 void web_app_startWebServer(void)
 {
+    wbp_parserConfig_t wbp_parserConfig = WBPARSER_DEFAULT_CONFIG();
+    wbp_parserConfig.buffer = web_app_buffer;
+
     httpd_config_t web_app_config = HTTPD_DEFAULT_CONFIG();
     web_app_config.max_open_sockets = 5; // increase limit of CORS socket
     // web_app_config.stack_size = ;
@@ -275,7 +278,7 @@ void web_app_startWebServer(void)
         web_app_registerURL_index();
         web_app_registerURL_test();
 
-        wbp_initParser();
+        wbp_initParser(&wbp_parserConfig);
     }
 }
 
