@@ -28,8 +28,11 @@
 #include "wifi.h"
 #include "web_app.h"
 
+static const char *TAG = "main";
+
 void app_main(void)
 {
+    ESP_UNUSED(TAG);
     
     // wifi_initSTA();
     wifi_initAP();
@@ -43,15 +46,17 @@ void app_main(void)
     WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);  // init ws leds
     
     WS2812BFX_SetSpeed(0, 100);	                // Speed of segment 0
-    WS2812BFX_SetColorRGB(0, 0, 0, 128);	        // Set color 0
+    WS2812BFX_SetColorRGB(0, 0, 0, 5);	        // Set color 0
     WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	// Set mode segment 0
     WS2812BFX_Start(0);	                        // Start segment 0
 
-     
+       
+    
     while (1) 
     {
         WS2812BFX_Callback();	                // FX effects calllback
 
+        // UTILS_RTOS_CHECK_FREE_STACK();
         vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog
     }
 }
@@ -68,4 +73,3 @@ void vApplicationIdleHook(void) // the lowest freeRTOS priority
 {
 
 }
-

@@ -13,7 +13,18 @@
     "files.associations": {
         "*.h": "c",
         "*.c": "c",
-        "atomic": "c"
+        "atomic": "c",
+        "array": "c",
+        "charconv": "c",
+        "compare": "c",
+        "complex": "c",
+        "functional": "c",
+        "ratio": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "variant": "c",
+        "cstdlib": "c"
     },
     "idf.portWin": "COM7",
 
