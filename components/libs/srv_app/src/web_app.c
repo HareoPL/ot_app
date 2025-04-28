@@ -27,13 +27,13 @@
 #include <sys/unistd.h>
 #include "esp_spiffs.h"
 #include "spiffs.h"
-#include "cJSON.h"
+#include "web_app_parser.h"
 
 static const char *TAG = "web_app";
 
 static httpd_handle_t web_app_server;
 
-static char web_app_buffer[512];
+static char web_app_buffer[WEB_APP_BUFFER_SIZE];
 
 static uint8_t web_app_spiffsIsMounted = 0;
 
@@ -162,75 +162,16 @@ static esp_err_t web_app_handlerURL_api(httpd_req_t *req)
     }
     web_app_buffer[received] = '\0'; // Null-terminate
 
-    // parse JSON
-    cJSON *root = cJSON_Parse(web_app_buffer);
-    if (root == NULL) 
-    {
-        ESP_LOGE(TAG, "parse error JSON");
-        httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "Incorrect JSON");
-        return ESP_FAIL;
-    }
-
-    // Download values ​​from JSON
-    // cJSON *sensor = cJSON_GetObjectItem(root, "sensor");
-    // cJSON *value = cJSON_GetObjectItem(root, "value");
-    
-    // if (!cJSON_IsString(sensor) || !cJSON_IsNumber(value)) 
-    // {
-    //     ESP_LOGE(TAG, "Incorrect JSON structure");
-    //     cJSON_Delete(root);
-    //     httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "No fields required");
-    //     return ESP_FAIL;
-    // }
-
-    // ESP_LOGI(TAG, "receive: sensor=%s, value=%.2f", sensor->valuestring, value->valuedouble);
-   
-    /////////////////////////////
-    
-    // Odczyt pól prostych
-    // const cJSON *sensor = cJSON_GetObjectItemCaseSensitive(root, "sensor");
-    // const cJSON *value = cJSON_GetObjectItemCaseSensitive(root, "value");
-    // const cJSON *unit = cJSON_GetObjectItemCaseSensitive(root, "unit");
-    // const cJSON *location = cJSON_GetObjectItemCaseSensitive(root, "location");
-    const cJSON *timestamp = cJSON_GetObjectItemCaseSensitive(root, "timestamp");
-
-    // Odczyt pól zagnieżdżonych (color, rgb)
-    const cJSON *color = cJSON_GetObjectItemCaseSensitive(root, "color");
-    const cJSON *hex = cJSON_GetObjectItemCaseSensitive(color, "hex");
-    const cJSON *rgb = cJSON_GetObjectItemCaseSensitive(color, "rgb");
-    const cJSON *r = cJSON_GetObjectItemCaseSensitive(rgb, "r");
-    const cJSON *g = cJSON_GetObjectItemCaseSensitive(rgb, "g");
-    const cJSON *b = cJSON_GetObjectItemCaseSensitive(rgb, "b");
-
-    // Przykładowe wypisanie wartości
-    // printf("Sensor: %s\n", cJSON_IsString(sensor) ? sensor->valuestring : "");
-    // printf("Value: %f\n", cJSON_IsNumber(value) ? value->valuedouble : 0);
-    // printf("Unit: %s\n", cJSON_IsString(unit) ? unit->valuestring : "");
-    // printf("Location: %s\n", cJSON_IsString(location) ? location->valuestring : "");
-    printf("Timestamp: %s\n", cJSON_IsString(timestamp) ? timestamp->valuestring : "");
-    printf("Color HEX: %s\n", cJSON_IsString(hex) ? hex->valuestring : "");
-    printf("Color RGB: (%d, %d, %d)\n",
-           cJSON_IsNumber(r) ? r->valueint : 0,
-           cJSON_IsNumber(g) ? g->valueint : 0,
-           cJSON_IsNumber(b) ? b->valueint : 0);
-
-    #include "ws2812b_fx.h"
-
-
-    WS2812BFX_SetColorRGB(0, r->valueint, g->valueint, b->valueint);
-    WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	 
-    ////////////////////////////
+    // parse incomming data
+    wbp_parseData();
 
     // Return the answer
     httpd_resp_set_type(req, "application/json");
     const char *resp = "{\"status\": \"OK\"}";
     httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
 
-    // memory free
-    cJSON_Delete(root);
     return ESP_OK;
 }
-
 
 static esp_err_t web_app_handlerURL_test(httpd_req_t *req) 
 {
@@ -316,12 +257,16 @@ void web_app_registerURL_test(void)
 //     }
 // }
 
+char *web_app_getBuffer(void)
+{
+    return web_app_buffer;
+}
 
 void web_app_startWebServer(void)
 {
     httpd_config_t web_app_config = HTTPD_DEFAULT_CONFIG();
     web_app_config.max_open_sockets = 5; // increase limit of CORS socket
-    
+    // web_app_config.stack_size = ;
 
     if (httpd_start(&web_app_server, &web_app_config) == ESP_OK) 
     {
@@ -329,5 +274,8 @@ void web_app_startWebServer(void)
         web_app_registerURLoptions_api(); 
         web_app_registerURL_index();
         web_app_registerURL_test();
+
+        wbp_initParser();
     }
 }
+

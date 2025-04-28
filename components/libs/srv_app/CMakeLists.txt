@@ -3,7 +3,8 @@ set(srcs) # set(srcs "file1.c" "file2.c" "file3.c")
 set(public_requires)
 
 list(APPEND srcs "src/wifi.c") # add new c file to srcs
-list(APPEND srcs "src/web_app.c") # add new c file to srcs
+list(APPEND srcs "src/web_app.c") 
+list(APPEND srcs "src/web_app_parser.c") 
 
 
 list(APPEND public_requires "main")

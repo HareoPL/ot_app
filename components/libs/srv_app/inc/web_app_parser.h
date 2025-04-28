@@ -1,9 +1,9 @@
 /**
- * @file web_app.h
+ * @file web_app_parser.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 21-04-2025
+ * @date 25-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,12 +19,30 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef WEB_APP_H_
-#define WEB_APP_H_
+#ifndef WEB_APP_PARSER_H_
+#define WEB_APP_PARSER_H_
 
-#define WEB_APP_BUFFER_SIZE 512
+#define WBP_MESSAGE_IJ      "Incorrect JSON"
+#define WBP_MESSAGE_NFR     "No fields required"
 
-void web_app_startWebServer(void);
-char *web_app_getBuffer(void);
+typedef enum
+{
+    WBP_OK = 0,
+    WBP_ERROR,
+}wbp_state_t;
 
-#endif  /* SRV_APP_H_ */
+// typedef struct
+// {
+//     char *buffer;
+
+//     cJSON *root;
+//     cJSON *obj ;
+    
+//     TaskHandle_t taskHandle;
+//     SemaphoreHandle_t semaphoreHandle;
+// }wbp_parser_t;
+
+void wbp_parseData(void);
+void wbp_initParser(void);
+
+#endif  /* WEB_APP_PARSER_H_ */
