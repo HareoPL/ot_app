@@ -169,6 +169,7 @@ void ws2812b_if_init(void)
     {
         .bit0 = {.duration0 = RMT_TIME_03_US, .level0 = 1, .duration1 = RMT_TIME_09_US, .level1 = 0}, // 0.3µs HIGH + 0.9µs LOW
         .bit1 = {.duration0 = RMT_TIME_09_US, .level0 = 1, .duration1 = RMT_TIME_03_US, .level1 = 0}, // 0.9µs HIGH + 0.3µs LOW
+        .flags.msb_first = 1,
     };
     ESP_ERROR_CHECK(rmt_new_bytes_encoder(&bytes_encoder_cfg, &encoder));
 
