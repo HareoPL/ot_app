@@ -27,7 +27,7 @@
 #define WS2812B_FX_H_
 
 #include "main.h"
-#include "ws2812b_drv.h"
+#include "ws2812b_if.h"
 
 #define DEFAULT_COLOR 	0x00FF000000
 #define NUM_COLORS		3
@@ -120,7 +120,7 @@ FX_MODE_TRICOLOR_CHASE,
 FX_MODE_ICU,
 } fx_mode;
 
-FX_STATUS WS2812BFX_Init(ws2812b_drv_t *drv, uint16_t Segments);
+FX_STATUS WS2812BFX_Init(const ws2812b_drv_t *drv, uint16_t Segments);
 FX_STATUS WS2812BFX_SegmentIncrease(ws2812b_drv_t *drv);
 FX_STATUS WS2812BFX_SegmentDecrease(ws2812b_drv_t *drv);
 uint8_t WS2812BFX_GetSegmentsQuantity(void);

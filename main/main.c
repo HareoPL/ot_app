@@ -22,7 +22,7 @@
 
 #include "main.h"
 #include "ws2812b_fx.h"
-#include "ws2812b_if_RMT.h"
+#include "ws2812b_drv_RMT.h"
 #include "xtimers.h"
 #include "spiffs.h"
 #include "wifi.h"

@@ -25,7 +25,14 @@
 #include "main.h"
 
 #define UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS
+// #define UNIT_TEST
 
+
+#ifndef UNIT_TEST
+    #define PRIVATE static
+#else
+    #define PRIVATE
+#endif
 
 #ifdef UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS  
     #define UTILS_RTOS_CHECK_FREE_STACK() \

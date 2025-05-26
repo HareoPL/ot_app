@@ -69,7 +69,7 @@ typedef struct ws2812bfx_s
 } ws2812bfx_s;
 
 static ws2812bfx_s *Ws28b12b_Segments = NULL;
-static ws2812b_drv_t *wsDrv = NULL;
+static const ws2812b_drv_t *wsDrv = NULL;
 
 void (*mModeCallback)(void);
 
@@ -203,7 +203,7 @@ void (*mMode[MODE_COUNT])(void) =
     mode_icu
 };
 
-FX_STATUS WS2812BFX_Init(ws2812b_drv_t *drv, uint16_t Segments)
+FX_STATUS WS2812BFX_Init(const ws2812b_drv_t *drv, uint16_t Segments)
 {
   if(NULL == drv)
   {

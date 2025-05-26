@@ -1,8 +1,7 @@
 /**
- * @file ws2812b_if_RMT.h
+ * @file ws2812b_if.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief ws2812b interface for esp32-c6 using RMT 
- * 
+ * @brief driver for ws2812b
  * @version 0.1
  * @date 15-04-2025
  * 
@@ -20,24 +19,27 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef WS2812B_IF_RMT_H_
-#define WS2812B_IF_RMT_H_
+#ifndef WS2812B_IF_H_
+#define WS2812B_IF_H_
 
-#include "ws2812b_drv.h"
+#include "stdint.h"
 
-#define WS2812B_IF_LEDS             5
+typedef struct
+{
+	uint8_t green, red, blue;
+} ws2812b_color;
 
-#define RMT_LED_STRIP_GPIO_NUM      8
-#define RMT_LED_STRIP_RESOLUTION_HZ (10 * 1000 * 1000) // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
+typedef struct 
+{   
+    void (*Refresh)(void);
+    uint8_t  (*sine8)(uint8_t x);
+    uint8_t* (*GetPixels)(void);
+    uint32_t (*GetColor)(int16_t DiodeID);
+    uint16_t (*GetNumberOfLeds)(void);
 
-#define RMT_TIME_03_US              (0.3 * RMT_LED_STRIP_RESOLUTION_HZ / 1000000) // T=0.3us
-#define RMT_TIME_09_US              (0.9 * RMT_LED_STRIP_RESOLUTION_HZ / 1000000) // T=0.9us
+    void (*SetOneDiode)(int16_t DiodeID, uint32_t color);
+    void (*SetOneDiodeRGB)(int16_t DiodeID, uint8_t R, uint8_t G, uint8_t B);
+    void (*SetDiodeColorStruct)(int16_t DiodeID, ws2812b_color colorStruct);
+}ws2812b_drv_t;
 
-
-ws2812b_drv_t *ws2812b_if_getDrvRMT(void);
-
-void ws2812b_if_init(void);
-void ws2812b_if_simpleTest(void); // add to your task with osDelay
-
-
-#endif  /* WS2812B_IF_RMT_H_ */
+#endif  /* WS2812B_IF_H_ */
