@@ -1,9 +1,9 @@
 /**
- * @file main.h
+ * @file web_app.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 08-04-2025
+ * @date 21-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,23 +19,12 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MAIN_H_
-#define MAIN_H_
+#ifndef WEB_APP_H_
+#define WEB_APP_H_
 
-#include <stdio.h>
-#include "stdint.h"
+#define WEB_APP_BUFFER_SIZE 512
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+void web_app_startWebServer(void);
+char *web_app_getBuffer(void);
 
-#include "sdkconfig.h"
-
-#include "esp_log.h"
-#include "esp_err.h"
-
-#include "utils.h"
-
-#define DEBUG
-
-
-#endif  /* MAIN_H_ */
+#endif  /* SRV_APP_H_ */

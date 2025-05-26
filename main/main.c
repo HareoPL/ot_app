@@ -22,27 +22,41 @@
 
 #include "main.h"
 #include "ws2812b_fx.h"
-#include "ws2812b_if_RMT.h"
+#include "ws2812b_drv_RMT.h"
 #include "xtimers.h"
+#include "spiffs.h"
+#include "wifi.h"
+#include "web_app.h"
 
+static const char *TAG = "main";
 
 void app_main(void)
 {
+    ESP_UNUSED(TAG);
+    
+    // wifi_initSTA();
+    wifi_initAP();
+    web_app_startWebServer();
+    
+  
     xTim_Init();                                // init freeRTOS soft timers
-    xTim_printTaskListEnable();                 // enable freeRTOS task list
+    // xTim_printTaskListEnable();                 // enable freeRTOS task list
 
     ws2812b_if_init();                          // init interface - RMT
     WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);  // init ws leds
     
     WS2812BFX_SetSpeed(0, 100);	                // Speed of segment 0
-    WS2812BFX_SetColorRGB(0, 5,0,0);	        // Set color 0
+    WS2812BFX_SetColorRGB(0, 0, 0, 5);	        // Set color 0
     WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	// Set mode segment 0
     WS2812BFX_Start(0);	                        // Start segment 0
 
+       
+    
     while (1) 
     {
         WS2812BFX_Callback();	                // FX effects calllback
 
+        // UTILS_RTOS_CHECK_FREE_STACK();
         vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog
     }
 }
@@ -50,13 +64,12 @@ void app_main(void)
 /****************************************************
  *  freeRtos hooks
  */
-void vApplicationTickHook(void) // calling from IRQ
-{
+// void vApplicationTickHook(void) // calling from IRQ
+// {
     
-}
+// }
 
 void vApplicationIdleHook(void) // the lowest freeRTOS priority
 {
 
 }
-

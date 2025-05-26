@@ -1,5 +1,5 @@
 /**
- * @file ws2812b_if_RMT.c
+ * @file ws2812b_drv_RMT.c
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief ws2812b interface for esp32-c6 using RMT 
  * @version 0.1
@@ -21,7 +21,7 @@
  */
 
 #include "main.h"
-#include "ws2812b_if_RMT.h"
+#include "ws2812b_drv_RMT.h"
 #include "driver/rmt_tx.h"
 
 // for ws2812b_if_simpleTest()
@@ -51,7 +51,7 @@ static void WS2812B_if_SetOneDiodeRGB(int16_t DiodeID, uint8_t R, uint8_t G, uin
 static void WS2812B_if_SetDiodeColorStruct(int16_t DiodeID, ws2812b_color colorStruct);
 
 
-ws2812b_drv_t ws2812b_if_DrvRMT = {
+const ws2812b_drv_t ws2812b_if_DrvRMT = {
     WS2812B_if_Refresh,
     WS2812B_if_sine8,
     WS2812B_if_GetPixels,
@@ -63,7 +63,7 @@ ws2812b_drv_t ws2812b_if_DrvRMT = {
     WS2812B_if_SetDiodeColorStruct
 };
 
-ws2812b_drv_t *ws2812b_if_getDrvRMT(void)
+const ws2812b_drv_t *ws2812b_if_getDrvRMT(void)
 {
     return &ws2812b_if_DrvRMT;
 }
@@ -169,6 +169,7 @@ void ws2812b_if_init(void)
     {
         .bit0 = {.duration0 = RMT_TIME_03_US, .level0 = 1, .duration1 = RMT_TIME_09_US, .level1 = 0}, // 0.3µs HIGH + 0.9µs LOW
         .bit1 = {.duration0 = RMT_TIME_09_US, .level0 = 1, .duration1 = RMT_TIME_03_US, .level1 = 0}, // 0.9µs HIGH + 0.3µs LOW
+        .flags.msb_first = 1,
     };
     ESP_ERROR_CHECK(rmt_new_bytes_encoder(&bytes_encoder_cfg, &encoder));
 

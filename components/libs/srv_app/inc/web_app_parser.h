@@ -1,10 +1,9 @@
 /**
- * @file ws2812b_if_RMT.h
+ * @file web_app_parser.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief ws2812b interface for esp32-c6 using RMT 
- * 
+ * @brief 
  * @version 0.1
- * @date 15-04-2025
+ * @date 25-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -20,24 +19,41 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef WS2812B_IF_RMT_H_
-#define WS2812B_IF_RMT_H_
+#ifndef WEB_APP_PARSER_H_
+#define WEB_APP_PARSER_H_
 
-#include "ws2812b_drv.h"
+#include "cJSON.h"
 
-#define WS2812B_IF_LEDS             5
+#define WBPARSER_DEFAULT_CONFIG() \
+{ \
+    .taskStackSize     = (1024 * 3), \
+    .taskPriority      = tskIDLE_PRIORITY+1,\
+}
+typedef enum
+{
+    WBP_OK = 0,
+    WBP_ERROR,
+    WBP_ERROR_CALLOC,
 
-#define RMT_LED_STRIP_GPIO_NUM      8
-#define RMT_LED_STRIP_RESOLUTION_HZ (10 * 1000 * 1000) // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
+}wbp_state_t;
 
-#define RMT_TIME_03_US              (0.3 * RMT_LED_STRIP_RESOLUTION_HZ / 1000000) // T=0.3us
-#define RMT_TIME_09_US              (0.9 * RMT_LED_STRIP_RESOLUTION_HZ / 1000000) // T=0.9us
+typedef struct
+{
+    cJSON *root;
+    cJSON *obj;
+    
+    TaskHandle_t taskHandle;
+    SemaphoreHandle_t semaphoreHandle;
+}wbp_parser_t;
 
+typedef struct 
+{
+    uint32_t taskStackSize;
+    uint32_t taskPriority;
+    char *buffer;
+}wbp_parserConfig_t;
 
-ws2812b_drv_t *ws2812b_if_getDrvRMT(void);
+void wbp_parseData(void);
+wbp_state_t wbp_initParser(const wbp_parserConfig_t *config);
 
-void ws2812b_if_init(void);
-void ws2812b_if_simpleTest(void); // add to your task with osDelay
-
-
-#endif  /* WS2812B_IF_RMT_H_ */
+#endif  /* WEB_APP_PARSER_H_ */

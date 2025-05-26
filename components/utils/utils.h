@@ -1,9 +1,9 @@
 /**
- * @file main.h
+ * @file utils.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 08-04-2025
+ * @date 28-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,23 +19,30 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MAIN_H_
-#define MAIN_H_
+#ifndef UTILS_H_
+#define UTILS_H_
 
-#include <stdio.h>
-#include "stdint.h"
+#include "main.h"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-
-#include "sdkconfig.h"
-
-#include "esp_log.h"
-#include "esp_err.h"
-
-#include "utils.h"
-
-#define DEBUG
+#define UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS
+// #define UNIT_TEST
 
 
-#endif  /* MAIN_H_ */
+#ifndef UNIT_TEST
+    #define PRIVATE static
+#else
+    #define PRIVATE
+#endif
+
+#ifdef UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS  
+    #define UTILS_RTOS_CHECK_FREE_STACK() \
+        do{ \
+            const char *task_name = pcTaskGetName(NULL); \
+            UBaseType_t stack_free = uxTaskGetStackHighWaterMark(NULL); \
+            ESP_LOGI(TAG, "task %s free stack: %d ", task_name, stack_free); \
+        }while(0)
+#else
+    #define UTILS_RTOS_CHECK_FREE_STACK() do{}while(0)
+#endif 
+
+#endif  /* UTILS_H_ */

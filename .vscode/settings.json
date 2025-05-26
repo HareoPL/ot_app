@@ -1,19 +1,80 @@
 {
-  "C_Cpp.intelliSenseEngine": "default",
-  "idf.espIdfPathWin": "c:\\.Programy\\esp-idf\\v5.4.1\\esp-idf",
-  "idf.toolsPathWin": "c:\\.Programy\\esp-idf\\IDF_TOOLS",
-  "idf.pythonInstallPath": "c:\\.Programy\\esp-idf\\IDF_TOOLS\\tools\\idf-python\\3.11.2\\python.exe",
-  "idf.customExtraVars": {
-      "IDF_TARGET": "esp32c6"
-  },
-  "idf.openOcdConfigs": [
-      "board/esp32c6-builtin.cfg"
-  ],
-  "idf.flashType": "JTAG",
-  "files.associations": {
-    "*.h": "c",
-    "*.c": "c",
-    "atomic": "c"
-},
-"idf.portWin": "COM6"
-}
+    "C_Cpp.intelliSenseEngine": "default",
+    "idf.espIdfPathWin": "c:\\.Programy\\esp-idf\\v5.4.1\\esp-idf",
+    "idf.toolsPathWin": "c:\\.Programy\\esp-idf\\IDF_TOOLS",
+    "idf.pythonInstallPath": "c:\\.Programy\\esp-idf\\IDF_TOOLS\\tools\\idf-python\\3.11.2\\python.exe",
+    "idf.customExtraVars": {
+        "IDF_TARGET": "esp32c6"
+    },
+    "idf.openOcdConfigs": [
+        "board/esp32c6-builtin.cfg"
+    ],
+    "idf.flashType": "JTAG",
+    "files.associations": {
+        "*.h": "c",
+        "*.c": "c",
+        "atomic": "c",
+        "array": "c",
+        "charconv": "c",
+        "compare": "c",
+        "complex": "c",
+        "functional": "c",
+        "ratio": "c",
+        "tuple": "c",
+        "type_traits": "c",
+        "utility": "c",
+        "variant": "c",
+        "cstdlib": "c"
+    },
+    "idf.portWin": "COM7",
+
+    // variables for tasks.json
+    "idfTask": {
+        "cfgCMD": {
+            "path": "C:\\.Programy\\esp-idf\\Espressif\\Initialize-Idf.ps1",
+            "IdfId": "esp-idf-5c2e5f70ffde7afd02a9fa37f5d92703"
+        },
+        "build" : {
+            "spiffs" : {
+                "binSize" : "0x200000",
+                "outPath" : "components/spiffs_data build/spiffs/storage_spiffs.bin",
+                // "path" : "components\\spiffs_data build\\spiffs\\storage_spiffs.bin",
+                "pageSize" : "256",
+                "blockSize" : "4096",
+                "objNameLen" : "32",
+                "metaLen" : "4",
+            },            
+        },
+        "flash": {
+            "jtagPort": "COM3",
+            "baud": "460800",
+            "before": "default_reset",
+            "after": "hard_reset write_flash",
+            "mode": "dio", // qout, qio not supported
+            "freq": "80m",
+            "size": "8MB",
+            "bootloader" : {
+                "adr" : "0x0",
+                "path" : "build/bootloader/bootloader.bin",
+            },
+            "app" : {
+                "adr" : "0x20000",
+                "path" : "build/esp32c6_prj.bin",
+            },
+            "partitionTable" : {
+                "adr" : "0x8000",
+                "path" : "build/partition_table/partition-table.bin",
+            },
+            "otaDataInit" : {
+                "adr" : "0xf000",
+                "path" : "build/ota_data_initial.bin",
+            },
+            "spiffs" : {
+                "adr" : "0x600000",
+                "path" : "build/spiffs/storage_spiffs.bin",
+            },
+        },
+    },
+    "liveServer.settings.multiRootWorkspaceName": "esp32-c6",
+
+} // end of settings.json
