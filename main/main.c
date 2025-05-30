@@ -27,16 +27,20 @@
 #include "spiffs.h"
 #include "wifi.h"
 #include "web_app.h"
+#include "esp_ot_cli.h"
 
 static const char *TAG = "main";
 
+
 void app_main(void)
 {
+
+    esp_ot_cli_init();
     ESP_UNUSED(TAG);
     
     // wifi_initSTA();
-    wifi_initAP();
-    web_app_startWebServer();
+    // wifi_initAP();
+    // web_app_startWebServer();
     
   
     xTim_Init();                                // init freeRTOS soft timers

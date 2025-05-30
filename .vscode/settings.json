@@ -26,7 +26,7 @@
         "variant": "c",
         "cstdlib": "c"
     },
-    "idf.portWin": "COM7",
+    "idf.portWin": "COM9",
 
     // variables for tasks.json
     "idfTask": {
@@ -43,7 +43,7 @@
                 "blockSize" : "4096",
                 "objNameLen" : "32",
                 "metaLen" : "4",
-            },            
+            },
         },
         "flash": {
             "jtagPort": "COM3",
