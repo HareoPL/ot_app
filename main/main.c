@@ -34,8 +34,17 @@ static const char *TAG = "main";
 
 void app_main(void)
 {
+    ESP_ERROR_CHECK(nvs_flash_init());
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
 
-    esp_ot_cli_init();
+    init_openthread_and_udp();
+
+    // Uruchomienie głównej pętli OpenThread (blokująca)
+    esp_openthread_launch_mainloop();
+
+
+    // esp_ot_cli_init();
     ESP_UNUSED(TAG);
     
     // wifi_initSTA();
