@@ -31,6 +31,7 @@ static char xTim_printBufferTaskList[512];
 void xTim_printTaskList(TimerHandle_t xTimer); 
 void xTim_sysTickMS(TimerHandle_t xTimer); 
 
+static uint32_t currentTick = 0;
 
 void xTim_Init(void)
 {
@@ -41,9 +42,14 @@ void xTim_Init(void)
     xTimerStart(xTim_sysTick, 0);
 }
 
+uint32_t xTim_getTick()
+{
+    return currentTick;
+}
 
 void xTim_sysTickMS(TimerHandle_t xTimer)
 {
+    currentTick ++;
     WS2812BFX_SysTickCallback();
 }
 
