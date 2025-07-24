@@ -1,3 +1,31 @@
+# menu "OpenThread device type"
+
+
+# choice OPENTHREAD_DEVICE_TYPE
+#     prompt "Choose device type"
+#     default DT_CONTROLLER_OR_SENSOR
+
+# config DT_BORDER_ROUTER
+#     bool "Border Router"
+
+# config DT_CONTROLLER_OR_SENSOR
+#     bool "Controller/Sensor"
+
+# config DT_CONTRO_PANEL
+#     bool "Control Panel"
+
+# endchoice
+
+# config DEVICE_TYPE_ID
+#     string
+#     default "BR" if DT_BORDER_ROUTER
+#     default "CS" if DT_CONTROLLER_OR_SENSOR
+#     default "CP" if DT_CONTRO_PANEL
+
+
+
+# endmenu
+
 menu "Example Configuration"
 
     orsource "$IDF_PATH/examples/common_components/env_caps/$IDF_TARGET/Kconfig.env_caps"

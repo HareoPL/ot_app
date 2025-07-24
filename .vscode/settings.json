@@ -24,16 +24,20 @@
         "type_traits": "c",
         "utility": "c",
         "variant": "c",
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "bitset": "c"
     },
-    "idf.portWin": "COM9",
+    "idf.portWin": "COM4",
 
     // variables for tasks.json
     "idfTask": {
+        "OTDEVICE": "-DOTDEVICE=BR",
+        // "OTDEVICE": "-DOTDEVICE=CS",
+        // "OTDEVICE": "-DOTDEVICE=CP",
         "cfgCMD": {
             "path": "C:\\.Programy\\esp-idf\\Espressif\\Initialize-Idf.ps1",
             "IdfId": "esp-idf-5c2e5f70ffde7afd02a9fa37f5d92703"
-        },
+        },        
         "build" : {
             "spiffs" : {
                 "binSize" : "0x200000",
