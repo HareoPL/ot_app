@@ -39,7 +39,17 @@ static otCoapResource otapp_coap_resource[] = {
 };
 #define OTAPP_COAP_RESOURCE_SIZE (sizeof(otapp_coap_resource) / sizeof(otapp_coap_resource[0]))
 
+typedef struct {
+    otapp_coap_messageId_t msgID;
+    char *message;
+}otapp_coap_message_t;
 
+static const otapp_coap_message_t otapp_coap_messages[] = {
+    {OTAPP_MESSAGE_OK, "OK"},
+    {OTAPP_MESSAGE_ERROR, "ERROR"},
+    {OTAPP_MESSAGE_TEST, "Hello coap !!"},
+};
+#define OTAPP_COAP_MESSAGE_SIZE (sizeof(otapp_coap_messages) / sizeof(otapp_coap_messages[0]))
 
 //////////////////////////////
 // do not edit below
@@ -48,6 +58,18 @@ static otCoapResource otapp_coap_resource[] = {
 static otMessageInfo mMessage;
 static char charBuf[OTAPP_CHAR_BUFFER];
 
+const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID)
+{
+    for (uint16_t i = 0; i < OTAPP_COAP_MESSAGE_SIZE; i++)
+    {
+        if(otapp_coap_messages[i].msgID == msgID)
+        {
+            return otapp_coap_messages[i].message;
+        }
+    }
+    
+    return NULL;
+} 
 
 void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
 {

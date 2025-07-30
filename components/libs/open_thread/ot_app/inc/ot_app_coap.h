@@ -28,11 +28,17 @@
 #define OTAPP_COAP_PORT 5683 ///< Default CoAP port, as specified in RFC 7252
 #define OTAPP_CHAR_BUFFER 1024
 
-
+typedef enum {
+    OTAPP_MESSAGE_OK = 0,
+    OTAPP_MESSAGE_ERROR,
+    OTAPP_MESSAGE_TEST,
+}otapp_coap_messageId_t;
 
 void otapp_coap_init(void);
 void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const char *responceContent);
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo);
+const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID);
+
 void otapp_coapSendtoTestPut();
 void otapp_coapSendtoTestGet();
 
