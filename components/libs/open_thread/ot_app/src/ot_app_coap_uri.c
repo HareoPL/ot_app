@@ -1,5 +1,5 @@
 /**
- * @file ot_app_coap_uri_test.c
+ * @file ot_app_coap_uri.c
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
@@ -21,13 +21,7 @@
  */
 
 #include "main.h"
-#include "ot_app_coap_uri_test.h"
-
-
-// static char *otapp_coap_urls[] ={"test","test2"};
-
-static const char *resourceContentTEST = "Hello from coap_uri_handleTest";
-static const char *resourceContentTEST2 = "Hello from coap_uri_handleTest2";
+#include "ot_app_coap_uri.h"
 
 void otapp_coap_uri_testHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {
@@ -35,16 +29,24 @@ void otapp_coap_uri_testHandle(void *aContext, otMessage *request, const otMessa
 
     if (request)
     {
-        otapp_coap_sendResponse(request, aMessageInfo, resourceContentTEST);
+
+        otapp_coap_sendResponse(request, aMessageInfo, otapp_coap_getMessage(OTAPP_MESSAGE_TEST));
     }
 }
 
-void otapp_coap_uri_test2Handle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
+static char charBuffer[1024];
+
+void otapp_coap_uri_ledControlHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {
     otapp_coap_printSenderIP(aMessageInfo);
 
     if (request)
     {
-        otapp_coap_sendResponse(request, aMessageInfo, resourceContentTEST2);
+        uint16_t len = otMessageGetLength(request) - otMessageGetOffset(request);
+
+        uint16_t lenOfReadedBytes = otMessageRead(request, otMessageGetOffset(request), charBuffer, len);
+
+        printf("Sender data: %s bytes: %d\n ", charBuffer, lenOfReadedBytes);
+        otapp_coap_sendResponse(request, aMessageInfo, NULL);
     }
 }

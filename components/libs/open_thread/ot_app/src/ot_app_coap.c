@@ -29,22 +29,23 @@
 ////////////////////////
 // add uri here:
 #include "ot_app_coap_uri_well-known-core.h"
-#include "ot_app_coap_uri_test.h"
+#include "ot_app_coap_uri.h"
 
 static otCoapResource otapp_coap_resource[] = {
     {".well-known/core", otapp_coap_uri_well_knownCoreHandle, NULL, NULL},
-    {"test", otapp_coap_uri_testHandle, NULL, NULL}
+    {"test", otapp_coap_uri_testHandle, NULL, NULL},
+    {"device/led", otapp_coap_uri_ledControlHandle, NULL, NULL}
 
 };
-#define OTAPP_COAP_RESOURCE_SIZE (sizeof(otapp_coap_resource)/sizeof(otapp_coap_resource[0]))
+#define OTAPP_COAP_RESOURCE_SIZE (sizeof(otapp_coap_resource) / sizeof(otapp_coap_resource[0]))
 
 
 
 //////////////////////////////
 // do not edit below
-static otMessageInfo mMessage;
-// static otCoapResource newResource;
+//
 
+static otMessageInfo mMessage;
 static char charBuf[OTAPP_CHAR_BUFFER];
 
 

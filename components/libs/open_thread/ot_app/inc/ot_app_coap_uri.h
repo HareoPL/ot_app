@@ -24,6 +24,6 @@
 #include "ot_app_coap.h"
 
 void otapp_coap_uri_testHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo);
-void otapp_coap_uri_test2Handle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo);
+void otapp_coap_uri_ledControlHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo);
 
 #endif  /* OT_APP_COAP_URI_TEST_H_ */
