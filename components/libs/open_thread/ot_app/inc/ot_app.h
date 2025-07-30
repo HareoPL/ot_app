@@ -27,7 +27,7 @@
 
 #include "openthread/dataset.h"
 #include "esp_openthread.h"
-
+#include "ot_app_coap.h"
 
 
 static const uint8_t otapp_dataset_tlv[] = {
@@ -43,7 +43,7 @@ static const uint8_t otapp_dataset_tlv[] = {
 
 void otapp_init(void);
 void otapp_network_init();
-void otapp_coapSendtoTest();
+
 otInstance *otapp_getOpenThreadInstancePtr(void);
 
 const otIp6Address *otapp_getMulticastAddr(void);

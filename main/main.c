@@ -27,25 +27,38 @@
 #include "spiffs.h"
 #include "wifi.h"
 #include "web_app.h"
-#include "esp_ot_cli.h"
+#include "ot_app.h"
+#include "OneButton.h"
 
 static const char *TAG = "main";
 
+#define BUTTON_GPIO GPIO_NUM_4
+OneButton_t btn_coapSendGetTest;
+
+// only for test coap get and put sent
+void otapp_gpioInit()
+{ 
+    
+    gpio_reset_pin(BUTTON_GPIO); // reset to default state
+    gpio_set_direction(BUTTON_GPIO, GPIO_MODE_INPUT); //set gpio as input
+
+    // set pull-up
+    gpio_pullup_en(BUTTON_GPIO);
+
+    OneButtonInit(&btn_coapSendGetTest, GPIO_NUM_4);
+    OneButtonCallbackOneClick(&btn_coapSendGetTest, otapp_coapSendtoTestGet);
+    OneButtonCallbackDoubleClick(&btn_coapSendGetTest, otapp_coapSendtoTestPut);
+    // OneButtonCallbackLongPressStart(&BlueKey,ToggleLed); // the function will repeat itself until you release the button
+    // OneButtonCallbackLongPressStop(&BlueKey,TurnOffLed);
+
+}
 
 void app_main(void)
 {
-    ESP_ERROR_CHECK(nvs_flash_init());
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-
-    init_openthread_and_udp();
-
-    // Uruchomienie głównej pętli OpenThread (blokująca)
-    esp_openthread_launch_mainloop();
-
-
-    // esp_ot_cli_init();
     ESP_UNUSED(TAG);
+
+    otapp_init();
+    otapp_gpioInit(); // only for test coap get sent
     
     // wifi_initSTA();
     // wifi_initAP();
@@ -68,6 +81,7 @@ void app_main(void)
     while (1) 
     {
         WS2812BFX_Callback();	                // FX effects calllback
+        OneButtonTask(&btn_coapSendGetTest);
 
         // UTILS_RTOS_CHECK_FREE_STACK();
         vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog

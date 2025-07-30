@@ -33,5 +33,7 @@
 void otapp_coap_init(void);
 void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const char *responceContent);
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo);
+void otapp_coapSendtoTestPut();
+void otapp_coapSendtoTestGet();
 
 #endif  /* OT_APP_COAP_H_ */
