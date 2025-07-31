@@ -29,6 +29,7 @@
 #include "openthread/udp.h"
 #include "openthread/dataset.h"
 #include "ot_app_coap.h"
+#include "ot_app_dataset_tlv.h"
 
 static const char *TAG = "ot_app";
 
