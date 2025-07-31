@@ -36,6 +36,8 @@ otInstance *openThreadInstance;
 static otUdpSocket udp_socket;
 otOperationalDatasetTlvs dataset;
 
+static char otapp_charBuf[OTAPP_CHAR_BUFFER];
+
 const otIp6Address ot_app_multicastAddr = {
     .mFields.m8 = {
         0xff, 0x03, 0x00, 0x00,
@@ -55,6 +57,11 @@ otInstance *otapp_getOpenThreadInstancePtr()
     return openThreadInstance;
 }
 
+char *otapp_getCharBuf()
+{
+    return otapp_charBuf;
+}
+
 void otapp_cli_init(void)
 {
     esp_ot_cli_init();
@@ -72,9 +79,8 @@ void otapp_setDataset_tlv(void)
 //
 void otapp_receive_callback(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo) 
 {
-    uint8_t buf[128];
-    int len = otMessageRead(aMessage, 0, buf, sizeof(buf));
-    ESP_LOGI(TAG, "Received UDP packet: %.*s", len, buf);
+    int len = otMessageRead(aMessage, 0, otapp_charBuf, OTAPP_CHAR_BUFFER);
+    ESP_LOGI(TAG, "Received UDP packet: %.*s", len, otapp_charBuf);
 }
 
 void otapp_udpStart(void) 

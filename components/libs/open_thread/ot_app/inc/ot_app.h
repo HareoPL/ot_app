@@ -23,6 +23,7 @@
 #define THREAD_UDP_H_
 
 #define OTAPP_UDP_PORT 12345
+#define OTAPP_CHAR_BUFFER 1024
 
 
 #include "openthread/dataset.h"

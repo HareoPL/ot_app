@@ -56,7 +56,7 @@ static const otapp_coap_message_t otapp_coap_messages[] = {
 //
 
 static otMessageInfo mMessage;
-static char charBuf[OTAPP_CHAR_BUFFER];
+static char *otapp_coap_charBuf;
 
 const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID)
 {
@@ -102,8 +102,8 @@ void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo)
         uint16_t sender_port = aMessageInfo->mPeerPort;
 
         // print it on uart
-        otIp6AddressToString(sender_addr, charBuf, OTAPP_CHAR_BUFFER); // OT_IP6_ADDRESS_STRING_SIZE
-        printf("Sender address: %s, port: %u\n", charBuf, sender_port);
+        otIp6AddressToString(sender_addr, otapp_coap_charBuf, OTAPP_CHAR_BUFFER); // OT_IP6_ADDRESS_STRING_SIZE
+        printf("Sender address: %s, port: %u\n", otapp_coap_charBuf, sender_port);
     }
 }
 
@@ -276,6 +276,7 @@ void otapp_coap_initCoapResource()
 void otapp_coap_init()
 {
     otError error;
+    otapp_coap_charBuf = otapp_getCharBuf();
 
     error = otCoapStart(otapp_getOpenThreadInstancePtr(), OT_DEFAULT_COAP_PORT);
     if (error != OT_ERROR_NONE)

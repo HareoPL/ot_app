@@ -26,7 +26,7 @@
 #include <openthread/message.h>
 
 #define OTAPP_COAP_PORT 5683 ///< Default CoAP port, as specified in RFC 7252
-#define OTAPP_CHAR_BUFFER 1024
+
 
 typedef enum {
     OTAPP_MESSAGE_OK = 0,
