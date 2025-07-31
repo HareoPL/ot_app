@@ -80,7 +80,8 @@ void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMes
 {
     if (aResult == OT_ERROR_NONE && aMessage)
     {
-        // Obsłuż odpowiedź (przeczytaj payload, kod odpowiedzi itd.)
+        // Obsłuż odpowiedź (przeczytaj payload, kod odpowiedzi itd.) 
+       
     }
 }
 
@@ -112,16 +113,8 @@ void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMe
     otMessage *responseMessage = NULL;
     otCoapCode responseCode = OT_COAP_CODE_EMPTY;
    
-    //  uint16_t len = otMessageGetLength(requestMessage) - otMessageGetOffset(requestMessage);
-    // uint8_t buffer[128]; 
-    // otMessageRead(requestMessage, otMessageGetOffset(requestMessage), buffer, len);
-    // // Przetwarzaj dane z buffer
-
-
     otCoapCode requestCode = otCoapMessageGetCode(requestMessage);
-    // otCoapType messageType = otCoapMessageGetType(requestMessage);
 
-    // Only GET support with confirmable
     if (requestCode == OT_COAP_CODE_GET)
     {
         responseCode = OT_COAP_CODE_CONTENT;
@@ -135,37 +128,48 @@ void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMe
 
         // Create ACK for GET query
         error = otCoapMessageInitResponse(responseMessage, requestMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode);
-        if (error != OT_ERROR_NONE)
-        {
-            goto exit;
-        }
+        if (error != OT_ERROR_NONE) { goto exit; }
 
         // // Add marker payload's and payload
         error = otCoapMessageSetPayloadMarker(responseMessage);
-        if (error != OT_ERROR_NONE)
+        if (error != OT_ERROR_NONE) { goto exit; }
+
+        if (NULL == responceContent) { goto exit; }
+        error = otMessageAppend(responseMessage, (const uint8_t *)responceContent, (uint16_t)strlen(responceContent));
+        if (error != OT_ERROR_NONE) { goto exit; }
+ 
+    }
+    else if(requestCode == OT_COAP_CODE_PUT)
+    {
+        responseCode = OT_COAP_CODE_CHANGED;
+
+        responseMessage = otCoapNewMessage(otapp_getOpenThreadInstancePtr(), NULL);
+        if (responseMessage == NULL)
         {
+            error = OT_ERROR_NO_BUFS;
             goto exit;
         }
 
-        error = otMessageAppend(responseMessage, responceContent, (uint16_t)strlen(responceContent));
-        if (error != OT_ERROR_NONE)
-        {
-            goto exit;
-        }
-
-        // send response with default parameters
-        error = otCoapSendResponseWithParameters(otapp_getOpenThreadInstancePtr(), responseMessage, aMessageInfo, NULL);
-        if (error != OT_ERROR_NONE)
-        {
-            goto exit;
-        }
-
-        printf("CoAP response sent.\n");       
+        // Create ACK for GET query
+        error = otCoapMessageInitResponse(responseMessage, requestMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, responseCode);
+        if (error != OT_ERROR_NONE)  { goto exit; }
+    
     }
     else
     {
         printf("CoAP method not supported: %d\n", requestCode);
         error = OT_ERROR_NOT_IMPLEMENTED;
+        return;
+    }
+
+    // send response with default parameters
+    error = otCoapSendResponseWithParameters(otapp_getOpenThreadInstancePtr(), responseMessage, aMessageInfo, NULL);
+    if (error != OT_ERROR_NONE)
+    {
+        goto exit;
+    }else
+    {
+        printf("CoAP response sent.\n");  
     }
 
 exit:
@@ -179,34 +183,60 @@ exit:
     }
 }
 
-void otapp_coap_client_send_get(const otIp6Address *peer_addr, const char *aUriPath)
+void otapp_coap_client_send(const otIp6Address *peer_addr, const char *aUriPath, otCoapCode code, const char *payloadMsg)
 {
     otError error;
     otMessage *message = NULL;
 
     mMessage.mPeerAddr = *peer_addr;
     mMessage.mPeerPort = OT_DEFAULT_COAP_PORT;
-    mMessage.mHopLimit = 0; // standard limitl
+    mMessage.mHopLimit = 0; // standard limit
     mMessage.mIsHostInterface = false; // package comes out of openthread interface
+
+    if(NULL == peer_addr || NULL == aUriPath)
+    {
+        return;
+    }
 
     // create new message CoAP
     message = otCoapNewMessage(otapp_getOpenThreadInstancePtr(), NULL);
-    if (!message)
-        return;
+    if (message == NULL)
+    {
+        error = OT_ERROR_NO_BUFS;
+        goto exit;
+    }
 
     // message initialize as Confirmable GET
-    otCoapMessageInit(message, OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_GET);
+    otCoapMessageInit(message, OT_COAP_TYPE_CONFIRMABLE, code);
 
     // add URI
-    otCoapMessageAppendUriPathOptions(message, aUriPath);
+    error = otCoapMessageAppendUriPathOptions(message, aUriPath);
+    if(error != OT_ERROR_NONE) { goto exit; }
+
+    if(code == OT_COAP_CODE_PUT)
+    {
+        if(NULL == payloadMsg) { goto exit; }
+
+        error = otCoapMessageSetPayloadMarker(message);
+        if (error != OT_ERROR_NONE) { goto exit; }
+
+        error = otMessageAppend(message, (const uint8_t *)payloadMsg, strlen(payloadMsg));
+        if (error != OT_ERROR_NONE) { goto exit; }
+    }
 
     // send request. otapp_coap_responseHandler 
     error = otCoapSendRequest(otapp_getOpenThreadInstancePtr(), message, &mMessage, otapp_coap_responseHandler, NULL);
-    if ((error != OT_ERROR_NONE) && (message != NULL)) //free only when is error. when succes CoAP stack do free message
-    {
-        otMessageFree(message);
-    }
+    if (error != OT_ERROR_NONE) { goto exit; }
 
+exit:
+    if (error != OT_ERROR_NONE)
+    {
+        printf("CoAP send() error: %d (%s)\n", error, otThreadErrorToString(error));
+        if (message != NULL)
+        {
+            otMessageFree(message);
+        }
+    }   
 }
 
 void otapp_coap_clientSendPut(const otIp6Address *peer_addr, const char *aUriPath, const char *payloadMsg)
@@ -241,7 +271,6 @@ void otapp_coap_initCoapResource()
     {
         otCoapAddResource(otapp_getOpenThreadInstancePtr(), &otapp_coap_resource[i]);
     }
-
 }
 
 void otapp_coap_init()
