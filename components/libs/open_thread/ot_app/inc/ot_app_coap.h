@@ -34,9 +34,21 @@ typedef enum {
     OTAPP_MESSAGE_TEST,
 }otapp_coap_messageId_t;
 
+//  it must be put in order like otapp_coap_resource[] table
+typedef enum {
+    OTAPP_URI_WELL_KNOWN_CORE = 0,
+    OTAPP_URI_TEST,
+    OTAPP_URI_DEVICE_TEST,
+}otapp_coap_uriTableIndex_t;
+
+
 void otapp_coap_init(void);
 void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const char *responceContent);
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo);
+
+void otapp_coap_clientSendPut(const otIp6Address *peer_addr, const char *aUriPath, const char *payloadMsg);
+void otapp_coap_clientSendGet(const otIp6Address *peer_addr, const char *aUriPath);
+
 const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID);
 
 void otapp_coapSendtoTestPut();

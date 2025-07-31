@@ -71,6 +71,11 @@ const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID)
     return NULL;
 } 
 
+const char *otapp_coap_getUriName(otapp_coap_uriTableIndex_t uriIndex)
+{
+    return otapp_coap_resource[uriIndex].mUriPath;
+} 
+
 void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
 {
     if (aResult == OT_ERROR_NONE && aMessage)
@@ -204,12 +209,31 @@ void otapp_coap_client_send_get(const otIp6Address *peer_addr, const char *aUriP
 
 }
 
-char *charTest = {"test"};
-void otapp_coapSendtoTest()
+void otapp_coap_clientSendPut(const otIp6Address *peer_addr, const char *aUriPath, const char *payloadMsg)
 {
-    otapp_coap_client_send_get(otapp_getMulticastAddr(), charTest);
+   otapp_coap_client_send(peer_addr, aUriPath, OT_COAP_CODE_PUT, payloadMsg);
 }
 
+void otapp_coap_clientSendGet(const otIp6Address *peer_addr, const char *aUriPath)
+{
+   otapp_coap_client_send(peer_addr, aUriPath, OT_COAP_CODE_GET, NULL);
+}
+
+// char *charTest = {"test"};
+
+void otapp_coapSendtoTestGet()
+{
+    printf("CoAP sent get to uri: test\n");
+    otapp_coap_clientSendGet(otapp_getMulticastAddr(), otapp_coap_getUriName(OTAPP_URI_TEST));
+}
+
+// char *charLed = {"device/led"};
+char *charLedPayload = {"LED_ON"};
+void otapp_coapSendtoTestPut()
+{
+    printf("CoAP sent put to uri: device/led \n");
+    otapp_coap_clientSendPut(otapp_getMulticastAddr(), otapp_coap_getUriName(OTAPP_URI_DEVICE_TEST), charLedPayload);
+}
 
 void otapp_coap_initCoapResource()
 {
