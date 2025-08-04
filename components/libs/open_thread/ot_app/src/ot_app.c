@@ -28,12 +28,18 @@
 #include "esp_openthread.h"
 #include "openthread/udp.h"
 #include "openthread/dataset.h"
+#include "openthread/srp_client.h"
 #include "ot_app_coap.h"
 #include "ot_app_dataset_tlv.h"
 
 static const char *TAG = "ot_app";
+static const char *otapp_hostName = "device1";
+static const char *otapp_serviceName = "_coap._udp";
+static otSrpClientService otapp_otSrpClientService;
 
 otInstance *openThreadInstance;
+const static otIp6Address *otapp_Ip6Address;
+
 static otUdpSocket udp_socket;
 otOperationalDatasetTlvs dataset;
 
@@ -106,16 +112,115 @@ void otapp_udpStart(void)
     ESP_LOGI(TAG, "UDP socket initialized and bound to port %d",OTAPP_UDP_PORT);
 }
 
+static void otapp_printIp6Address(const otIp6Address *aAddress)
+{
+    if (aAddress != NULL)
+    {
+        otIp6AddressToString(aAddress, otapp_charBuf, OTAPP_CHAR_BUFFER); 
+        printf("%s\n", otapp_charBuf);
+    }
+}
+                                 
+static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context) 
+{
+    if (flags & OT_CHANGED_THREAD_RLOC_ADDED) 
+    {
+        // otapp_netifAddress = otIp6GetUnicastAddresses(otapp_getOpenThreadInstancePtr());
+        
+        otapp_Ip6Address = otThreadGetMeshLocalEid(otapp_getOpenThreadInstancePtr());
 
+        printf(">>>>>>> device address has been updated: ");
+        otapp_printIp6Address(otapp_Ip6Address);
+    }
+    if (flags & OT_CHANGED_THREAD_RLOC_REMOVED) 
+    {
+        printf(">>>>>>> device address has been deleted");
+    }
+}
+
+static void otapp_srpClientSetHostName(otInstance *instance, const char *hostName)
+{
+    otError error;
+
+    error = otSrpClientSetHostName(instance, hostName);
+    if (error != OT_ERROR_NONE)
+    {
+        printf("Error: hostname SRP NOT set: %d\n", error);
+        return;
+    }
+}
+
+static void otapp_srpClientEnableAutoHostAddress(otInstance *instance)
+{
+    otError error;
+    error = otSrpClientEnableAutoHostAddress(instance);
+    if (error != OT_ERROR_NONE)
+    {
+        printf("Błąd ustawienia adresów IPv6 hosta SRP: %d\n", error);
+        return;
+    }
+}
+
+static void otapp_srpClientAddService(otInstance *instance)
+{
+    otError error;
+
+    otapp_otSrpClientService.mName = otapp_serviceName;               
+    otapp_otSrpClientService.mInstanceName = otapp_hostName;    
+    otapp_otSrpClientService.mSubTypeLabels = NULL;              
+    otapp_otSrpClientService.mTxtEntries = NULL;                 
+    otapp_otSrpClientService.mPort = OTAPP_COAP_PORT;               
+    otapp_otSrpClientService.mPriority = 0;                      
+    otapp_otSrpClientService.mWeight = 0;                       
+    otapp_otSrpClientService.mNumTxtEntries = 0;                
+    otapp_otSrpClientService.mState = OT_SRP_CLIENT_ITEM_STATE_TO_ADD; 
+    otapp_otSrpClientService.mData = 0;                         
+    otapp_otSrpClientService.mNext = NULL;                     
+    otapp_otSrpClientService.mLease = 7200;                   
+    otapp_otSrpClientService.mKeyLease = 86400;                
+    
+    error = otSrpClientAddService(instance, &otapp_otSrpClientService);
+    if (error != OT_ERROR_NONE)
+    {
+        printf("Error: SRP service add: %d\n", error);
+        return;
+    }
+}
+
+static void otapp_srpClientInit(otInstance *instance)
+{
+    otapp_srpClientSetHostName(instance, otapp_hostName);
+    otapp_srpClientEnableAutoHostAddress(instance);
+    otapp_srpClientAddService(instance);
+     
+    if(otSrpClientIsAutoStartModeEnabled(instance))
+    {
+        printf("SRP client has already ran\n");
+        return;
+    }else
+    {
+       otSrpClientEnableAutoStartMode(instance,  /* aCallback */ NULL, /* aContext */ NULL);
+    }
+    
+    printf("SRP client Auto start Enabled \n");
+}
+
+
+//
+// init functions
+//
 void otapp_network_init() // this function will be initialize in ot_task_worker rtos task (esp_ot_cli.c)
 {
     otapp_setDataset_tlv();
     // otapp_udpStart(); 
-    otapp_coap_init();
+    otapp_coap_init();    
+    otapp_srpClientInit(otapp_getOpenThreadInstancePtr());
 }
 
 void otapp_init(void) //app init
 {
     openThreadInstance = esp_openthread_get_instance();
-    otapp_cli_init();
+    otapp_cli_init();    
+    otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
+    
 }
