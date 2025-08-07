@@ -171,6 +171,24 @@ static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context
     }
 }
 
+void otapp_macAddrPrint(const otExtAddress *macAddr)
+{
+    if(macAddr != NULL)
+    {
+        printf("MAC Address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
+               macAddr->m8[0], macAddr->m8[1], macAddr->m8[2], macAddr->m8[3],
+               macAddr->m8[4], macAddr->m8[5], macAddr->m8[6], macAddr->m8[7]);
+    }else
+    {
+        printf("ERROR: MAC Address - null ptr \n");
+    }
+}
+
+const otExtAddress *otapp_macAddrGet(otInstance *instance)
+{
+   return otLinkGetExtendedAddress(instance);
+}
+
 static void otapp_srpClientSetHostName(otInstance *instance, const char *hostName)
 {
     otError error;
@@ -262,6 +280,7 @@ void otapp_network_init() // this function will be initialize in ot_task_worker 
     // otapp_udpStart(); 
     otapp_coap_init();    
     otapp_srpClientInit(otapp_getOpenThreadInstancePtr());
+    otapp_macAddrPrint(otapp_macAddrGet(otapp_getOpenThreadInstancePtr()));
 }
 
 void otapp_init(void) //app init
