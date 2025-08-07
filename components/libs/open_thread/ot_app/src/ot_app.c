@@ -186,9 +186,21 @@ static void otapp_srpClientAddService(otInstance *instance)
         return;
     }
 }
+void otapp_srpClientAutoStartCallback(const otSockAddr *aServerSockAddr, void *aContext)
+{
+    if(NULL != aServerSockAddr)
+    {
+        printf("SRP SERVER detected on IP: ");
+        otapp_printIp6Address(&aServerSockAddr->mAddress);
+    }else
+    {
+         printf("SRP SERVER lost\n");
+    }
+}
 
 static void otapp_srpClientInit(otInstance *instance)
 {
+    otSrpClientStop(instance);
     otapp_srpClientSetHostName(instance, otapp_hostName);
     otapp_srpClientEnableAutoHostAddress(instance);
     otapp_srpClientAddService(instance);
@@ -199,7 +211,7 @@ static void otapp_srpClientInit(otInstance *instance)
         return;
     }else
     {
-       otSrpClientEnableAutoStartMode(instance,  /* aCallback */ NULL, /* aContext */ NULL);
+       otSrpClientEnableAutoStartMode(instance, otapp_srpClientAutoStartCallback, NULL); 
     }
     
     printf("SRP client Auto start Enabled \n");
