@@ -38,6 +38,8 @@ static const char *TAG = "ot_app";
 
 static const char *otapp_hostName = "device1";
 static const char *otapp_serviceName = "_coap._udp";
+static const char *otapp_browseDefaultServiceName = "_coap._udp.default.service.arpa.";
+static otapp_DNS_services_t otapp_DNS_services[OTAPP_DNS_SERVICES_MAX];
 
 otInstance *openThreadInstance;
 const static otIp6Address *otapp_Ip6Address;
@@ -158,8 +160,6 @@ static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context
 {
     if (flags & OT_CHANGED_THREAD_RLOC_ADDED) 
     {
-        // otapp_netifAddress = otIp6GetUnicastAddresses(otapp_getOpenThreadInstancePtr());
-        
         otapp_Ip6Address = otThreadGetMeshLocalEid(otapp_getOpenThreadInstancePtr());
 
         printf(">>>>>>> device address has been updated: ");
@@ -189,6 +189,85 @@ const otExtAddress *otapp_macAddrGet(otInstance *instance)
    return otLinkGetExtendedAddress(instance);
 }
 
+///////////////////////
+// dnsClient functions
+//
+
+void otapp_dnsClientBrowsePrintServiceInfo(otDnsServiceInfo *aServiceInfo)
+{
+    printf(" Port: %d, Priority:%d, Weight:%d, TTL:%lu \n", aServiceInfo->mPort, aServiceInfo->mPriority, aServiceInfo->mWeight, aServiceInfo->mTtl);
+    printf(" Host: %s \n", aServiceInfo->mHostNameBuffer);
+    printf(" HostAddress: ");
+    otapp_printIp6Address(&aServiceInfo->mHostAddress);
+    printf(" TTL:%lu \n", aServiceInfo->mHostAddressTtl);
+    printf(" TXT: ");
+
+    if (!aServiceInfo->mTxtDataTruncated)
+    {
+        printf("mTxtDataTruncated:%d \n", aServiceInfo->mTxtDataTruncated);
+    }
+    else
+    {
+        printf("[");
+        for(uint16_t byte = 0; byte < aServiceInfo->mTxtDataSize; byte++)
+        {
+            printf("%02X", aServiceInfo->mTxtData[byte]);
+        }        
+        printf("...] \n");
+    }
+}
+
+uint8_t txtBuffer[OTAPP_DNS_SRV_TXT_SIZE]; 
+
+void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResponse *aResponse, void *aContext)
+{
+    static otDnsServiceInfo otapp_serviceInfo;
+    otDnsBrowseResponseGetServiceName(aResponse, otapp_DNS_services[0].nameBuffer, OTAPP_DNS_SRV_NAME_SIZE);
+
+    printf("DNS browse response for %s \n", otapp_DNS_services[0].nameBuffer);
+
+    if (aError == OT_ERROR_NONE)
+    {
+        uint16_t index = 0;
+
+        while (otDnsBrowseResponseGetServiceInstance(aResponse, index, otapp_DNS_services[0].labelBuffer, OTAPP_DNS_SRV_LABEL_SIZE) == OT_ERROR_NONE)
+        {
+            printf("label: %s \n", otapp_DNS_services[0].labelBuffer);
+            index++;
+
+            otapp_serviceInfo.mHostNameBuffer     = otapp_DNS_services[0].nameBuffer;
+            otapp_serviceInfo.mHostNameBufferSize = OTAPP_DNS_SRV_NAME_SIZE;
+            otapp_serviceInfo.mTxtData            = txtBuffer;
+            otapp_serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
+
+            if (otDnsBrowseResponseGetServiceInfo(aResponse, otapp_DNS_services[0].labelBuffer, &otapp_serviceInfo) == OT_ERROR_NONE)
+            {
+               otapp_dnsClientBrowsePrintServiceInfo(&otapp_serviceInfo);
+            }
+
+            printf("\n");
+        }
+    }
+    otapp_charBufRelease();
+}
+
+void otapp_dnsClientBrowse(otInstance *instance, const char *serviceName)
+{
+    otError error = OT_ERROR_NONE; 
+    static const otDnsQueryConfig *config;
+    config = otDnsClientGetDefaultConfig(instance);
+
+    error = otDnsClientBrowse(instance, serviceName, otapp_dnsClientBrowseResponseCallback, NULL, config);
+    if (error != OT_ERROR_NONE)
+    {
+        printf("Error: DNS client browse: %d\n", error);
+        return;
+    }
+}
+
+///////////////////////
+// srpClient functions
+//
 static void otapp_srpClientSetHostName(otInstance *instance, const char *hostName)
 {
     otError error;
@@ -238,6 +317,19 @@ static void otapp_srpClientAddService(otInstance *instance)
         return;
     }
 }
+
+void otapp_otSrpClientCallback(otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices, const otSrpClientService *aRemovedServices, void *aContext)
+{
+    if(aError == OT_ERROR_NONE)
+    {
+        if(aHostInfo->mState == OT_SRP_CLIENT_ITEM_STATE_REGISTERED)
+        {
+            printf("CHECK DNS BROWSE: \n");
+            otapp_dnsClientBrowse(otapp_getOpenThreadInstancePtr(), otapp_browseDefaultServiceName);
+        }       
+    }
+}
+
 void otapp_srpClientAutoStartCallback(const otSockAddr *aServerSockAddr, void *aContext)
 {
     if(NULL != aServerSockAddr)
@@ -280,6 +372,7 @@ void otapp_network_init() // this function will be initialize in ot_task_worker 
     // otapp_udpStart(); 
     otapp_coap_init();    
     otapp_srpClientInit(otapp_getOpenThreadInstancePtr());
+    otSrpClientSetCallback(otapp_getOpenThreadInstancePtr(), otapp_otSrpClientCallback, NULL); 
     otapp_macAddrPrint(otapp_macAddrGet(otapp_getOpenThreadInstancePtr()));
 }
 

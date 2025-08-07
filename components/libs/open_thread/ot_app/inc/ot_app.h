@@ -23,12 +23,30 @@
 #define THREAD_UDP_H_
 
 #define OTAPP_UDP_PORT 12345
-#define OTAPP_CHAR_BUFFER 1024
-
+#define OTAPP_CHAR_BUFFER_SIZE 1024 
+#define OTAPP_DNS_SERVICES_MAX 10 // max number of devices to save them from DNS query
 
 #include "openthread/dataset.h"
 #include "esp_openthread.h"
 #include "ot_app_coap.h"
+#include "openthread/dns_client.h"
+
+
+
+#define OTAPP_DNS_SRV_NAME_SIZE     64 // OT_DNS_MAX_NAME_SIZE full service name: "_coap._udp.default.service.arpa." 
+#define OTAPP_DNS_SRV_LABEL_SIZE    32 // OT_DNS_MAX_LABEL_SIZE host name: "device1"
+#define OTAPP_DNS_SRV_TXT_SIZE      512
+
+typedef struct {
+    uint32_t ttl;
+    uint16_t port;
+    uint16_t priority;
+    char labelBuffer[OTAPP_DNS_SRV_LABEL_SIZE];
+    char nameBuffer[OTAPP_DNS_SRV_NAME_SIZE];
+    // uint8_t txtBuffer[OTAPP_DNS_SRV_TXT_SIZE]; 
+    otIp6Address mHostAddress;
+    uint16_t weight;
+}otapp_DNS_services_t;
 
 
 
