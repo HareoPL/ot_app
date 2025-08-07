@@ -35,7 +35,6 @@
 static const char *TAG = "ot_app";
 static const char *otapp_hostName = "device1";
 static const char *otapp_serviceName = "_coap._udp";
-static otSrpClientService otapp_otSrpClientService;
 
 otInstance *openThreadInstance;
 const static otIp6Address *otapp_Ip6Address;
@@ -164,6 +163,7 @@ static void otapp_srpClientEnableAutoHostAddress(otInstance *instance)
 static void otapp_srpClientAddService(otInstance *instance)
 {
     otError error;
+    static otSrpClientService otapp_otSrpClientService;
 
     otapp_otSrpClientService.mName = otapp_serviceName;               
     otapp_otSrpClientService.mInstanceName = otapp_hostName;    
