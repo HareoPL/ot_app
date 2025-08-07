@@ -24,6 +24,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "esp_ot_cli.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 
 #include "esp_openthread.h"
 #include "openthread/udp.h"
@@ -33,6 +35,7 @@
 #include "ot_app_dataset_tlv.h"
 
 static const char *TAG = "ot_app";
+
 static const char *otapp_hostName = "device1";
 static const char *otapp_serviceName = "_coap._udp";
 
@@ -42,7 +45,8 @@ const static otIp6Address *otapp_Ip6Address;
 static otUdpSocket udp_socket;
 otOperationalDatasetTlvs dataset;
 
-static char otapp_charBuf[OTAPP_CHAR_BUFFER];
+static char otapp_charBuf[OTAPP_CHAR_BUFFER_SIZE];
+SemaphoreHandle_t otapp_mutexBuf;
 
 const otIp6Address ot_app_multicastAddr = {
     .mFields.m8 = {
@@ -63,9 +67,18 @@ otInstance *otapp_getOpenThreadInstancePtr()
     return openThreadInstance;
 }
 
-char *otapp_getCharBuf()
+char *otapp_charBufGet_withMutex()
 {
-    return otapp_charBuf;
+    if(xSemaphoreTake(otapp_mutexBuf, portMAX_DELAY) == pdTRUE)
+    {
+        return otapp_charBuf;
+    }
+    return NULL; // it should never come here
+}
+
+void otapp_charBufRelease()
+{
+    xSemaphoreGive(otapp_mutexBuf);
 }
 
 void otapp_cli_init(void)
@@ -80,13 +93,23 @@ void otapp_setDataset_tlv(void)
     esp_openthread_auto_start(&dataset);
 }
 
-//
+/////////////////////////
 // UDP init
 //
 void otapp_receive_callback(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo) 
 {
-    int len = otMessageRead(aMessage, 0, otapp_charBuf, OTAPP_CHAR_BUFFER);
-    ESP_LOGI(TAG, "Received UDP packet: %.*s", len, otapp_charBuf);
+    char *buf = otapp_charBufGet_withMutex();
+
+    if (buf != NULL)
+    {
+        int len = otMessageRead(aMessage, 0, buf, OTAPP_CHAR_BUFFER_SIZE);
+        ESP_LOGI(TAG, "Received UDP packet: %.*s", len, buf);
+    }else
+    {
+        printf("NULL PTR from otapp_charBufGet_withMutex");
+    }
+
+    otapp_charBufRelease();
 }
 
 void otapp_udpStart(void) 
@@ -111,12 +134,23 @@ void otapp_udpStart(void)
     ESP_LOGI(TAG, "UDP socket initialized and bound to port %d",OTAPP_UDP_PORT);
 }
 
-static void otapp_printIp6Address(const otIp6Address *aAddress)
+void otapp_printIp6Address(const otIp6Address *aAddress)
 {
     if (aAddress != NULL)
     {
-        otIp6AddressToString(aAddress, otapp_charBuf, OTAPP_CHAR_BUFFER); 
-        printf("%s\n", otapp_charBuf);
+        char *buf = otapp_charBufGet_withMutex();
+
+        if (buf != NULL)
+        {
+            otIp6AddressToString(aAddress, buf, OTAPP_CHAR_BUFFER_SIZE); 
+            printf("%s\n", buf);
+            otapp_charBufRelease();
+        }else
+        {
+            printf("NULL PTR from otapp_charBufGet_withMutex");
+        }
+        
+        otapp_charBufRelease();        
     }
 }
                                  
@@ -155,7 +189,7 @@ static void otapp_srpClientEnableAutoHostAddress(otInstance *instance)
     error = otSrpClientEnableAutoHostAddress(instance);
     if (error != OT_ERROR_NONE)
     {
-        printf("Błąd ustawienia adresów IPv6 hosta SRP: %d\n", error);
+        printf("Error: SRP set IPv6 host addresses: %d\n", error);
         return;
     }
 }
@@ -218,6 +252,7 @@ static void otapp_srpClientInit(otInstance *instance)
 }
 
 
+///////////////////////
 //
 // init functions
 //
@@ -234,5 +269,5 @@ void otapp_init(void) //app init
     openThreadInstance = esp_openthread_get_instance();
     otapp_cli_init();    
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
-    
+    otapp_mutexBuf = xSemaphoreCreateMutex();
 }

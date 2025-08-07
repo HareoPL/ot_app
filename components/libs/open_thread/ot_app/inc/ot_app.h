@@ -38,7 +38,17 @@ void otapp_network_init();
 otInstance *otapp_getOpenThreadInstancePtr(void);
 
 const otIp6Address *otapp_getMulticastAddr(void);
-char *otapp_getCharBuf(void);
+
+/**
+ * @brief get PTR char buffer address and take MUTEX * 
+ * @return char* PTR to char buffer * 
+ * @note remember to release mutex by otapp_charBufRelease()
+ * 
+ */
+char *otapp_charBufGet_withMutex(void);
+void otapp_charBufRelease(void);
+
+void otapp_printIp6Address(const otIp6Address *aAddress);
 
 #endif  /* THREAD_UDP_H_ */
 
