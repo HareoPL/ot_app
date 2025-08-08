@@ -191,36 +191,35 @@ const otExtAddress *otapp_macAddrGet(otInstance *instance)
 ///////////////////////
 // dnsClient functions
 //
+// void otapp_dnsClientBrowsePrintServiceInfo(otDnsServiceInfo *aServiceInfo)
+// {
+//     printf(" Port: %d, Priority:%d, Weight:%d, TTL:%lu \n", aServiceInfo->mPort, aServiceInfo->mPriority, aServiceInfo->mWeight, aServiceInfo->mTtl);
+//     printf(" Host: %s \n", aServiceInfo->mHostNameBuffer);
+//     printf(" HostAddress: ");
+//     otapp_printIp6Address(&aServiceInfo->mHostAddress);
+//     printf(" TTL:%lu \n", aServiceInfo->mHostAddressTtl);
+//     printf(" TXT: ");
 
-void otapp_dnsClientBrowsePrintServiceInfo(otDnsServiceInfo *aServiceInfo)
-{
-    printf(" Port: %d, Priority:%d, Weight:%d, TTL:%lu \n", aServiceInfo->mPort, aServiceInfo->mPriority, aServiceInfo->mWeight, aServiceInfo->mTtl);
-    printf(" Host: %s \n", aServiceInfo->mHostNameBuffer);
-    printf(" HostAddress: ");
-    otapp_printIp6Address(&aServiceInfo->mHostAddress);
-    printf(" TTL:%lu \n", aServiceInfo->mHostAddressTtl);
-    printf(" TXT: ");
-
-    if (!aServiceInfo->mTxtDataTruncated)
-    {
-        printf("mTxtDataTruncated:%d \n", aServiceInfo->mTxtDataTruncated);
-    }
-    else
-    {
-        printf("[");
-        for(uint16_t byte = 0; byte < aServiceInfo->mTxtDataSize; byte++)
-        {
-            printf("%02X", aServiceInfo->mTxtData[byte]);
-        }        
-        printf("...] \n");
-    }
-}
+//     if (!aServiceInfo->mTxtDataTruncated)
+//     {
+//         printf("mTxtDataTruncated:%d \n", aServiceInfo->mTxtDataTruncated);
+//     }
+//     else
+//     {
+//         printf("[");
+//         for(uint16_t byte = 0; byte < aServiceInfo->mTxtDataSize; byte++)
+//         {
+//             printf("%02X", aServiceInfo->mTxtData[byte]);
+//         }        
+//         printf("...] \n");
+//     }
+// }
 
 uint8_t txtBuffer[OTAPP_DNS_SRV_TXT_SIZE]; 
 
 void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResponse *aResponse, void *aContext)
 {
-    static otDnsServiceInfo otapp_serviceInfo;
+    // static otDnsServiceInfo otapp_serviceInfo;
     otDnsBrowseResponseGetServiceName(aResponse, otapp_DNS_services[0].nameBuffer, OTAPP_DNS_SRV_NAME_SIZE);
 
     printf("DNS browse response for %s \n", otapp_DNS_services[0].nameBuffer);
@@ -231,18 +230,16 @@ void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResp
 
         while (otDnsBrowseResponseGetServiceInstance(aResponse, index, otapp_DNS_services[0].labelBuffer, OTAPP_DNS_SRV_LABEL_SIZE) == OT_ERROR_NONE)
         {
-            printf("label: %s \n", otapp_DNS_services[0].labelBuffer);
-            index++;
+            // otapp_serviceInfo.mHostNameBuffer     = otapp_DNS_services[index].nameBuffer;
+            // otapp_serviceInfo.mHostNameBufferSize = OTAPP_DNS_SRV_NAME_SIZE;
+            // otapp_serviceInfo.mTxtData            = txtBuffer;
+            // otapp_serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
 
-            otapp_serviceInfo.mHostNameBuffer     = otapp_DNS_services[0].nameBuffer;
-            otapp_serviceInfo.mHostNameBufferSize = OTAPP_DNS_SRV_NAME_SIZE;
-            otapp_serviceInfo.mTxtData            = txtBuffer;
-            otapp_serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
-
-            if (otDnsBrowseResponseGetServiceInfo(aResponse, otapp_DNS_services[0].labelBuffer, &otapp_serviceInfo) == OT_ERROR_NONE)
-            {
-               otapp_dnsClientBrowsePrintServiceInfo(&otapp_serviceInfo);
-            }
+            // aError = otDnsBrowseResponseGetServiceInfo(aResponse, otapp_DNS_services[index].labelBuffer, &otapp_serviceInfo);
+            // if(aError == OT_ERROR_NONE)
+            // {
+            //    otapp_dnsClientBrowsePrintServiceInfo(&otapp_serviceInfo);
+            // }
 
             printf("\n");
         }
