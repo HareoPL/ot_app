@@ -191,6 +191,56 @@ const otExtAddress *otapp_macAddrGet(otInstance *instance)
 ///////////////////////
 // dnsClient functions
 //
+void otapp_dnsClientResolvePrint(otError aError, const otDnsAddressResponse *aResponse)
+{
+    char         hostName[OT_DNS_MAX_NAME_SIZE];
+    otIp6Address address;
+    uint32_t     ttl;
+
+    otDnsAddressResponseGetHostName(aResponse, hostName, sizeof(hostName));
+
+    printf("DNS resolve: \n");
+    printf("DNS response for %s - ", hostName);
+
+    if (aError == OT_ERROR_NONE)
+    {
+        uint16_t index = 0;
+
+        while (otDnsAddressResponseGetAddress(aResponse, index, &address, &ttl) == OT_ERROR_NONE)
+        {
+            
+            printf(" TTL: %lu IP: ", ttl);
+            otapp_printIp6Address(&address);
+            printf("\n");
+
+            index++;
+        }
+    }
+}
+
+void otapp_otDnsAddressCallback(otError aError, const otDnsAddressResponse *aResponse, void *aContext)
+{
+    otapp_dnsClientResolvePrint(aError, aResponse);
+}
+
+/**
+ * @brief get DNS resolve using full host name
+ * 
+ * @param instance [in] ptr to openthread instance
+ * @param hostName [in] full host name with domain exampel "device1.default.service.arpa."
+ */
+void otapp_dnsClientResolve(otInstance *instance, const char *hostName)
+{   
+    otError           error = OT_ERROR_NONE;
+    const otDnsQueryConfig *config = otDnsClientGetDefaultConfig(instance);
+
+    error = otDnsClientResolveAddress(instance, hostName, otapp_otDnsAddressCallback, NULL, config);
+    if(error != OT_ERROR_NONE)
+    {
+        printf("Error: otDnsClientResolveAddress");
+    }
+}
+
 // void otapp_dnsClientBrowsePrintServiceInfo(otDnsServiceInfo *aServiceInfo)
 // {
 //     printf(" Port: %d, Priority:%d, Weight:%d, TTL:%lu \n", aServiceInfo->mPort, aServiceInfo->mPriority, aServiceInfo->mWeight, aServiceInfo->mTtl);
@@ -222,14 +272,27 @@ void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResp
     // static otDnsServiceInfo otapp_serviceInfo;
     otDnsBrowseResponseGetServiceName(aResponse, otapp_DNS_services[0].nameBuffer, OTAPP_DNS_SRV_NAME_SIZE);
 
+    char *chr = otapp_charBufGet_withMutex();
     printf("DNS browse response for %s \n", otapp_DNS_services[0].nameBuffer);
 
     if (aError == OT_ERROR_NONE)
     {
         uint16_t index = 0;
 
-        while (otDnsBrowseResponseGetServiceInstance(aResponse, index, otapp_DNS_services[0].labelBuffer, OTAPP_DNS_SRV_LABEL_SIZE) == OT_ERROR_NONE)
+        if(index == OTAPP_DNS_SERVICES_MAX)
         {
+            printf("OTAPP_DNS_SERVICES_MAX has been reached");
+            return;
+        }
+
+        while (otDnsBrowseResponseGetServiceInstance(aResponse, index, otapp_DNS_services[index].labelBuffer, OTAPP_DNS_SRV_LABEL_SIZE) == OT_ERROR_NONE)
+        {
+            printf("label: %s \n", otapp_DNS_services[index].labelBuffer);
+
+            strcpy(chr, otapp_DNS_services[index].labelBuffer);
+            strcat(chr, ".default.service.arpa.");
+            otapp_dnsClientResolve(otapp_getOpenThreadInstancePtr(), chr);
+
             // otapp_serviceInfo.mHostNameBuffer     = otapp_DNS_services[index].nameBuffer;
             // otapp_serviceInfo.mHostNameBufferSize = OTAPP_DNS_SRV_NAME_SIZE;
             // otapp_serviceInfo.mTxtData            = txtBuffer;
@@ -242,6 +305,7 @@ void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResp
             // }
 
             printf("\n");
+            index++;
         }
     }
     otapp_charBufRelease();
