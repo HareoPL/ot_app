@@ -146,7 +146,6 @@ void otapp_printIp6Address(const otIp6Address *aAddress)
         {
             otIp6AddressToString(aAddress, buf, OTAPP_CHAR_BUFFER_SIZE); 
             printf("%s\n", buf);
-            otapp_charBufRelease();
         }else
         {
             printf("NULL PTR from otapp_charBufGet_withMutex");
