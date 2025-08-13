@@ -26,6 +26,11 @@
 #define OTAPP_CHAR_BUFFER_SIZE 1024 
 #define OTAPP_DNS_SERVICES_MAX 10 // max number of devices to save them from DNS query
 
+#define OTAPP_DNS_LEASE_TASK_DELAY  300  // in secounds = 5m
+#define OTAPP_DNS_LEASE_TIME        7200 // in secounds = 2h
+#define OTAPP_DNS_LEASE_GUARD       (4 * OTAPP_DNS_LEASE_TASK_DELAY) // 20 min before end the time lease
+#define OTAPP_DNS_M_KEY_LEASE_TIME  86400
+
 #include "openthread/dataset.h"
 #include "esp_openthread.h"
 #include "ot_app_coap.h"

@@ -33,6 +33,7 @@
 #include "openthread/srp_client.h"
 #include "ot_app_coap.h"
 #include "ot_app_dataset_tlv.h"
+#include <inttypes.h>
 
 static const char *TAG = "ot_app";
 
@@ -330,6 +331,79 @@ void otapp_dnsClientBrowse(otInstance *instance, const char *serviceName)
 ///////////////////////
 // srpClient functions
 //
+otError otapp_srpClientRefreshService(otInstance *instance);
+static uint32_t otapp_srpLeaseValue;
+
+void otapp_srpServiceLeaseInitCount(otInstance *instance)
+{
+    otapp_srpLeaseValue = otSrpClientGetLeaseInterval(instance) + OTAPP_DNS_LEASE_TASK_DELAY; // because while created task, the task is immediately running without any delay 
+}
+
+uint32_t otapp_srpServiceLeaseGetCount(void)
+{
+    return otapp_srpLeaseValue;
+}
+
+void otapp_srpServiceLeaseCountDecrease(void)
+{
+    otapp_srpLeaseValue = otapp_srpLeaseValue - OTAPP_DNS_LEASE_TASK_DELAY;
+}
+
+uint8_t otapp_srpServiceLeaseCheckExpiry(uint32_t lease)
+{
+    return (lease <= OTAPP_DNS_LEASE_GUARD);
+}
+
+void otapp_srpServiceLeaseCheckTask(void *arg)
+{
+    (void)arg;    
+  
+    TickType_t previousWakeTime;
+    otInstance *instance;
+
+    previousWakeTime = xTaskGetTickCount();
+    instance = otapp_getOpenThreadInstancePtr();
+
+    otapp_srpServiceLeaseInitCount(instance);
+
+    while (1)
+    {
+        otapp_srpServiceLeaseCountDecrease();
+        ESP_LOGI(TAG, "Current SRP lease interval: %" PRIu32 " seconds", otapp_srpServiceLeaseGetCount());
+
+        if (otapp_srpServiceLeaseCheckExpiry(otapp_srpServiceLeaseGetCount()))
+        {
+           otapp_srpClientRefreshService(instance);
+           otapp_srpServiceLeaseInitCount(instance);          
+        }
+
+        vTaskDelayUntil(&previousWakeTime,  pdMS_TO_TICKS(OTAPP_DNS_LEASE_TASK_DELAY * 1000)); // in ms
+    }
+}
+
+void otapp_srpServiceLeaseCheckTaskInit(void)
+{
+    static uint8_t initFlag = 0;
+
+    if(!initFlag)
+    {
+        BaseType_t result = xTaskCreate(otapp_srpServiceLeaseCheckTask, "SRP_Check_Service_Lease_Task", 4096, NULL, 5, NULL);
+    
+        if (result == pdPASS)
+        {
+            initFlag = 1;
+            ESP_LOGI(TAG, "SRP_Check_Service_Lease_Task created successfully");
+        }
+        else
+        {
+            ESP_LOGE(TAG, "Failed to create SRP_Check_Service_Lease_Task");
+        }
+    }else
+    {
+         ESP_LOGI(TAG, "SRP_Check_Lease_Task has been created");
+    }
+}
+
 static void otapp_srpClientSetHostName(otInstance *instance, const char *hostName)
 {
     otError error;
@@ -390,7 +464,21 @@ otError otapp_srpClientAddService(otInstance *instance, otSrpClientItemState mSt
 
     return OT_ERROR_NONE; 
 }
+
+otError otapp_srpClientRefreshService(otInstance *instance)
+{
+    otError error;
+
+    error = otapp_srpClientAddService(instance, OT_SRP_CLIENT_ITEM_STATE_TO_REFRESH);
+    if (error != OT_ERROR_NONE)
+    {
+        printf("Error: SRP service refreshing: %d\n", error);
+        return error;
     }
+
+    ESP_LOGI(TAG, "SRP SERVICES has been refreshed \n");
+
+    return error;
 }
 
 void otapp_otSrpClientCallback(otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices, const otSrpClientService *aRemovedServices, void *aContext)
@@ -399,6 +487,7 @@ void otapp_otSrpClientCallback(otError aError, const otSrpClientHostInfo *aHostI
     {
         if(aHostInfo->mState == OT_SRP_CLIENT_ITEM_STATE_REGISTERED)
         {
+            otapp_srpServiceLeaseCheckTaskInit();   
             printf("CHECK DNS BROWSE: \n");
             otapp_dnsClientBrowse(otapp_getOpenThreadInstancePtr(), otapp_browseDefaultServiceName);
         }       
