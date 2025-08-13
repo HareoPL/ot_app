@@ -41,6 +41,8 @@ static const char *otapp_serviceName = "_coap._udp";
 static const char *otapp_browseDefaultServiceName = "_coap._udp.default.service.arpa.";
 static otapp_DNS_services_t otapp_DNS_services[OTAPP_DNS_SERVICES_MAX];
 
+static otSrpClientService otapp_otSrpClientService;
+
 otInstance *openThreadInstance;
 const static otIp6Address *otapp_Ip6Address;
 
@@ -351,10 +353,9 @@ static void otapp_srpClientEnableAutoHostAddress(otInstance *instance)
     }
 }
 
-static void otapp_srpClientAddService(otInstance *instance)
+otError otapp_srpClientAddService(otInstance *instance, otSrpClientItemState mState)
 {
     otError error;
-    static otSrpClientService otapp_otSrpClientService;
 
     otapp_otSrpClientService.mName = otapp_serviceName;               
     otapp_otSrpClientService.mInstanceName = otapp_hostName;    
@@ -364,17 +365,31 @@ static void otapp_srpClientAddService(otInstance *instance)
     otapp_otSrpClientService.mPriority = 0;                      
     otapp_otSrpClientService.mWeight = 0;                       
     otapp_otSrpClientService.mNumTxtEntries = 0;                
-    otapp_otSrpClientService.mState = OT_SRP_CLIENT_ITEM_STATE_TO_ADD; 
+    otapp_otSrpClientService.mState = mState; 
     otapp_otSrpClientService.mData = 0;                         
     otapp_otSrpClientService.mNext = NULL;                     
-    otapp_otSrpClientService.mLease = 7200;                   
-    otapp_otSrpClientService.mKeyLease = 86400;                
+    otapp_otSrpClientService.mLease = OTAPP_DNS_LEASE_TIME;                   
+    otapp_otSrpClientService.mKeyLease = OTAPP_DNS_M_KEY_LEASE_TIME;                
     
+    if(mState == OT_SRP_CLIENT_ITEM_STATE_TO_REFRESH)
+    {
+        error = otSrpClientClearService(instance, &otapp_otSrpClientService);
+        if (error != OT_ERROR_NONE)
+        {
+            printf("Error: SRP service clear: %d\n", error);
+            return error;
+        }
+    }
+
     error = otSrpClientAddService(instance, &otapp_otSrpClientService);
     if (error != OT_ERROR_NONE)
     {
         printf("Error: SRP service add: %d\n", error);
-        return;
+        return error;
+    }
+
+    return OT_ERROR_NONE; 
+}
     }
 }
 
@@ -407,7 +422,7 @@ static void otapp_srpClientInit(otInstance *instance)
     otSrpClientStop(instance);
     otapp_srpClientSetHostName(instance, otapp_hostName);
     otapp_srpClientEnableAutoHostAddress(instance);
-    otapp_srpClientAddService(instance);
+    otapp_srpClientAddService(instance, OT_SRP_CLIENT_ITEM_STATE_TO_ADD);
      
     if(otSrpClientIsAutoStartModeEnabled(instance))
     {
