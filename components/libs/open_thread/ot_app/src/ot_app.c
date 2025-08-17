@@ -22,6 +22,7 @@
 #include "main.h"
 #include "ot_app.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "esp_ot_cli.h"
 #include "freertos/FreeRTOS.h"
@@ -37,7 +38,7 @@
 
 static const char *TAG = "ot_app";
 
-static const char *otapp_hostName = "device1";
+static char otapp_hostName[OTAPP_DNS_SRV_LABEL_SIZE]; // = "device1_1_588c81fffe301ea4";
 static const char *otapp_serviceName = "_coap._udp";
 static const char *otapp_browseDefaultServiceName = "_coap._udp.default.service.arpa.";
 static otapp_DNS_services_t otapp_DNS_services[OTAPP_DNS_SERVICES_MAX];
@@ -72,6 +73,50 @@ otInstance *otapp_getOpenThreadInstancePtr()
 {
     return openThreadInstance;
 }
+
+void otapp_hostNameSet(const char *hostName, otapp_deviceType_t deviceType)
+{
+    snprintf(otapp_hostName, OTAPP_DNS_SRV_LABEL_SIZE - 1, "%s_%d_%02x%02x%02x%02x%02x%02x%02x%02x", 
+                        hostName, (int)deviceType,
+                        otapp_factoryEUI_64.m8[0], otapp_factoryEUI_64.m8[1], otapp_factoryEUI_64.m8[2], otapp_factoryEUI_64.m8[3],
+                        otapp_factoryEUI_64.m8[4], otapp_factoryEUI_64.m8[5], otapp_factoryEUI_64.m8[6], otapp_factoryEUI_64.m8[7]);
+}
+
+const char *otapp_hostNameFullGet()
+{
+    return otapp_hostName;
+}
+
+uint8_t otapp_hostNameIsSame(const char *hostNameFull, uint16_t bufLength)
+{
+    char inHostName[OTAPP_HOST_NAME_SIZE];
+    char devHostName[OTAPP_HOST_NAME_SIZE];
+
+    strncpy(inHostName, hostNameFull, bufLength);
+    strncpy(devHostName, otapp_hostNameFullGet(), bufLength);
+    
+    strtok(inHostName, "_");
+    strtok(devHostName, "_");
+
+    if(strcmp(inHostName, devHostName) == 0)
+    {
+        return 1;
+    }
+    return 0;
+}
+
+otapp_deviceType_t otapp_hostNameConvertToDevId(const char *hostNameFull, uint16_t bufLength)
+{
+    char buf[OTAPP_HOST_NAME_SIZE];
+    char *ptr;
+    strncpy(buf, hostNameFull, bufLength);
+    
+    strtok(buf, "_");
+    ptr = strtok(NULL, "_");
+
+    return atoi(ptr);
+}
+
 
 char *otapp_charBufGet_withMutex()
 {
@@ -542,6 +587,8 @@ void otapp_network_init() // this function will be initialize in ot_task_worker 
 
     otLinkGetFactoryAssignedIeeeEui64(otapp_getOpenThreadInstancePtr(), &otapp_factoryEUI_64);
     otapp_macAddrPrint(&otapp_factoryEUI_64);
+
+    otapp_hostNameSet("device1", OTAPP_SWITCH);
     // otapp_udpStart(); 
     otapp_coap_init();    
     otapp_srpClientInit(otapp_getOpenThreadInstancePtr());

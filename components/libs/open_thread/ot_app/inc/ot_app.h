@@ -62,6 +62,11 @@ otInstance *otapp_getOpenThreadInstancePtr(void);
 
 const otIp6Address *otapp_getMulticastAddr(void);
 
+const char *otapp_hostNameFullGet(void);
+void otapp_hostNameSet(const char *hostName, otapp_deviceType_t deviceType);
+uint8_t otapp_hostNameIsSame(const char *hostNameFull, uint16_t bufLength);
+otapp_deviceType_t otapp_hostNameConvertToDevId(const char *hostNameFull, uint16_t bufLength);
+
 /**
  * @brief get PTR char buffer address and take MUTEX * 
  * @return char* PTR to char buffer * 
