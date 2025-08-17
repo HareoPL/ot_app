@@ -49,6 +49,7 @@ const static otIp6Address *otapp_Ip6Address;
 
 static otUdpSocket udp_socket;
 otOperationalDatasetTlvs dataset;
+static otExtAddress otapp_factoryEUI_64;
 
 static char otapp_charBuf[OTAPP_CHAR_BUFFER_SIZE];
 SemaphoreHandle_t otapp_mutexBuf;
@@ -177,19 +178,15 @@ void otapp_macAddrPrint(const otExtAddress *macAddr)
 {
     if(macAddr != NULL)
     {
-        printf("MAC Address: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
+        printf("Factory EUI-64: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
                macAddr->m8[0], macAddr->m8[1], macAddr->m8[2], macAddr->m8[3],
                macAddr->m8[4], macAddr->m8[5], macAddr->m8[6], macAddr->m8[7]);
     }else
     {
-        printf("ERROR: MAC Address - null ptr \n");
+        printf("ERROR: Factory EUI-64: - null ptr \n");
     }
 }
 
-const otExtAddress *otapp_macAddrGet(otInstance *instance)
-{
-   return otLinkGetExtendedAddress(instance);
-}
 
 ///////////////////////
 // dnsClient functions
@@ -542,11 +539,13 @@ static void otapp_srpClientInit(otInstance *instance)
 void otapp_network_init() // this function will be initialize in ot_task_worker rtos task (esp_ot_cli.c)
 {
     otapp_setDataset_tlv();
+
+    otLinkGetFactoryAssignedIeeeEui64(otapp_getOpenThreadInstancePtr(), &otapp_factoryEUI_64);
+    otapp_macAddrPrint(&otapp_factoryEUI_64);
     // otapp_udpStart(); 
     otapp_coap_init();    
     otapp_srpClientInit(otapp_getOpenThreadInstancePtr());
     otSrpClientSetCallback(otapp_getOpenThreadInstancePtr(), otapp_otSrpClientCallback, NULL); 
-    otapp_macAddrPrint(otapp_macAddrGet(otapp_getOpenThreadInstancePtr()));
 }
 
 void otapp_init(void) //app init
