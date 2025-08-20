@@ -565,6 +565,8 @@ void otapp_otSrpClientCallback(otError aError, const otSrpClientHostInfo *aHostI
             otapp_srpServiceLeaseCheckTaskInit();   
             printf("CHECK DNS BROWSE: \n");
             otapp_dnsClientBrowse(otapp_getOpenThreadInstancePtr(), otapp_browseDefaultServiceName);
+
+            otapp_coapSendDeviceNamePut();
         }       
     }
 }
