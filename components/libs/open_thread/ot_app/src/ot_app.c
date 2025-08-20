@@ -189,18 +189,10 @@ void otapp_printIp6Address(const otIp6Address *aAddress)
 {
     if (aAddress != NULL)
     {
-        char *buf = otapp_charBufGet_withMutex();
+        char buf[OT_IP6_ADDRESS_STRING_SIZE];
 
-        if (buf != NULL)
-        {
-            otIp6AddressToString(aAddress, buf, OTAPP_CHAR_BUFFER_SIZE); 
-            printf("%s\n", buf);
-
-            otapp_charBufRelease(); 
-        }else
-        {
-            printf("NULL PTR from otapp_charBufGet_withMutex");
-        }
+        otIp6AddressToString(aAddress, buf, OTAPP_CHAR_BUFFER_SIZE); 
+        printf("%s\n", buf);
     }
 }
                                  
