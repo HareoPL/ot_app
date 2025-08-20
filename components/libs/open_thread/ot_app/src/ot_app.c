@@ -21,19 +21,21 @@
  */
 #include "main.h"
 #include "ot_app.h"
+#include "ot_app_coap.h"
+#include "ot_app_pair.h"
+#include "ot_app_dataset_tlv.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "esp_ot_cli.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
 
 #include "esp_openthread.h"
 #include "openthread/udp.h"
 #include "openthread/dataset.h"
 #include "openthread/srp_client.h"
-#include "ot_app_coap.h"
-#include "ot_app_dataset_tlv.h"
+
 #include <inttypes.h>
 
 static const char *TAG = "ot_app";
@@ -41,7 +43,7 @@ static const char *TAG = "ot_app";
 static char otapp_deviceName[OTAPP_DNS_SRV_LABEL_SIZE]; // = "device1_1_588c81fffe301ea4";
 static const char *otapp_serviceName = "_coap._udp";
 static const char *otapp_browseDefaultServiceName = "_coap._udp.default.service.arpa.";
-static otapp_DNS_services_t otapp_DNS_services[OTAPP_DNS_SERVICES_MAX];
+
 
 static otSrpClientService otapp_otSrpClientService;
 
