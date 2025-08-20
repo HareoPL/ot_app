@@ -264,6 +264,11 @@ void otapp_coapSendtoTestPut()
     printf("CoAP sent put to uri: device/led \n");
     otapp_coap_clientSendPut(otapp_getMulticastAddr(), otapp_coap_getUriName(OTAPP_URI_DEVICE_TEST), charLedPayload);
 }
+void otapp_coapSendDeviceNamePut()
+{
+    printf("CoAP sent multicast device name \n");
+    otapp_coap_clientSendPut(otapp_getMulticastAddr(), otapp_coap_getUriName(OTAPP_URI_PARING_SERVICES), otapp_deviceNameFullGet());
+}
 
 void otapp_coap_initCoapResource()
 {

@@ -60,4 +60,6 @@ void otapp_coapSendtoTestPut();
 void otapp_coapSendtoTestGet();
 void otapp_coapSendDeviceNamePut();
 
+char *otapp_coap_getUriName(otapp_coap_uriTableIndex_t uriIndex);
+
 #endif  /* OT_APP_COAP_H_ */
