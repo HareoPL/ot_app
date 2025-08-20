@@ -22,26 +22,29 @@
 #ifndef THREAD_UDP_H_
 #define THREAD_UDP_H_
 
+#include "openthread/dataset.h"
+#include "esp_openthread.h"
+#include "ot_app_coap.h"
+#include "openthread/dns_client.h"
+
+#define OTAPP_ERROR     (-1)
+
+
 #define OTAPP_UDP_PORT 12345
 #define OTAPP_CHAR_BUFFER_SIZE 1024 
-#define OTAPP_DNS_SERVICES_MAX 10 // max number of devices to save them from DNS query
+
+#define OTAPP_PAIRED_DEVICES_MAX    10 // max number of devices to save them from DNS query
+#define OTAPP_PAIRED_URI_MAX        OTAPP_COAP_URI_MAX 
 
 #define OTAPP_DNS_LEASE_TASK_DELAY  300  // in secounds = 5m
 #define OTAPP_DNS_LEASE_TIME        7200 // in secounds = 2h
 #define OTAPP_DNS_LEASE_GUARD       (4 * OTAPP_DNS_LEASE_TASK_DELAY) // 20 min before end the time lease
 #define OTAPP_DNS_M_KEY_LEASE_TIME  86400
 
-#include "openthread/dataset.h"
-#include "esp_openthread.h"
-#include "ot_app_coap.h"
-#include "openthread/dns_client.h"
-
-
-
 #define OTAPP_DNS_SRV_NAME_SIZE     64 // OT_DNS_MAX_NAME_SIZE full service name: "_coap._udp.default.service.arpa." 
 #define OTAPP_DNS_SRV_LABEL_SIZE    32 // OT_DNS_MAX_LABEL_SIZE host name: "device1"
 #define OTAPP_DNS_SRV_TXT_SIZE      512
-#define OTAPP_HOST_NAME_SIZE        OTAPP_DNS_SRV_LABEL_SIZE
+#define OTAPP_DEVICE_NAME_SIZE        OTAPP_DNS_SRV_LABEL_SIZE
 
 typedef enum {
     OTAPP_CONTROL_PANEL = 1 ,
@@ -58,16 +61,6 @@ typedef enum {
     OTAPP_DOOR_SENSOR,
     OTAPP_ALARM,
 }otapp_deviceType_t;
-typedef struct {
-    uint32_t ttl;
-    uint16_t port;
-    uint16_t priority;
-    char labelBuffer[OTAPP_DNS_SRV_LABEL_SIZE];
-    char nameBuffer[OTAPP_DNS_SRV_NAME_SIZE];
-    // uint8_t txtBuffer[OTAPP_DNS_SRV_TXT_SIZE]; 
-    otIp6Address mHostAddress;
-    uint16_t weight;
-}otapp_DNS_services_t;
 
 
 
@@ -78,10 +71,12 @@ otInstance *otapp_getOpenThreadInstancePtr(void);
 
 const otIp6Address *otapp_getMulticastAddr(void);
 
-const char *otapp_hostNameFullGet(void);
-void otapp_hostNameSet(const char *hostName, otapp_deviceType_t deviceType);
-uint8_t otapp_hostNameIsSame(const char *hostNameFull, uint16_t bufLength);
-otapp_deviceType_t otapp_hostNameConvertToDevId(const char *hostNameFull, uint16_t bufLength);
+const char *otapp_deviceNameFullGet(void);
+void otapp_deviceNameSet(const char *deviceName, otapp_deviceType_t deviceType);
+uint8_t otapp_deviceNameFullIsSame(const char *deviceNameFull);
+uint8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint16_t bufLength);
+
+otapp_deviceType_t otapp_deviceNameConvertToDevId(const char *hostNameFull, uint16_t bufLength);
 
 /**
  * @brief get PTR char buffer address and take MUTEX * 
