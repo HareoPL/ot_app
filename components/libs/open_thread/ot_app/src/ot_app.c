@@ -90,6 +90,15 @@ const char *otapp_deviceNameFullGet()
     return otapp_deviceName;
 }
 
+uint8_t otapp_deviceNameFullIsSame(const char *deviceNameFull)
+{
+    if(strcmp(deviceNameFull, otapp_deviceNameFullGet()) == 0)
+    {
+        return 1;
+    }
+    return 0;
+}
+
 // device1
 uint8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint16_t bufLength)
 {
@@ -121,7 +130,26 @@ otapp_deviceType_t otapp_deviceNameConvertToDevId(const char *deviceNameFull, ui
     return atoi(ptr);
 }
 
+static void otapp_deviceNameFullAddDomain(char *labelName)
+{
+    strcat(labelName, ".default.service.arpa.");
+}
 
+int8_t otapp_hostNameToDeviceNameFull(char *hostName)
+{
+    char *chrPtr;
+    chrPtr = strtok(hostName, ".");
+
+    if(chrPtr == NULL)
+    {
+        return OTAPP_ERROR;
+    }
+    return 0;
+}
+
+/////////////////////////
+// char buffer
+//
 char *otapp_charBufGet_withMutex()
 {
     if(xSemaphoreTake(otapp_mutexBuf, portMAX_DELAY) == pdTRUE)
