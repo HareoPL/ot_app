@@ -31,10 +31,11 @@
 #include "ot_app_coap_uri_well-known-core.h"
 #include "ot_app_coap_uri.h"
 
+// remember to also add name in otapp_coap_uriTableIndex_t enum
 static otCoapResource otapp_coap_resource[] = {
     {".well-known/core", otapp_coap_uri_well_knownCoreHandle, NULL, NULL},
     {"test", otapp_coap_uri_testHandle, NULL, NULL},
-    {"device/led", otapp_coap_uri_ledControlHandle, NULL, NULL}
+    {"paring_services", otapp_coap_uri_paringServicesHandle, NULL, NULL}
 
 };
 #define OTAPP_COAP_RESOURCE_SIZE (sizeof(otapp_coap_resource) / sizeof(otapp_coap_resource[0]))

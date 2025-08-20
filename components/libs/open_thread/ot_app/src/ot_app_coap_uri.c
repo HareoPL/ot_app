@@ -22,6 +22,8 @@
 
 #include "main.h"
 #include "ot_app_coap_uri.h"
+#include "string.h"
+#include "ot_app.h"
 
 void otapp_coap_uri_testHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {
@@ -50,3 +52,36 @@ void otapp_coap_uri_ledControlHandle(void *aContext, otMessage *request, const o
         otapp_coap_sendResponse(request, aMessageInfo, NULL);
     }
 }
+
+void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
+{    
+    if (request)
+    {
+        printf("from uri: paring_services \n");
+        char incommingHostName[OTAPP_DEVICE_NAME_SIZE];
+
+        uint8_t strCompare = 0;
+
+
+            uint16_t len = otMessageGetLength(request) - otMessageGetOffset(request);    
+            uint16_t lenOfReadedBytes = otMessageRead(request, otMessageGetOffset(request), incommingHostName, len);
+            incommingHostName[lenOfReadedBytes] = '\0';
+
+            printf("Sender data: %s bytes: %d\n ", incommingHostName, lenOfReadedBytes);
+            otapp_coap_sendResponse(request, aMessageInfo, NULL);
+
+
+            strCompare = otapp_deviceNameIsSame(incommingHostName, lenOfReadedBytes);
+
+            if(strCompare)
+            {
+                printf("new devica has been successfully paired. Dev ID: %d \n", otapp_deviceNameConvertToDevId(incommingHostName, lenOfReadedBytes));
+                // todo check otapp pair.... 
+            }else
+            {
+                printf("new device has NOT been paried ! \n ");
+            }
+       
+    }
+}
+
