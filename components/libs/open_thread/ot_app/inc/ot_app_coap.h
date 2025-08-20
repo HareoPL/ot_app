@@ -26,7 +26,7 @@
 #include <openthread/message.h>
 
 #define OTAPP_COAP_PORT 5683 ///< Default CoAP port, as specified in RFC 7252
-
+#define OTAPP_COAP_URI_MAX 20
 
 typedef enum {
     OTAPP_MESSAGE_OK = 0,
@@ -36,9 +36,14 @@ typedef enum {
 
 //  it must be put in order like otapp_coap_resource[] table
 typedef enum {
-    OTAPP_URI_WELL_KNOWN_CORE = 0,
+    OTAPP_URI_NO_URI_INDEX = 0,
+    
+    OTAPP_URI_WELL_KNOWN_CORE,
     OTAPP_URI_TEST,
     OTAPP_URI_DEVICE_TEST,
+    OTAPP_URI_PARING_SERVICES,
+
+    OTAPP_URI_END_OF_INDEX,
 }otapp_coap_uriTableIndex_t;
 
 
@@ -53,5 +58,6 @@ const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID);
 
 void otapp_coapSendtoTestPut();
 void otapp_coapSendtoTestGet();
+void otapp_coapSendDeviceNamePut();
 
 #endif  /* OT_APP_COAP_H_ */

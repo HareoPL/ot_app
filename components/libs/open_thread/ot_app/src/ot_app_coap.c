@@ -70,9 +70,9 @@ const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID)
     return NULL;
 } 
 
-const char *otapp_coap_getUriName(otapp_coap_uriTableIndex_t uriIndex)
+char *otapp_coap_getUriName(otapp_coap_uriTableIndex_t uriIndex)
 {
-    return otapp_coap_resource[uriIndex].mUriPath;
+    return otapp_coap_resource[uriIndex - 1].mUriPath;
 } 
 
 void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
