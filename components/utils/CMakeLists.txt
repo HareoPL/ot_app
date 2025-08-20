@@ -1,11 +1,12 @@
-
-set(srcs) # set(srcs "file1.c" "file2.c" "file3.c")
+set(srcs) 
 set(public_requires)
 
-list(APPEND srcs "utils.c") # add new c file to srcs
+file(GLOB_RECURSE srcs
+    *.c  
+)
 
-list(APPEND public_requires "driver")
 list(APPEND public_requires "main")
+
 
 idf_component_register(SRCS ${srcs}
                     INCLUDE_DIRS "."

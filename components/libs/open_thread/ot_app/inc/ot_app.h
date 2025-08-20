@@ -41,7 +41,23 @@
 #define OTAPP_DNS_SRV_NAME_SIZE     64 // OT_DNS_MAX_NAME_SIZE full service name: "_coap._udp.default.service.arpa." 
 #define OTAPP_DNS_SRV_LABEL_SIZE    32 // OT_DNS_MAX_LABEL_SIZE host name: "device1"
 #define OTAPP_DNS_SRV_TXT_SIZE      512
+#define OTAPP_HOST_NAME_SIZE        OTAPP_DNS_SRV_LABEL_SIZE
 
+typedef enum {
+    OTAPP_CONTROL_PANEL = 0 ,
+    OTAPP_SWITCH,
+    OTAPP_LIGHTING,
+    OTAPP_SENSOR,
+    OTAPP_THERMOSTAT,
+    OTAPP_DOOR_LOCK,
+    OTAPP_MOTION_DETECTOR,
+    OTAPP_REMOTE_CONTROL,
+    OTAPP_ENERGY_METER,
+    OTAPP_SMART_PLUG,
+    OTAPP_ENVIRONMENT_SENSOR,
+    OTAPP_DOOR_SENSOR,
+    OTAPP_ALARM,
+}otapp_deviceType_t;
 typedef struct {
     uint32_t ttl;
     uint16_t port;
