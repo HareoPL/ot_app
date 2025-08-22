@@ -138,7 +138,7 @@ int8_t otapp_pair_DeviceDelete(otapp_pair_DeviceList_t *pairDeviceList, const ch
         
         return tableIndex;
     }
-    return OTAPP_PAIR_ERROR;
+    return OTAPP_PAIR_NO_EXIST;
 }
 
 int8_t otapp_pair_DeviceDeleteAll(otapp_pair_DeviceList_t *pairDeviceList)
@@ -172,7 +172,7 @@ int8_t otapp_pair_DeviceIndexGet(otapp_pair_DeviceList_t *pairDeviceList, const 
     deviceIndex = otapp_pair_DeviceIsExist(pairDeviceList, deviceNameFull);
     if(deviceIndex == OTAPP_PAIR_NO_EXIST)
     {
-        return OTAPP_PAIR_ERROR;
+        return OTAPP_PAIR_NO_EXIST;
     }
 
     return deviceIndex;
