@@ -12,5 +12,5 @@ int main(int argc, const char **argv)
 static void run_all_tests(void)
 {
    RUN_TEST_GROUP(ot_app_pair);
-   RUN_TEST_GROUP(ot_app_pair_UriIndexAdd);
+   RUN_TEST_GROUP(ot_app_pair_UriIndex);
 }
