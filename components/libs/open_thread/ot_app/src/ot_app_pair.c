@@ -113,6 +113,12 @@ char *otapp_pair_DeviceNameGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t 
     {
         return NULL;
     }
+    
+    if(otapp_pair_spaceIsTaken(pairDeviceList, indexDevice) == 0)
+    {
+        return NULL;
+    }
+
     return pairDeviceList->list[indexDevice].devName;
 }
 
