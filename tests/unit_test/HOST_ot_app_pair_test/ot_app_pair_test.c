@@ -4,6 +4,13 @@
 #define UT_OAP_RETURN_INDEX_0 (0)
 #define UT_OAP_RETURN_INDEX_9 (9)
 
+#define UT_OAP_URI_TABLE_1      (OTAPP_URI_WELL_KNOWN_CORE)
+#define UT_OAP_URI_TABLE_2      (OTAPP_URI_TEST)
+#define UT_OAP_URI_TABLE_20     (OTAPP_URI_MOCK_20)
+
+#define UT_OAP_DEVICE_NAME_FULL_3 (3)
+#define UT_OAP_DEVICE_NAME_FULL_9 (9)
+
 static char *deviceNameFull_0 = {"device1_1_588c81fffe301ea1"};
 static char *deviceNameFull_1 = {"device1_1_588c81fffe301ea2"};
 static char *deviceNameFull_2 = {"device1_1_588c81fffe301ea3"};
@@ -14,6 +21,7 @@ static char *deviceNameFull_6 = {"device1_1_588c81fffe301ea7"};
 static char *deviceNameFull_7 = {"device1_1_588c81fffe301ea8"};
 static char *deviceNameFull_8 = {"device1_1_588c81fffe301ea9"};
 static char *deviceNameFull_9 = {"device1_1_588c81fffe301e10"};
+static char *deviceNameFull_NO_EXIST = {"device1_1_no_exist"};
 static char *deviceNameFull_MaxLength10 = {"device1_1_588c81fffe301ea4___31"};
 static char *deviceNameFull_TooLength = {"device1_1_588c81fffe301ea9____32"};
 
@@ -139,4 +147,83 @@ TEST(ot_app_pair, GivenMaxDevicesPlus1_WhenCallingDeviceAdd_ThenReturnError)
     result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_MaxLength10, &ipAddr);
 
     TEST_ASSERT_EQUAL(OTAPP_PAIR_DEVICE_NO_SPACE, result);   
+}
+
+TEST(ot_app_pair, GivenNullDeviceList_WhenCallingDeviceDelete_ThenReturnError)
+{
+    int8_t result;
+    result = otapp_pair_DeviceDelete(NULL, deviceNameFull_0);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);   
+}
+
+TEST(ot_app_pair, GivenNullDeviceName_WhenCallingDeviceDelete_ThenReturnError)
+{
+    int8_t result;
+    result = otapp_pair_DeviceDelete(otapp_pair_getHandle(), NULL);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);   
+}
+
+TEST(ot_app_pair, GivenTrueVariable_WhenCallingDeviceDelete_ThenReturn3)
+{
+    int8_t result;
+    ut_oap_deviceAddFullFill();
+    ut_oap_DeviceUriIndexAddFillAll(UT_OAP_URI_TABLE_2);
+
+    result = otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_3);
+
+    TEST_ASSERT_EQUAL(UT_OAP_DEVICE_NAME_FULL_3, result);   
+}
+
+TEST(ot_app_pair, GivenSameDeviceNameTwice_WhenCallingDeviceDelete_ThenReturnError)
+{
+    int8_t result;
+    ut_oap_deviceAddFullFill();
+    ut_oap_DeviceUriIndexAddFillAll(UT_OAP_URI_TABLE_2);
+
+    otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_3);
+    result = otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_3);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_NO_EXIST, result);   
+}
+
+TEST(ot_app_pair, GivenNullDeviceList_WhenCallingDeviceIndexGet_ThenReturnError)
+{
+    int8_t result;
+ 
+    ut_oap_deviceAddFullFill();
+    result = otapp_pair_DeviceIndexGet(NULL, deviceNameFull_9);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);   
+}
+
+TEST(ot_app_pair, GivenNullDeviceName_WhenCallingDeviceIndexGet_ThenReturnError)
+{
+    int8_t result;
+ 
+    ut_oap_deviceAddFullFill();
+    result = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), NULL);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);   
+}
+
+TEST(ot_app_pair, GivenCorrectVariable_WhenCallingDeviceIndexGet_ThenReturn9)
+{
+    int8_t result;
+ 
+    ut_oap_deviceAddFullFill();
+    result = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_9);
+
+    TEST_ASSERT_EQUAL(UT_OAP_RETURN_INDEX_9, result);   
+}
+
+TEST(ot_app_pair, GivenNoExistDeviceName_WhenCallingDeviceIndexGet_ThenReturnError)
+{
+    int8_t result;
+ 
+    ut_oap_deviceAddFullFill();
+    result = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_NO_EXIST);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_NO_EXIST, result);   
 }

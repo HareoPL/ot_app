@@ -12,6 +12,17 @@ TEST_GROUP_RUNNER(ot_app_pair)
    RUN_TEST_CASE(ot_app_pair, GivenMaxLengthDeviceName_WhenCallingDeviceAdd_ThenReturnIndex0);
    RUN_TEST_CASE(ot_app_pair, GivenMaxDevices_WhenCallingDeviceAdd_ThenReturnIndex9);
    RUN_TEST_CASE(ot_app_pair, GivenMaxDevicesPlus1_WhenCallingDeviceAdd_ThenReturnError);
+
+   RUN_TEST_CASE(ot_app_pair, GivenNullDeviceList_WhenCallingDeviceDelete_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenNullDeviceName_WhenCallingDeviceDelete_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenTrueVariable_WhenCallingDeviceDelete_ThenReturn3);
+   RUN_TEST_CASE(ot_app_pair, GivenSameDeviceNameTwice_WhenCallingDeviceDelete_ThenReturnError);
+
+   RUN_TEST_CASE(ot_app_pair, GivenNullDeviceList_WhenCallingDeviceIndexGet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenNullDeviceName_WhenCallingDeviceIndexGet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenCorrectVariable_WhenCallingDeviceIndexGet_ThenReturn9);
+   RUN_TEST_CASE(ot_app_pair, GivenNoExistDeviceName_WhenCallingDeviceIndexGet_ThenReturnError);
+
 }
 
 TEST_GROUP_RUNNER(ot_app_pair_UriIndex)
@@ -22,6 +33,7 @@ TEST_GROUP_RUNNER(ot_app_pair_UriIndex)
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueUri_WhenCallingUriIndexAdd_ThenReturn0);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenMaxUri_WhenCallingUriIndexAdd_ThenReturn19);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenMaxUriPlus1_WhenCallingUriIndexAdd_ThenReturnError);
+
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullDeviceList_WhenCallingDeviceUriIndexGet_ThenReturnError);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenBadIndexDevice_WhenCallingDeviceUriIndexGet_ThenReturnError);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenBadIndexUri_WhenCallingDeviceUriIndexGet_ThenReturnError);
