@@ -90,7 +90,7 @@ char *otapp_pair_DeviceNameGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t 
  *                                     LSB = uri index (pairDeviceList->list[].uriIndex[]) 
  *                                      or  OTAPP_PAIR_ERROR (-1)
  */
-int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, char *deviceNameFull, otapp_coap_uriTableIndex_t uriIndex);
+int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, otapp_coap_uriTableIndex_t uriIndex);
 
 /**
  * @brief get URI index from uriIndex of device list 
