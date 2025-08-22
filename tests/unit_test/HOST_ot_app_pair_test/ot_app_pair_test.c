@@ -17,7 +17,7 @@ static char *deviceNameFull_10 = {"device1_1_588c81fffe301e10"};
 static char *deviceNameFull_MaxLength11 = {"device1_1_588c81fffe301ea4___31"};
 static char *deviceNameFull_TooLength = {"device1_1_588c81fffe301ea9____32"};
 
-otIp6Address ipAddr = {
+static otIp6Address ipAddr = {
     .mFields.m8 = {0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
                    0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34}
 };
