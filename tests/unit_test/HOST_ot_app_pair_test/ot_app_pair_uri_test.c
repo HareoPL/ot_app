@@ -2,6 +2,18 @@
 #include "ot_app_pair.h"
 
 #define UT_OAP_DEVICE_INDEX_0 (0)
+#define UT_OAP_DEVICE_INDEX_1 (1)
+#define UT_OAP_DEVICE_INDEX_BAD (OTAPP_PAIR_DEVICES_MAX)
+
+#define UT_OAP_URI_INDEX_BAD    (OTAPP_PAIR_URI_MAX)
+#define UT_OAP_URI_INDEX_OK     (OTAPP_URI_WELL_KNOWN_CORE)
+#define UT_OAP_URI_INDEX_0      (0)
+#define UT_OAP_URI_INDEX_1      (1)
+#define UT_OAP_URI_INDEX_MAX    (OTAPP_PAIR_URI_MAX - 1)
+
+#define UT_OAP_URI_TABLE_1      (OTAPP_URI_WELL_KNOWN_CORE)
+#define UT_OAP_URI_TABLE_2      (OTAPP_URI_TEST)
+#define UT_OAP_URI_TABLE_20     (OTAPP_URI_MOCK_20)
 
 #define EXPECTED_URI_RETURN(devIndex, uriIndex) ((devIndex << 8) | (uriIndex)) 
 
@@ -20,6 +32,23 @@ static otIp6Address ipAddr = {
     .mFields.m8 = {0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
                    0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34}
 };
+
+void ut_oap_fillAllUriIndexInAllDeviceIndex(otapp_coap_uriTableIndex_t uriIndex)
+{
+    for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
+    {
+       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_1, uriIndex);
+       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_2, uriIndex);
+       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_3, uriIndex);
+       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_4, uriIndex);
+       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_5, uriIndex);
+       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_6, uriIndex);
+       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_7, uriIndex);
+       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_8, uriIndex);
+       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_9, uriIndex);
+       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_10, uriIndex);
+    }
+}
 
 TEST_GROUP(ot_app_pair_UriIndex);
 
@@ -106,3 +135,41 @@ TEST(ot_app_pair_UriIndex, GivenNullDeviceList_WhenCallingDeviceUriIndexGet_Then
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
 }
 
+
+TEST(ot_app_pair_UriIndex, GivenBadIndexDevice_WhenCallingDeviceUriIndexGet_ThenReturnError)
+{
+    int16_t result;    
+    result = otapp_pair_deviceUriIndexGet(otapp_pair_getHandle(), UT_OAP_DEVICE_INDEX_BAD, UT_OAP_URI_INDEX_OK);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair_UriIndex, GivenBadIndexUri_WhenCallingDeviceUriIndexGet_ThenReturnError)
+{
+    int16_t result;    
+    result = otapp_pair_deviceUriIndexGet(otapp_pair_getHandle(), UT_OAP_DEVICE_INDEX_0, UT_OAP_URI_INDEX_BAD);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair_UriIndex, GivenCorrectArguments_WhenCallingDeviceUriIndexGet_ThenReturn1)
+{
+    int16_t result;  
+
+    ut_oap_fillAllUriIndexInAllDeviceIndex(UT_OAP_URI_TABLE_1);
+
+    result = otapp_pair_deviceUriIndexGet(otapp_pair_getHandle(), UT_OAP_DEVICE_INDEX_0, UT_OAP_URI_INDEX_0);
+
+    TEST_ASSERT_EQUAL(UT_OAP_URI_TABLE_1, result);
+}
+
+TEST(ot_app_pair_UriIndex, GivenIndexUriMax_WhenCallingDeviceUriIndexGet_ThenReturn2)
+{
+    int16_t result;   
+
+    ut_oap_fillAllUriIndexInAllDeviceIndex(UT_OAP_URI_TABLE_2);
+
+    result = otapp_pair_deviceUriIndexGet(otapp_pair_getHandle(), UT_OAP_DEVICE_INDEX_1, UT_OAP_URI_INDEX_MAX);
+
+    TEST_ASSERT_EQUAL(UT_OAP_URI_TABLE_2, result);
+}
