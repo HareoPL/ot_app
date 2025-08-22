@@ -75,3 +75,13 @@ TEST(ot_app_pair_UriIndexAdd, GivenTrueUri_WhenCallingUriIndexAdd_ThenReturn0)
 
     TEST_ASSERT_EQUAL(EXPECTED_URI_RETURN(0, 0), result);   
 }
+
+TEST(ot_app_pair_UriIndexAdd, GivenMaxUri_WhenCallingUriIndexAdd_ThenReturn19)
+{
+    int16_t result;    
+    for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
+    {
+       result = otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_1, i+1);
+    }    
+    TEST_ASSERT_EQUAL(EXPECTED_URI_RETURN(0, 19), result);   
+}

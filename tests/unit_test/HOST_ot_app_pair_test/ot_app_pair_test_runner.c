@@ -20,5 +20,5 @@ TEST_GROUP_RUNNER(ot_app_pair_UriIndexAdd)
    RUN_TEST_CASE(ot_app_pair_UriIndexAdd, GivenNullDeviceName_WhenCallingUriIndexAdd_ThenReturnError);
    RUN_TEST_CASE(ot_app_pair_UriIndexAdd, GivenBadUri_WhenCallingUriIndexAdd_ThenReturnError);
    RUN_TEST_CASE(ot_app_pair_UriIndexAdd, GivenTrueUri_WhenCallingUriIndexAdd_ThenReturn0);
-
+   RUN_TEST_CASE(ot_app_pair_UriIndexAdd, GivenMaxUri_WhenCallingUriIndexAdd_ThenReturn19);
 }
