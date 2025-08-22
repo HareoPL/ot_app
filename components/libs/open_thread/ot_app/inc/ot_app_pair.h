@@ -40,9 +40,11 @@
 
 #define OTAPP_PAIR_DEVICES_MAX    OTAPP_PAIRED_DEVICES_MAX // max number of devices to save them from DNS query
 #define OTAPP_PAIR_URI_MAX        OTAPP_PAIRED_URI_MAX 
+#define OTAPP_PAIR_URI_MAX_VAL    OTAPP_URI_END_OF_INDEX
 #define OTAPP_PAIR_NAME_SIZE      OTAPP_DEVICE_NAME_SIZE 
-#define OTAPP_PAIR_NO_URI         0
+#define OTAPP_PAIR_NO_URI         OTAPP_URI_NO_URI_INDEX
 #define OTAPP_PAIR_URI_INIT       OTAPP_URI_END_OF_INDEX
+
 
 
 typedef struct otapp_pair_DeviceList_t otapp_pair_DeviceList_t;
