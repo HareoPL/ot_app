@@ -1,8 +1,8 @@
 #include "unity_fixture.h"
 #include "ot_app_pair.h"
 
-// #define UT_OAP_RETURN_INDEX_0 (0)
-// #define UT_OAP_RETURN_INDEX_9 (9)
+#define UT_OAP_DEVICE_INDEX_0 (0)
+
 #define EXPECTED_URI_RETURN(devIndex, uriIndex) ((devIndex << 8) | (uriIndex)) 
 
 static char *deviceNameFull_1 = {"device1_1_588c81fffe301ea1"};
@@ -98,4 +98,11 @@ TEST(ot_app_pair_UriIndex, GivenMaxUriPlus1_WhenCallingUriIndexAdd_ThenReturnErr
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
 }
 
-// otapp_pair_deviceUriIndexGet
+TEST(ot_app_pair_UriIndex, GivenNullDeviceList_WhenCallingDeviceUriIndexGet_ThenReturnError)
+{
+    int16_t result;    
+    result = otapp_pair_deviceUriIndexGet(NULL, UT_OAP_DEVICE_INDEX_0, OTAPP_URI_WELL_KNOWN_CORE); // OTAPP_PAIR_NO_URI
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
