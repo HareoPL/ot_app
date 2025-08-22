@@ -43,11 +43,11 @@ TEST_TEAR_DOWN(ot_app_pair_UriIndex)
 {
     /* Cleanup after every test */
 }
-// result = otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_1, OTAPP_URI_WELL_KNOWN_CORE);
+
 TEST(ot_app_pair_UriIndex, GivenNullDeviceList_WhenCallingUriIndexAdd_ThenReturnError)
 {
     int16_t result;    
-    result = otapp_pair_DeviceUriIndexAdd(NULL, deviceNameFull_1, OTAPP_URI_WELL_KNOWN_CORE);
+    result = otapp_pair_DeviceUriIndexAdd(NULL, deviceNameFull_1, UT_OAP_URI_INDEX_OK);
 
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);   
 }
@@ -55,7 +55,7 @@ TEST(ot_app_pair_UriIndex, GivenNullDeviceList_WhenCallingUriIndexAdd_ThenReturn
 TEST(ot_app_pair_UriIndex, GivenNullDeviceName_WhenCallingUriIndexAdd_ThenReturnError)
 {
     int16_t result;    
-    result = otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), NULL, OTAPP_URI_WELL_KNOWN_CORE);
+    result = otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), NULL, UT_OAP_URI_INDEX_OK);
 
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);   
 }
@@ -71,7 +71,7 @@ TEST(ot_app_pair_UriIndex, GivenBadUri_WhenCallingUriIndexAdd_ThenReturnError)
 TEST(ot_app_pair_UriIndex, GivenTrueUri_WhenCallingUriIndexAdd_ThenReturn0)
 {
     int16_t result;    
-    result = otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_1, OTAPP_URI_WELL_KNOWN_CORE);
+    result = otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_1, UT_OAP_URI_INDEX_OK);
 
     TEST_ASSERT_EQUAL(EXPECTED_URI_RETURN(0, 0), result);   
 }
@@ -101,7 +101,7 @@ TEST(ot_app_pair_UriIndex, GivenMaxUriPlus1_WhenCallingUriIndexAdd_ThenReturnErr
 TEST(ot_app_pair_UriIndex, GivenNullDeviceList_WhenCallingDeviceUriIndexGet_ThenReturnError)
 {
     int16_t result;    
-    result = otapp_pair_deviceUriIndexGet(NULL, UT_OAP_DEVICE_INDEX_0, OTAPP_URI_WELL_KNOWN_CORE); // OTAPP_PAIR_NO_URI
+    result = otapp_pair_deviceUriIndexGet(NULL, UT_OAP_DEVICE_INDEX_0, UT_OAP_URI_INDEX_OK);
 
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
 }
