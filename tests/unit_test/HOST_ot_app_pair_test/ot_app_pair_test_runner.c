@@ -23,6 +23,10 @@ TEST_GROUP_RUNNER(ot_app_pair)
    RUN_TEST_CASE(ot_app_pair, GivenCorrectVariable_WhenCallingDeviceIndexGet_ThenReturn9);
    RUN_TEST_CASE(ot_app_pair, GivenNoExistDeviceName_WhenCallingDeviceIndexGet_ThenReturnError);
 
+   RUN_TEST_CASE(ot_app_pair, GivenNullPairDeviceList_WhenCallingDeviceNameGet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenBadIndexDevice_WhenCallingDeviceNameGet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenNotExistIndexDevice_WhenCallingDeviceNameGet_ThenReturnNull);
+   RUN_TEST_CASE(ot_app_pair, GivenExistIndexDevice_WhenCallingDeviceNameGet_ThenReturnTrueString);
 }
 
 TEST_GROUP_RUNNER(ot_app_pair_UriIndex)
