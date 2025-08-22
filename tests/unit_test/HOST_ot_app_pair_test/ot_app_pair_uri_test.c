@@ -132,6 +132,8 @@ TEST(ot_app_pair_UriIndex, GivenMaxUriPlus1_WhenCallingUriIndexAdd_ThenReturnErr
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
 }
 
+//////////////////////
+// DeviceUriIndexGet()
 TEST(ot_app_pair_UriIndex, GivenNullDeviceList_WhenCallingDeviceUriIndexGet_ThenReturnError)
 {
     int16_t result;    
@@ -178,3 +180,43 @@ TEST(ot_app_pair_UriIndex, GivenIndexUriMax_WhenCallingDeviceUriIndexGet_ThenRet
 
     TEST_ASSERT_EQUAL(UT_OAP_URI_TABLE_2, result);
 }
+
+TEST(ot_app_pair_UriIndex, GivenNotExistDeviceName_WhenCallingDeviceUriIndexGet_ThenReturnError)
+{
+    int16_t result;   
+    int8_t deletedDeviceIndex; 
+    ut_oap_DeviceUriIndexAddFillAll(UT_OAP_URI_TABLE_2);
+
+    deletedDeviceIndex = otapp_pair_DeviceDelete(otapp_pair_getHandle(),deviceNameFull_6);
+    result = otapp_pair_deviceUriIndexGet(otapp_pair_getHandle(), deletedDeviceIndex, UT_OAP_URI_INDEX_MAX);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_NO_EXIST, result);
+} 
+
+TEST(ot_app_pair_UriIndex, GivenNotExistUriMax_WhenCallingDeviceUriIndexGet_ThenReturnError)
+{
+    int16_t result;   
+    int8_t deviceIndex; 
+    ut_oap_DeviceUriIndexAddFillAll(UT_OAP_URI_TABLE_2);
+
+    otapp_pair_DeviceDelete(otapp_pair_getHandle(),deviceNameFull_6);
+    deviceIndex = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_6, &ipAddr);
+    result = otapp_pair_deviceUriIndexGet(otapp_pair_getHandle(), deviceIndex, UT_OAP_URI_INDEX_MAX);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_NO_URI, result);
+} 
+
+TEST(ot_app_pair_UriIndex, GivenNewUri_WhenAfterDeletedDeviceCallingDeviceUriIndexGet_ThenReturn1)
+{
+    int16_t result;   
+    int16_t deviceIndex; 
+    ut_oap_DeviceUriIndexAddFillAll(UT_OAP_URI_TABLE_2);
+
+    otapp_pair_DeviceDelete(otapp_pair_getHandle(),deviceNameFull_6);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_6, &ipAddr);
+    deviceIndex = otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_6, UT_OAP_URI_TABLE_1);
+    
+    result = otapp_pair_deviceUriIndexGet(otapp_pair_getHandle(), (deviceIndex >> 8), (deviceIndex & 0xFF));
+
+    TEST_ASSERT_EQUAL(UT_OAP_URI_TABLE_1, result);
+} 
