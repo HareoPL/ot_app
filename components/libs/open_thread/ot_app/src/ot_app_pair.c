@@ -244,7 +244,7 @@ otapp_coap_uriTableIndex_t otapp_pair_deviceUriIndexGet(otapp_pair_DeviceList_t 
 
     if(pairDeviceList == NULL || indexDevice >= OTAPP_PAIR_DEVICES_MAX || indexUri >= OTAPP_PAIR_URI_MAX)
     {
-        return OTAPP_PAIR_NO_URI;
+        return OTAPP_PAIR_ERROR;
     }
 
     uriIndex = pairDeviceList->list[indexDevice].uriIndex[indexUri];
