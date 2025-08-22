@@ -253,6 +253,11 @@ otapp_coap_uriTableIndex_t otapp_pair_deviceUriIndexGet(otapp_pair_DeviceList_t 
         return OTAPP_PAIR_ERROR;
     }
 
+    if(otapp_pair_spaceIsTaken(pairDeviceList, indexDevice) == 0)
+    {
+        return OTAPP_PAIR_NO_EXIST;
+    }
+
     uriIndex = pairDeviceList->list[indexDevice].uriIndex[indexUri];
 
     if(uriIndex == OTAPP_PAIR_NO_URI)
