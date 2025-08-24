@@ -27,6 +27,15 @@ TEST_GROUP_RUNNER(ot_app_pair)
    RUN_TEST_CASE(ot_app_pair, GivenBadIndexDevice_WhenCallingDeviceNameGet_ThenReturnError);
    RUN_TEST_CASE(ot_app_pair, GivenNotExistIndexDevice_WhenCallingDeviceNameGet_ThenReturnNull);
    RUN_TEST_CASE(ot_app_pair, GivenExistIndexDevice_WhenCallingDeviceNameGet_ThenReturnTrueString);
+   
+   RUN_TEST_CASE(ot_app_pair, GivenNullDeviceList_WhenCallingipAddressIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenDeletedDeviceIndex_WhenCallingipAddressIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenIncorrectDeviceIndex_WhenCallingipAddressIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenNullIpAddress_WhenCallingipAddressIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenToShortIpAddress_WhenCallingipAddressIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenNotSameIpAddr_WhenCallingipAddressIsSame_ThenReturn0);
+   RUN_TEST_CASE(ot_app_pair, GivenSameIpAddr_WhenCallingipAddressIsSame_ThenReturn1);
+
 }
 
 TEST_GROUP_RUNNER(ot_app_pair_UriIndex)

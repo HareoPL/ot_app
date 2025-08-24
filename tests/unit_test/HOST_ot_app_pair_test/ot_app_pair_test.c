@@ -5,6 +5,9 @@
 #define UT_OAP_RETURN_INDEX_5 (5)
 #define UT_OAP_RETURN_INDEX_9 (9)
 
+#define UT_OAP_IS_SAME (1)
+#define UT_OAP_IS_NOT_SAME (0)
+
 #define UT_OAP_DEVICE_INDEX_0 (0)
 #define UT_OAP_DEVICE_INDEX_1 (1)
 #define UT_OAP_DEVICE_INDEX_BAD (OTAPP_PAIR_DEVICES_MAX)
@@ -30,10 +33,21 @@ static char *deviceNameFull_NO_EXIST = {"device1_1_no_exist"};
 static char *deviceNameFull_MaxLength10 = {"device1_1_588c81fffe301ea4___31"};
 static char *deviceNameFull_TooLength = {"device1_1_588c81fffe301ea9____32"};
 
-static otIp6Address ipAddr = {
+static otIp6Address ipAddr_ok_1 = {
     .mFields.m8 = {0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
                    0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34}
 };
+
+static otIp6Address ipAddr_ok_2 = {
+    .mFields.m8 = {0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73,  0x00,
+                   0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x34}
+};
+
+static otIp6Address ipAddr_bad_to_short_lenght = {
+    .mFields.m8 = {0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34,
+                   0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x2e}
+};
+
 static void ut_oap_DeviceUriIndexAddFillAll(otapp_coap_uriTableIndex_t uriIndex)
 {
     for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
@@ -53,16 +67,16 @@ static void ut_oap_DeviceUriIndexAddFillAll(otapp_coap_uriTableIndex_t uriIndex)
 
 static int8_t ut_oap_deviceAddFullFill(void)
 {
-    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr);
-    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_1, &ipAddr);
-    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_2, &ipAddr);
-    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_3, &ipAddr);
-    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_4, &ipAddr);
-    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_5, &ipAddr);
-    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_6, &ipAddr);
-    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_7, &ipAddr);
-    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_8, &ipAddr);
-    return otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_9, &ipAddr);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr_ok_1);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_1, &ipAddr_ok_1);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_2, &ipAddr_ok_1);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_3, &ipAddr_ok_1);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_4, &ipAddr_ok_1);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_5, &ipAddr_ok_1);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_6, &ipAddr_ok_1);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_7, &ipAddr_ok_1);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_8, &ipAddr_ok_1);
+    return otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_9, &ipAddr_ok_1);
 }
 
 
@@ -82,7 +96,7 @@ TEST(ot_app_pair, GivenNullDeviceList_WhenCallingDeviceAdd_ThenReturnError)
 {
     int8_t result;
     // otapp_pair_DeviceAdd(otapp_pair_getHandle(), &deviceNameFull_0, &ipAddr);
-    result = otapp_pair_DeviceAdd(NULL, deviceNameFull_0, &ipAddr);
+    result = otapp_pair_DeviceAdd(NULL, deviceNameFull_0, &ipAddr_ok_1);
 
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);   
 }
@@ -90,7 +104,7 @@ TEST(ot_app_pair, GivenNullDeviceList_WhenCallingDeviceAdd_ThenReturnError)
 TEST(ot_app_pair, GivenNullDeviceNameFull_WhenCallingDeviceAdd_ThenReturnError)
 {
     int8_t result;
-    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), NULL, &ipAddr);
+    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), NULL, &ipAddr_ok_1);
 
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);   
 }
@@ -106,8 +120,8 @@ TEST(ot_app_pair, GivenNullIpAddr_WhenCallingDeviceAdd_ThenReturnError)
 TEST(ot_app_pair, GivenTwiceSameDeviceName_WhenCallingDeviceAdd_ThenReturnError)
 {
     int8_t result;
-             otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr);
-    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr);
+             otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr_ok_1);
+    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr_ok_1);
 
     TEST_ASSERT_EQUAL(OTAPP_PAIR_DEVICE_NAME_EXIST, result);   
 }
@@ -115,7 +129,7 @@ TEST(ot_app_pair, GivenTwiceSameDeviceName_WhenCallingDeviceAdd_ThenReturnError)
 TEST(ot_app_pair, GivenTooLengthDeviceName_WhenCallingDeviceAdd_ThenReturnError)
 {
     int8_t result;
-    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_TooLength, &ipAddr);
+    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_TooLength, &ipAddr_ok_1);
 
     TEST_ASSERT_EQUAL(OTAPP_PAIR_DEVICE_NAME_TO_LONG, result);   
 }
@@ -123,7 +137,7 @@ TEST(ot_app_pair, GivenTooLengthDeviceName_WhenCallingDeviceAdd_ThenReturnError)
 TEST(ot_app_pair, GivenTrueVariables_WhenCallingDeviceAdd_ThenReturnIndex0)
 {
     int8_t result;
-    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr);
+    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr_ok_1);
 
     TEST_ASSERT_EQUAL(UT_OAP_RETURN_INDEX_0, result);   
 }
@@ -131,7 +145,7 @@ TEST(ot_app_pair, GivenTrueVariables_WhenCallingDeviceAdd_ThenReturnIndex0)
 TEST(ot_app_pair, GivenMaxLengthDeviceName_WhenCallingDeviceAdd_ThenReturnIndex0)
 {
     int8_t result;
-    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_MaxLength10, &ipAddr);
+    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_MaxLength10, &ipAddr_ok_1);
 
     TEST_ASSERT_EQUAL(UT_OAP_RETURN_INDEX_0, result);   
 }
@@ -149,7 +163,7 @@ TEST(ot_app_pair, GivenMaxDevicesPlus1_WhenCallingDeviceAdd_ThenReturnError)
 {
     int8_t result;
     ut_oap_deviceAddFullFill();
-    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_MaxLength10, &ipAddr);
+    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_MaxLength10, &ipAddr_ok_1);
 
     TEST_ASSERT_EQUAL(OTAPP_PAIR_DEVICE_NO_SPACE, result);   
 }
@@ -281,4 +295,95 @@ TEST(ot_app_pair, GivenExistIndexDevice_WhenCallingDeviceNameGet_ThenReturnTrueS
     result = otapp_pair_DeviceNameGet(otapp_pair_getHandle(), deviceIndex);
 
     TEST_ASSERT_EQUAL_STRING(deviceNameFull_5, result);
+}
+
+////////////////////////////
+// otapp_pair_ipAddress()
+TEST(ot_app_pair, GivenNullDeviceList_WhenCallingipAddressIsSame_ThenReturnError)
+{
+    int8_t result;   
+    int8_t deviceIndex;  
+
+    ut_oap_deviceAddFullFill();
+
+    deviceIndex = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressIsSame(NULL, deviceIndex, &ipAddr_ok_2);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair, GivenDeletedDeviceIndex_WhenCallingipAddressIsSame_ThenReturnError)
+{
+    int8_t result;   
+    int8_t deletedIndex;  
+
+    ut_oap_deviceAddFullFill();
+
+    deletedIndex = otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressIsSame(otapp_pair_getHandle(), deletedIndex, &ipAddr_ok_2);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_NO_EXIST, result);
+}
+
+TEST(ot_app_pair, GivenIncorrectDeviceIndex_WhenCallingipAddressIsSame_ThenReturnError)
+{
+    int8_t result;   
+
+    ut_oap_deviceAddFullFill();
+
+    result = otapp_pair_ipAddressIsSame(otapp_pair_getHandle(), UT_OAP_DEVICE_INDEX_BAD, &ipAddr_ok_2);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair, GivenNullIpAddress_WhenCallingipAddressIsSame_ThenReturnError)
+{
+    int8_t result;   
+    int8_t deviceIndex;   
+
+    ut_oap_deviceAddFullFill();
+
+    deviceIndex = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressIsSame(otapp_pair_getHandle(), deviceIndex, NULL);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair, GivenToShortIpAddress_WhenCallingipAddressIsSame_ThenReturnError)
+{
+    int8_t result;   
+    int8_t deviceIndex;   
+
+    ut_oap_deviceAddFullFill();
+
+    deviceIndex = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressIsSame(otapp_pair_getHandle(), deviceIndex, &ipAddr_bad_to_short_lenght);
+
+    TEST_ASSERT_EQUAL(UT_OAP_IS_NOT_SAME, result);
+}
+
+TEST(ot_app_pair, GivenNotSameIpAddr_WhenCallingipAddressIsSame_ThenReturn0)
+{
+    int8_t result;   
+    int8_t deviceIndex;  
+
+    ut_oap_deviceAddFullFill();
+
+    deviceIndex = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressIsSame(otapp_pair_getHandle(), deviceIndex, &ipAddr_ok_2);
+
+    TEST_ASSERT_EQUAL(UT_OAP_IS_NOT_SAME, result);
+}
+
+TEST(ot_app_pair, GivenSameIpAddr_WhenCallingipAddressIsSame_ThenReturn1)
+{
+    int8_t result;   
+    int8_t deviceIndex;  
+
+    ut_oap_deviceAddFullFill();
+
+    deviceIndex = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressIsSame(otapp_pair_getHandle(), deviceIndex, &ipAddr_ok_1);
+
+    TEST_ASSERT_EQUAL(UT_OAP_IS_SAME, result);
 }
