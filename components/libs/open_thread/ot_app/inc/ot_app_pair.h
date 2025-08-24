@@ -139,6 +139,17 @@ otapp_pair_DeviceList_t *otapp_pair_getHandle(void);
 otIp6Address *otapp_pair_ipAddressGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice);
 
 /**
+ * @brief check the ip address is same as saved in given device index
+ * 
+ * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle() 
+ * @param indexDevice     [in] index of device  
+ * @param ipAddr          [in] ptr to otIp6Address
+ * @return int8_t         [out] TRUE = 1, FALSE = 0
+ *                              or OTAPP_PAIR_ERROR, OTAPP_PAIR_NO_EXIST
+ */
+int8_t otapp_pair_ipAddressIsSame(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, otIp6Address *ipAddr);
+
+/**
  * @brief print all saved data of device
  * 
  * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle() 

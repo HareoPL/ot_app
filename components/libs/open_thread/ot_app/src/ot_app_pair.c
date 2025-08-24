@@ -277,9 +277,34 @@ otIp6Address *otapp_pair_ipAddressGet(otapp_pair_DeviceList_t *pairDeviceList, u
 
     return &pairDeviceList->list[indexDevice].ipAddr;
 }
-// otapp_pair_ipAddressCompare
-// otapp_pair_ipAddressUpdate
 
+int8_t otapp_pair_ipAddressIsSame(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, otIp6Address *ipAddr)
+{
+    if(pairDeviceList == NULL || indexDevice >= OTAPP_PAIR_DEVICES_MAX || ipAddr  == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    if(otapp_pair_spaceIsTaken(pairDeviceList, indexDevice) == 0)
+    {
+        return OTAPP_PAIR_NO_EXIST;
+    }
+    uint8_t *ipAddr_old = (uint8_t *)(&pairDeviceList->list[indexDevice].ipAddr);
+    uint8_t *ipAddr_new = (uint8_t *)ipAddr;
+    
+    for (uint8_t i = 0; i < sizeof(otIp6Address); i++)
+    {
+        if(*ipAddr_new != *ipAddr_old)
+        {
+            return 0;
+        }
+
+        ipAddr_new ++;
+        ipAddr_old ++;
+    }
+    
+    return 1;
+}
 
 void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice)
 {
