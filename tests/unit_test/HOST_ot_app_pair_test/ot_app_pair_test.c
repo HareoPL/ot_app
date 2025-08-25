@@ -48,6 +48,9 @@ static otIp6Address ipAddr_bad_to_short_lenght = {
                    0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x2e}
 };
 
+static otIp6Address *ipAddr_same = &ipAddr_ok_1;
+static otIp6Address *ipAddr_new = &ipAddr_ok_2;
+
 static void ut_oap_DeviceUriIndexAddFillAll(otapp_coap_uriTableIndex_t uriIndex)
 {
     for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
@@ -386,4 +389,94 @@ TEST(ot_app_pair, GivenSameIpAddr_WhenCallingipAddressIsSame_ThenReturn1)
     result = otapp_pair_ipAddressIsSame(otapp_pair_getHandle(), deviceIndex, &ipAddr_ok_1);
 
     TEST_ASSERT_EQUAL(UT_OAP_IS_SAME, result);
+}
+
+TEST(ot_app_pair, GivenNullDeviceList_WhenCallingIpAddressUpdate_ThenReturnError)
+{
+    int8_t result;   
+    int8_t deviceIndex;  
+
+    ut_oap_deviceAddFullFill();
+
+    deviceIndex = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressUpdate(NULL, deviceIndex, ipAddr_new);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair, GivenDeletedDeviceIndex_WhenCallingIpAddressUpdate_ThenReturnError)
+{
+    int8_t result;   
+    int8_t deletedIndex;  
+
+    ut_oap_deviceAddFullFill();
+
+    deletedIndex = otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressUpdate(otapp_pair_getHandle(), deletedIndex, ipAddr_new);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_NO_EXIST, result);
+}
+
+TEST(ot_app_pair, GivenIncorrectDeviceIndex_WhenCallingIpAddressUpdate_ThenReturnError)
+{
+    int8_t result;   
+
+    ut_oap_deviceAddFullFill();
+
+    result = otapp_pair_ipAddressUpdate(otapp_pair_getHandle(), UT_OAP_DEVICE_INDEX_BAD, ipAddr_new);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair, GivenNullIpAddress_WhenCallingIpAddressUpdate_ThenReturnError)
+{
+    int8_t result;   
+    int8_t deviceIndex;   
+
+    ut_oap_deviceAddFullFill();
+
+    deviceIndex = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressUpdate(otapp_pair_getHandle(), deviceIndex, NULL);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair, GivenSameIpAddress_WhenCallingIpAddressUpdate_ThenReturn0)
+{
+    int8_t result;   
+    int8_t deviceIndex;   
+
+    ut_oap_deviceAddFullFill();
+
+    deviceIndex = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressUpdate(otapp_pair_getHandle(), deviceIndex, ipAddr_same);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_NO_NEED_UPDATE , result);
+}
+
+TEST(ot_app_pair, GivenNewIpAddress_WhenCallingIpAddressUpdate_ThenReturn1)
+{
+    int8_t result;   
+    int8_t deviceIndex;   
+
+    ut_oap_deviceAddFullFill();
+
+    deviceIndex = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_5);
+    result = otapp_pair_ipAddressUpdate(otapp_pair_getHandle(), deviceIndex, ipAddr_new);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_UPDATED , result);
+}
+
+TEST(ot_app_pair, GivenNewIpAddress_WhenCallingIpAddressUpdateAndIpAddressIsSame_ThenReturn1)
+{
+    int8_t result;   
+    int8_t deviceIndex;   
+
+    ut_oap_deviceAddFullFill();
+
+    deviceIndex = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_5);
+    otapp_pair_ipAddressUpdate(otapp_pair_getHandle(), deviceIndex, ipAddr_new);
+    result = otapp_pair_ipAddressIsSame(otapp_pair_getHandle(), deviceIndex, ipAddr_new);
+
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_IS , result);
 }

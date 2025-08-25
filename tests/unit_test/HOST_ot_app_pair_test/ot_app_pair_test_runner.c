@@ -36,6 +36,14 @@ TEST_GROUP_RUNNER(ot_app_pair)
    RUN_TEST_CASE(ot_app_pair, GivenNotSameIpAddr_WhenCallingipAddressIsSame_ThenReturn0);
    RUN_TEST_CASE(ot_app_pair, GivenSameIpAddr_WhenCallingipAddressIsSame_ThenReturn1);
 
+   RUN_TEST_CASE(ot_app_pair, GivenNullDeviceList_WhenCallingIpAddressUpdate_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenDeletedDeviceIndex_WhenCallingIpAddressUpdate_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenIncorrectDeviceIndex_WhenCallingIpAddressUpdate_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenNullIpAddress_WhenCallingIpAddressUpdate_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenSameIpAddress_WhenCallingIpAddressUpdate_ThenReturn0);
+   RUN_TEST_CASE(ot_app_pair, GivenNewIpAddress_WhenCallingIpAddressUpdate_ThenReturn1);
+   RUN_TEST_CASE(ot_app_pair, GivenNewIpAddress_WhenCallingIpAddressUpdateAndIpAddressIsSame_ThenReturn1);
+
 }
 
 TEST_GROUP_RUNNER(ot_app_pair_UriIndex)
