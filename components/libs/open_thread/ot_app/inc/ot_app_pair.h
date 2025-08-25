@@ -31,6 +31,11 @@
          
 #endif
 
+#define OTAPP_PAIR_IS                       (1)
+#define OTAPP_PAIR_IS_NOT                   (0)
+#define OTAPP_PAIR_UPDATED                  (OTAPP_PAIR_IS)
+#define OTAPP_PAIR_NO_NEED_UPDATE           (OTAPP_PAIR_IS_NOT)
+
 #define OTAPP_PAIR_OK                       (-1)
 #define OTAPP_PAIR_ERROR                    (-2)
 #define OTAPP_PAIR_NO_EXIST                 (-3)
@@ -144,10 +149,20 @@ otIp6Address *otapp_pair_ipAddressGet(otapp_pair_DeviceList_t *pairDeviceList, u
  * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle() 
  * @param indexDevice     [in] index of device  
  * @param ipAddr          [in] ptr to otIp6Address
- * @return int8_t         [out] TRUE = 1, FALSE = 0
+ * @return int8_t         [out] OTAPP_PAIR_IS, OTAPP_PAIR_IS_NOT
  *                              or OTAPP_PAIR_ERROR, OTAPP_PAIR_NO_EXIST
  */
 int8_t otapp_pair_ipAddressIsSame(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, otIp6Address *ipAddr);
+
+/**
+ * @brief update ip address when it is different than saved
+ * 
+ * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle()  
+ * @param indexDevice     [in] index of device  
+ * @param ipAddr          [in] ptr to new otIp6Address 
+ * @return int8_t         [out] OTAPP_PAIR_UPDATED, OTAPP_PAIR_NO_NEED_UPDATE or if error: OTAPP_PAIR_ERROR, OTAPP_PAIR_NO_EXIST
+ */
+int8_t otapp_pair_ipAddressUpdate(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, otIp6Address *ipAddrNew);
 
 /**
  * @brief print all saved data of device

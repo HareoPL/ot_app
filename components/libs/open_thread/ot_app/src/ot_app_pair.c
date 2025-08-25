@@ -303,7 +303,33 @@ int8_t otapp_pair_ipAddressIsSame(otapp_pair_DeviceList_t *pairDeviceList, uint8
         ipAddr_old ++;
     }
     
-    return 1;
+    return OTAPP_PAIR_IS;
+}
+
+int8_t otapp_pair_ipAddressUpdate(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, otIp6Address *ipAddrNew)
+{
+    if(pairDeviceList == NULL || indexDevice >= OTAPP_PAIR_DEVICES_MAX || ipAddrNew  == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    if(otapp_pair_spaceIsTaken(pairDeviceList, indexDevice) == 0)
+    {
+        return OTAPP_PAIR_NO_EXIST;
+    }
+
+    otIp6Address *ipAddr_saved = otapp_pair_ipAddressGet(pairDeviceList, indexDevice);
+
+    int8_t isSame =  otapp_pair_ipAddressIsSame(pairDeviceList, indexDevice, ipAddrNew);
+
+    if(!isSame)
+    {
+        memcpy(ipAddr_saved, ipAddrNew, sizeof(otIp6Address));
+
+        return OTAPP_PAIR_UPDATED;
+    }
+
+    return OTAPP_PAIR_NO_NEED_UPDATE;
 }
 
 void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice)
