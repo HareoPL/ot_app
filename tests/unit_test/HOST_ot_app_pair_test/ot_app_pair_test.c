@@ -5,8 +5,8 @@
 #define UT_OAP_RETURN_INDEX_5 (5)
 #define UT_OAP_RETURN_INDEX_9 (9)
 
-#define UT_OAP_IS_SAME (1)
-#define UT_OAP_IS_NOT_SAME (0)
+#define UT_OAP_IS_SAME (OTAPP_PAIR_IS)
+#define UT_OAP_IS_NOT_SAME (OTAPP_PAIR_IS_NOT)
 
 #define UT_OAP_DEVICE_INDEX_0 (0)
 #define UT_OAP_DEVICE_INDEX_1 (1)
