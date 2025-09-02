@@ -24,6 +24,7 @@
 #include "ot_app_coap_uri.h"
 #include "string.h"
 #include "ot_app.h"
+#include "ot_app_deviceName.h"
 
 void otapp_coap_uri_testHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {
@@ -58,7 +59,7 @@ void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, con
     if (request)
     {
         printf("from uri: paring_services \n");
-        char incommingHostName[OTAPP_DEVICE_NAME_SIZE];
+        char incommingHostName[OTAPP_DEVICENAME_FULL_SIZE];
 
         uint8_t strCompare = 0;
 
@@ -75,7 +76,7 @@ void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, con
 
             if(strCompare)
             {
-                printf("new devica has been successfully paired. Dev ID: %d \n", otapp_deviceNameConvertToDevId(incommingHostName, lenOfReadedBytes));
+                printf("new devica has been successfully paired. Dev ID: %d \n", otapp_deviceNameGetDevId(incommingHostName, lenOfReadedBytes));
                 // todo check otapp pair.... 
             }else
             {
