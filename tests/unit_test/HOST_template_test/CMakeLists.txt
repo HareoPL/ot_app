@@ -11,13 +11,20 @@ set(INCLUDE_DIRS)
 
 list(APPEND INCLUDE_DIRS
 	# ADD your include dir here
-	# ../../../project/app/app
-	# ../../../project/app/boot_app
-	# ../../../project/common
+	# ../../../components/libs/open_thread/ot_app/inc/
+	../../../components/utils
+	# ../../../main
+)
+
+file(GLOB_RECURSE SRCS
+    # ../../../components/libs/open_thread/ot_app/src/*.c  
 )
 
 list(APPEND SRCS
-	# ADD your source file here ex. ../test.c
+	# ADD your source file here ex. ../test.c	
+	../../../components/utils/hro_utils.c
+	# ../../../components/libs/open_thread/ot_app/src/ot_app_pair.c
+	# ../../../main/main.c
 
 )
 
@@ -72,10 +79,12 @@ set(CMAKE_C_FLAGS  "${CMAKE_CXX_FLAGS} -Wall -Wextra")
 
 set(TEST_INCLUDE_DIRS
 	.
+	mocks/
 )
 
 file(GLOB_RECURSE SRC_GLOB
 	*.c	
+	mocks/*.c	
 )
 list(FILTER SRC_GLOB EXCLUDE REGEX ".*/out/.*")
 list(PREPEND SRCS ${SRC_GLOB})
