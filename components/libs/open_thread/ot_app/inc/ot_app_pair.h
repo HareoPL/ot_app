@@ -32,7 +32,7 @@
 #endif
 
 #define OTAPP_PAIR_IS                       (1)
-#define OTAPP_PAIR_IS_NOT                   (0)
+#define OTAPP_PAIR_IS_NOT                   (2)
 #define OTAPP_PAIR_UPDATED                  (OTAPP_PAIR_IS)
 #define OTAPP_PAIR_NO_NEED_UPDATE           (OTAPP_PAIR_IS_NOT)
 
@@ -46,7 +46,7 @@
 #define OTAPP_PAIR_DEVICES_MAX    OTAPP_PAIRED_DEVICES_MAX // max number of devices to save them from DNS query
 #define OTAPP_PAIR_URI_MAX        OTAPP_PAIRED_URI_MAX 
 #define OTAPP_PAIR_URI_MAX_VAL    OTAPP_URI_END_OF_INDEX
-#define OTAPP_PAIR_NAME_SIZE      OTAPP_DEVICE_NAME_SIZE 
+#define OTAPP_PAIR_NAME_FULL_SIZE OTAPP_DEVICE_NAME_FULL_SIZE 
 #define OTAPP_PAIR_NO_URI         OTAPP_URI_NO_URI_INDEX
 #define OTAPP_PAIR_URI_INIT       OTAPP_URI_END_OF_INDEX
 
@@ -219,7 +219,7 @@ PRIVATE int8_t otapp_pair_DeviceIsExist(otapp_pair_DeviceList_t *pairDeviceList,
  * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle() 
  * @param deviceNameFull  [in] char ptr of full device name ("device1_1_588c81fffe301ea4") 
  * @param indexDevice     [in] device index to comparison 
- * @return int8_t         [out] TRUE = 1, FALSE = 0, 
+ * @return int8_t         [out] TRUE = OTAPP_PAIR_IS, FALSE = OTAPP_PAIR_IS_NOT, 
  *                              or OTAPP_PAIR_ERROR (-1) if error
  */
 PRIVATE int8_t otapp_pair_deviceNameIsSame(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, uint8_t indexDevice);

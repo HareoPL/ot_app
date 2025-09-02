@@ -23,7 +23,7 @@
  #include "ot_app_pair.h"
 
 typedef struct {
-    char devName[OTAPP_PAIR_NAME_SIZE]; // deviceNameFull
+    char devName[OTAPP_PAIR_NAME_FULL_SIZE]; // deviceNameFull
     otIp6Address ipAddr;
     uint8_t uriIndex[OTAPP_PAIR_URI_MAX];    
 }otapp_pair_Device_t;
@@ -81,9 +81,9 @@ PRIVATE int8_t otapp_pair_deviceNameIsSame(otapp_pair_DeviceList_t *pairDeviceLi
 
     if(strcmp(deviceNameFull, pairDeviceList->list[indexDevice].devName) == 0)
     {
-        return 1;
+        return OTAPP_PAIR_IS;
     }
-    return 0;
+    return OTAPP_PAIR_IS_NOT;
 }
 
 PRIVATE int8_t otapp_pair_DeviceIsExist(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull)
@@ -97,7 +97,7 @@ PRIVATE int8_t otapp_pair_DeviceIsExist(otapp_pair_DeviceList_t *pairDeviceList,
     {
         if(otapp_pair_spaceIsTaken(pairDeviceList, i))
         {
-            if(otapp_pair_deviceNameIsSame(pairDeviceList, deviceNameFull, i))
+            if(otapp_pair_deviceNameIsSame(pairDeviceList, deviceNameFull, i) == OTAPP_PAIR_IS)
             {
                 return i;
             }
@@ -137,7 +137,7 @@ int8_t otapp_pair_DeviceDelete(otapp_pair_DeviceList_t *pairDeviceList, const ch
     int8_t tableIndex = otapp_pair_DeviceIsExist(pairDeviceList, deviceNameFull);
     if(tableIndex >= 0)
     {
-        memset(pairDeviceList->list[tableIndex].devName, 0, OTAPP_PAIR_NAME_SIZE);
+        memset(pairDeviceList->list[tableIndex].devName, 0, OTAPP_PAIR_NAME_FULL_SIZE);
         memset(&pairDeviceList->list[tableIndex].ipAddr, 0, sizeof(otIp6Address));
         memset(pairDeviceList->list[tableIndex].uriIndex, 0, OTAPP_PAIR_URI_MAX);
         pairDeviceList->takenPosition[tableIndex] = 0;
@@ -156,7 +156,7 @@ int8_t otapp_pair_DeviceDeleteAll(otapp_pair_DeviceList_t *pairDeviceList)
 
     for (uint8_t i = 0; i < OTAPP_PAIR_DEVICES_MAX; i++)
     {
-        memset(pairDeviceList->list[i].devName, 0, OTAPP_PAIR_NAME_SIZE);
+        memset(pairDeviceList->list[i].devName, 0, OTAPP_PAIR_NAME_FULL_SIZE);
         memset(&pairDeviceList->list[i].ipAddr, 0, sizeof(otIp6Address));
         pairDeviceList->takenPosition[i] = 0;
                 
@@ -289,14 +289,15 @@ int8_t otapp_pair_ipAddressIsSame(otapp_pair_DeviceList_t *pairDeviceList, uint8
     {
         return OTAPP_PAIR_NO_EXIST;
     }
-    uint8_t *ipAddr_old = (uint8_t *)(&pairDeviceList->list[indexDevice].ipAddr);
+
+    uint8_t *ipAddr_old = (uint8_t *)otapp_pair_ipAddressGet(pairDeviceList, indexDevice);
     uint8_t *ipAddr_new = (uint8_t *)ipAddr;
     
     for (uint8_t i = 0; i < sizeof(otIp6Address); i++)
     {
         if(*ipAddr_new != *ipAddr_old)
         {
-            return 0;
+            return OTAPP_PAIR_IS_NOT;
         }
 
         ipAddr_new ++;
@@ -322,7 +323,7 @@ int8_t otapp_pair_ipAddressUpdate(otapp_pair_DeviceList_t *pairDeviceList, uint8
 
     int8_t isSame =  otapp_pair_ipAddressIsSame(pairDeviceList, indexDevice, ipAddrNew);
 
-    if(!isSame)
+    if(isSame == OTAPP_PAIR_IS_NOT)
     {
         memcpy(ipAddr_saved, ipAddrNew, sizeof(otIp6Address));
 
