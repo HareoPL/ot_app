@@ -161,7 +161,6 @@ TEST(ot_app_pair_rtos, GivenMaxPlus1QueueItems_WhenCallingAddToQueue_ThenReturnE
 TEST(ot_app_pair_rtos, GivenMaxQueueItems_WhenCallingRtosTask_ThenReturnItemQuantity9)
 {
     size_t result;   
-    otapp_pair_queueItem_t *_queueItem;
 
     otapp_pair_initQueue();
     ut_oap_fillQueue(UT_OAP_MAX_QUEUE_ITEM);
@@ -174,7 +173,6 @@ TEST(ot_app_pair_rtos, GivenMaxQueueItems_WhenCallingRtosTask_ThenReturnItemQuan
 TEST(ot_app_pair_rtos, GivenMaxQueueItems_WhenCallingRtosTaskMaxTimes_ThenReturnItemQuantity0)
 {
     size_t result;   
-    otapp_pair_queueItem_t *_queueItem;
 
     otapp_pair_initQueue();
     ut_oap_fillQueue(UT_OAP_MAX_QUEUE_ITEM);
@@ -189,7 +187,6 @@ TEST(ot_app_pair_rtos, GivenMaxQueueItems_WhenCallingRtosTaskMaxTimes_ThenReturn
 TEST(ot_app_pair_rtos, GivenMaxQueueItems_WhenCallingRtosTaskMaxTimesPlus1_ThenReturnItemQuantity0)
 {
     size_t result;   
-    otapp_pair_queueItem_t *_queueItem;
 
     otapp_pair_initQueue();
     ut_oap_fillQueue(UT_OAP_MAX_QUEUE_ITEM);
