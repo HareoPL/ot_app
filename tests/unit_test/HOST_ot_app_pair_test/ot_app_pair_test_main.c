@@ -13,4 +13,5 @@ static void run_all_tests(void)
 {
    RUN_TEST_GROUP(ot_app_pair);
    RUN_TEST_GROUP(ot_app_pair_UriIndex);
+   RUN_TEST_GROUP(ot_app_pair_rtos);
 }

@@ -64,3 +64,7 @@ TEST_GROUP_RUNNER(ot_app_pair_UriIndex)
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNotExistUriMax_WhenCallingDeviceUriIndexGet_ThenReturnError);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNewUri_WhenAfterDeletedDeviceCallingDeviceUriIndexGet_ThenReturn1);
 }
+
+TEST_GROUP_RUNNER(ot_app_pair_rtos)
+{
+}
