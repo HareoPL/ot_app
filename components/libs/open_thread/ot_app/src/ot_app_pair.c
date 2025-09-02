@@ -22,6 +22,20 @@
 
  #include "ot_app_pair.h"
 
+ #ifdef UNIT_TEST
+    #include "mock_freertos_queue.h"
+    #include "mock_freertos_task.h"
+    #include "mock_ot_app_deviceName.h"
+ #else
+    #include "ot_app_deviceName.h"
+
+    #include "freertos/FreeRTOS.h"
+    #include "freertos/task.h"
+    #include "freertos/queue.h"
+#endif
+    
+static const char *TAG = "ot_app_pair";
+
 typedef struct {
     char devName[OTAPP_PAIR_NAME_FULL_SIZE]; // deviceNameFull
     otIp6Address ipAddr;
@@ -33,7 +47,23 @@ struct otapp_pair_DeviceList_t{
     uint8_t takenPosition[OTAPP_PAIR_DEVICES_MAX];
 };
 
-PRIVATE otapp_pair_DeviceList_t otapp_pair_DeviceList;
+static otapp_pair_DeviceList_t otapp_pair_DeviceList;
+static QueueHandle_t otapp_pair_queueHandle;
+static otapp_pair_queueItem_t otapp_pair_queueIteam;
+
+int8_t otapp_pair_addToQueue(otapp_pair_queueItem_t *queueItem) 
+{
+    if(queueItem == NULL || otapp_pair_queueHandle == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    if(xQueueSend(otapp_pair_queueHandle, (void *)queueItem, (TickType_t) 0) != pdTRUE)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+    return OTAPP_PAIR_OK;
+}
 
 PRIVATE int8_t otapp_pair_DeviceIsFreeSpace(otapp_pair_DeviceList_t *pairDeviceList)
 {
@@ -372,3 +402,88 @@ void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t
     }
 }
 
+PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_DeviceList_t *pairDeviceList, otapp_pair_queueItem_t *queueIteam)
+{
+    if(pairDeviceList == NULL || queueIteam == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+    int8_t result;
+
+    printf("Pairing new device: %s... ", queueIteam->deviceNameFull);
+
+    if(otapp_deviceNameIsMatching(queueIteam->deviceNameFull) == OTAPP_DEVICENAME_IS)
+    {
+        result = otapp_pair_DeviceAdd(pairDeviceList, queueIteam->deviceNameFull, &queueIteam->ipAddress);
+        if(result < 0)
+        {
+            printf("has NOT been paired. Error: %d \n", result);
+            return result; 
+        }else
+        {
+            printf("has been success paired on index %d \n", result);
+            return result;
+        }
+    }
+
+    return OTAPP_PAIR_IS_NOT;
+}
+
+void otapp_pair_task(void *params) 
+{
+    UNUSED(params);
+
+    while (1)
+    {
+        if (xQueueReceive(otapp_pair_queueHandle, &otapp_pair_queueIteam, portMAX_DELAY) == pdTRUE) 
+        {
+            if (otapp_pair_queueIteam.type == OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST)
+            {
+                otapp_pair_deviceIsMatchingFromQueue(otapp_pair_getHandle(), &otapp_pair_queueIteam);
+            }
+
+            UTILS_RTOS_CHECK_FREE_STACK();
+        }
+
+        BREAK_U_TEST;
+    }
+}
+
+PRIVATE int8_t otapp_pair_initQueue(void)
+{
+    otapp_pair_queueHandle = xQueueCreate(OTAPP_PAIR_QUEUE_LENGTH, sizeof(otapp_pair_queueItem_t));
+    if(otapp_pair_queueHandle == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+    return OTAPP_PAIR_OK;
+}
+
+PRIVATE int8_t otapp_pair_initTask(void)
+{    
+    if(xTaskCreate(otapp_pair_task, "otapp pair task", OTAPP_PAIR_TASK_STACK_DEPTH, xTaskGetCurrentTaskHandle(), OTAPP_PAIR_TASK_PRIORITY, NULL) != pdPASS)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+     
+    return OTAPP_PAIR_OK;
+}
+
+int8_t otapp_pair_init(void)
+{
+    int8_t result; 
+    result = otapp_pair_initQueue();
+    if(result != OTAPP_PAIR_OK)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    result =otapp_pair_initTask();
+    if(result != OTAPP_PAIR_OK)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+    
+    UNUSED(TAG);
+    return OTAPP_PAIR_OK;
+}

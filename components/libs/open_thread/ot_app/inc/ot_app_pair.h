@@ -50,9 +50,29 @@
 #define OTAPP_PAIR_NO_URI         OTAPP_URI_NO_URI_INDEX
 #define OTAPP_PAIR_URI_INIT       OTAPP_URI_END_OF_INDEX
 
-
+#define OTAPP_PAIR_QUEUE_LENGTH         10
+#define OTAPP_PAIR_TASK_STACK_DEPTH     (128 * 3)
+#define OTAPP_PAIR_TASK_PRIORITY        5
 
 typedef struct otapp_pair_DeviceList_t otapp_pair_DeviceList_t;
+
+typedef enum {
+    OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST     
+} otapp_pair_QueueDataType_t;
+
+typedef struct {
+    otapp_pair_QueueDataType_t type;
+    char deviceNameFull[OTAPP_PAIR_NAME_FULL_SIZE];
+    otIp6Address ipAddress;
+} otapp_pair_queueItem_t;
+
+/**
+ * @brief todo
+ * 
+ * @return int8_t 
+ */
+int8_t otapp_pair_init(void);
+
 
 /**
  * @brief add new device to the pairing list
@@ -172,6 +192,13 @@ int8_t otapp_pair_ipAddressUpdate(otapp_pair_DeviceList_t *pairDeviceList, uint8
  */
 void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice);
 
+/**
+ * @brief todo
+ * 
+ * @param queueItem 
+ * @return int8_t 
+ */
+int8_t otapp_pair_addToQueue(otapp_pair_queueItem_t *queueItem);
 
 #ifdef UNIT_TEST
 
@@ -224,6 +251,28 @@ PRIVATE int8_t otapp_pair_DeviceIsExist(otapp_pair_DeviceList_t *pairDeviceList,
  */
 PRIVATE int8_t otapp_pair_deviceNameIsSame(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, uint8_t indexDevice);
 
+/**
+ * @brief todo
+ * 
+ * @param pairDeviceList 
+ * @param queueIteam 
+ * @return PRIVATE 
+ */
+PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_DeviceList_t *pairDeviceList, otapp_pair_queueItem_t *queueIteam);
+
+/**
+ * @brief todo
+ * 
+ * @return PRIVATE 
+ */
+PRIVATE int8_t otapp_pair_initQueue(void);
+
+/**
+ * @brief todo
+ * 
+ * @return PRIVATE 
+ */
+PRIVATE int8_t otapp_pair_initTask(void);
 #endif  /* UNIT_TEST */
 
 #endif  /* OT_APP_PAIR_H_ */
