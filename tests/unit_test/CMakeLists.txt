@@ -12,8 +12,8 @@ add_subdirectory(../external/unity unity)
 # add tests subdirectory:
 # add_subdirectory(HOST_template_test)
 add_subdirectory(HOST_ot_app_pair_test)
-# add_subdirectory(HW_template_test)
-# add_subdirectory(testX)
+add_subdirectory(HOST_ot_app_deviceName_test)
+
 
 message(STATUS "------------------------------------------------ Project targets list: ")
 foreach(list ${PROJECT_TARGETS_LIST})
