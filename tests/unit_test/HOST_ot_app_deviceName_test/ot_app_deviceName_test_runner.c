@@ -32,6 +32,8 @@ TEST_GROUP_RUNNER(ot_app_deviceName)
    // otapp_deviceNameGetDevId
    RUN_TEST_CASE(ot_app_deviceName, GivenNullDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnError);
    RUN_TEST_CASE(ot_app_deviceName, GivenWrongTypeDevInDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenCorrectTypeDevInDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_deviceName, GivenOutsideScopeTypeDevInDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnError);
 
 }
 

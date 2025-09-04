@@ -17,6 +17,14 @@ static char *deviceNameFull_not_same = {"device2_1_588c81fffe301ea4"};
 static char *deviceNameFull_device1_type0_fakeAddr = {"device1_0_0011223344556677"};
 static char *deviceNameFull_device1_type1_fakeAddr = {"device1_1_0011223344556677"};
 
+static char deviceNameFull[OTAPP_DNS_SRV_LABEL_SIZE];
+char *ut_dn_createDeviceNameFull(const char *deviceName, const uint8_t deviceType) 
+{
+    snprintf(deviceNameFull, OTAPP_DNS_SRV_LABEL_SIZE - 1, "%s_%d_0011223344556677", deviceName, deviceType);
+    
+    return deviceNameFull;
+}
+
 TEST_GROUP(ot_app_deviceName);
 
 TEST_SETUP(ot_app_deviceName)
@@ -196,3 +204,20 @@ TEST(ot_app_deviceName, GivenWrongTypeDevInDevNameFull_WhenIsCallingDeviceNameGe
     TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
 }
 
+TEST(ot_app_deviceName, GivenCorrectTypeDevInDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnOK)
+{
+    int8_t result;
+    char *_deviceNameFull = ut_dn_createDeviceNameFull(deviceName_device1, UT_DN_OK_DEVICE_TYPE_1);
+
+    result = otapp_deviceNameGetDevId(_deviceNameFull, strlen(_deviceNameFull));
+    TEST_ASSERT_EQUAL(UT_DN_OK_DEVICE_TYPE_1, result);
+}
+
+TEST(ot_app_deviceName, GivenOutsideScopeTypeDevInDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnError)
+{
+    int8_t result;
+    char *_deviceNameFull = ut_dn_createDeviceNameFull(deviceName_device1, UT_DN_BAD_DEVICE_TYPE_OUTSIDE_SCOPE);
+    
+    result = otapp_deviceNameGetDevId(_deviceNameFull, strlen(_deviceNameFull));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}
