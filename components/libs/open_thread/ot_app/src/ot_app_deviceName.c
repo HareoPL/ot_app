@@ -97,8 +97,14 @@ int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength)
     char inDeviceName[OTAPP_DEVICENAME_FULL_SIZE];
     char curDeviceName[OTAPP_DEVICENAME_FULL_SIZE];
 
+    char *curDeviceNamePtr = otapp_deviceNameFullGet();
+    if(NULL == curDeviceNamePtr)
+    {
+        return OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN;
+    }
+
     strncpy(inDeviceName, deviceNameFull, stringLength);
-    strncpy(curDeviceName, otapp_deviceNameFullGet(), stringLength);
+    strncpy(curDeviceName, curDeviceNamePtr, strlen(curDeviceNamePtr));
     
     strtok(inDeviceName, "_");
     strtok(curDeviceName, "_");
