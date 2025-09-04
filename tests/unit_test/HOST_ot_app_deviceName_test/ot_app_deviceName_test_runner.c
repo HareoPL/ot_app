@@ -13,6 +13,14 @@ TEST_GROUP_RUNNER(ot_app_deviceName)
    // deviceNameFullGet
    RUN_TEST_CASE(ot_app_deviceName, GivenNoCallingDeviceNameSet_WhenIsCallingDeviceNameFullGet_ThenReturnError);
    RUN_TEST_CASE(ot_app_deviceName, GivenCallingDeviceNameSet_WhenIsCallingDeviceNameFullGet_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullArgument_WhenIsCallingdeviceNameFullIsSame_ThenReturnError);
+
+   // deviceNameFullIsSame
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullArgument_WhenIsCallingdeviceNameFullIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevNameFull_WhenIsCallingdeviceNameFullIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenNotSameDevNameFull_WhenIsCallingdeviceNameFullIsSame_ThenReturnNOT);
+   RUN_TEST_CASE(ot_app_deviceName, GivenSameDevNameFull_WhenIsCallingdeviceNameFullIsSame_ThenReturnYES);
+
 
 }
 
