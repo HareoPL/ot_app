@@ -34,7 +34,7 @@ int8_t otapp_deviceNameSet(const char *deviceName, otapp_deviceType_t deviceType
         return OTAPP_DEVICENAME_ERROR;
     }
 
-    if(strlen(deviceName) >= OTAPP_DEVICENAME_SIZE)
+    if(strlen(deviceName) > OTAPP_DEVICENAME_SIZE)
     {
         return OTAPP_DEVICENAME_TOO_LONG;
     }
