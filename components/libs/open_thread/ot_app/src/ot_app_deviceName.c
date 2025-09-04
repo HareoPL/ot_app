@@ -94,6 +94,11 @@ int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength)
         return OTAPP_DEVICENAME_TOO_LONG;
     }
 
+    if(stringLength < OTAPP_DEVICENAME_MIN_SIZE) 
+    {
+        return OTAPP_DEVICENAME_TOO_SHORT;
+    }
+
     char inDeviceName[OTAPP_DEVICENAME_FULL_SIZE];
     char curDeviceName[OTAPP_DEVICENAME_FULL_SIZE];
 

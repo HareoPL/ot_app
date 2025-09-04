@@ -161,5 +161,5 @@ TEST(ot_app_deviceName, GivenTooShortDevNameFull_WhenIsCallingDeviceNameIsSame_T
     int8_t result;
     otapp_deviceNameSet(deviceName_0, UT_DN_OK_DEVICE_TYPE_0);
     result = otapp_deviceNameIsSame(deviceName_0, strlen(deviceName_0));
-    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_TOO_SHORT, result);
 }   

@@ -38,11 +38,14 @@
 
 #define OTAPP_DEVICENAME_ERROR              (-2)
 #define OTAPP_DEVICENAME_TOO_LONG           (-3)
-#define OTAPP_DEVICENAME_BUFFER_TOO_SMALL   (-4)
+#define OTAPP_DEVICENAME_TOO_SHORT          (-4)
+#define OTAPP_DEVICENAME_BUFFER_TOO_SMALL   (-5)
+#define OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN   (-6)
 
 #define OTAPP_DEVICENAME_MAX_DEVICE_TYPE    OTAPP_END_OF_DEVICE_TYPE
 #define OTAPP_DEVICENAME_FULL_SIZE          OTAPP_DNS_SRV_LABEL_SIZE
 #define OTAPP_DEVICENAME_SIZE               (OTAPP_DEVICENAME_FULL_SIZE - 22)
+#define OTAPP_DEVICENAME_MIN_SIZE           (OTAPP_DEVICENAME_FULL_SIZE - OTAPP_DEVICENAME_SIZE + 1)
 
 /**
  * @brief set device name + device type. Max length of device name: 10 bytes
@@ -78,7 +81,7 @@ int8_t otapp_deviceNameFullIsSame(const char *deviceNameFull);
  * @param deviceNameFull [in] char ptr to device name full which will be compared
  * @param stringLength   [in] lenght of the string.
  * @return int8_t        [out] OTAPP_DEVICENAME_IS, OTAPP_DEVICENAME_IS_NOT
- *                             or if error: OTAPP_DEVICENAME_ERROR, OTAPP_DEVICENAME_TOO_LONG 
+ *                             or if error: OTAPP_DEVICENAME_ERROR, OTAPP_DEVICENAME_TOO_LONG, OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN
  * @note this function compare "device1", NOT "device1_1_588c81fffe301ea4"
  */
 int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength);
