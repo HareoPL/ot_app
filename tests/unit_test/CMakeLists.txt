@@ -7,6 +7,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_definitions(UNIT_TEST)
 
 add_subdirectory(../external/unity unity)
+add_subdirectory(../external/fff fff)
 
 
 # add tests subdirectory:
