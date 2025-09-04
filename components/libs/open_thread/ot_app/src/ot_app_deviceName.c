@@ -54,6 +54,11 @@ const char *otapp_deviceNameFullGet()
     return otapp_deviceName;
 }
 
+void otapp_deviceNameDelete()
+{
+    memset(otapp_deviceName, 0, OTAPP_DNS_SRV_LABEL_SIZE);
+}
+
 int8_t otapp_deviceNameFullIsSame(const char *deviceNameFull)
 {
     if(deviceNameFull == NULL )

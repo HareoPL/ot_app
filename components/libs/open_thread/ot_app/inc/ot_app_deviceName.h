@@ -124,5 +124,10 @@ int8_t otapp_hostNameToDeviceNameFull(char *hostName);
  */
 int8_t otapp_deviceNameIsMatching(char *deviceFullName);
 
+/**
+ * @brief todo
+ * 
+ */
+void otapp_deviceNameDelete(void);
 
 #endif  /* OT_APP_DEVICENAME_H_ */
