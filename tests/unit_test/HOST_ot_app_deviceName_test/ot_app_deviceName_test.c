@@ -11,6 +11,8 @@ static char *deviceName_0 = {"device1"};
 static char *deviceName_max_10_byte = {"dMax10byte"};
 static char *deviceName_to_long = {"name11_byte"};
 
+static char *deviceNameFull_devName0_type0_fakeAddr = {"device1_1_0011223344556677"};
+
 TEST_GROUP(ot_app_deviceName);
 
 TEST_SETUP(ot_app_deviceName)
@@ -85,7 +87,15 @@ TEST(ot_app_deviceName, GivenNoCallingDeviceNameSet_WhenIsCallingDeviceNameFullG
 {
     const char *devNameFull;
 
-    // otapp_deviceNameSet(deviceName_max_10_byte, UT_DN_OK_DEVICE_TYPE_0);
     devNameFull = otapp_deviceNameFullGet();
     TEST_ASSERT_EQUAL_STRING(NULL, devNameFull);
+}
+
+TEST(ot_app_deviceName, GivenCallingDeviceNameSet_WhenIsCallingDeviceNameFullGet_ThenReturnOK)
+{
+    const char *devNameFull;
+
+    otapp_deviceNameSet(deviceName_0, UT_DN_OK_DEVICE_TYPE_0);
+    devNameFull = otapp_deviceNameFullGet();
+    TEST_ASSERT_EQUAL_STRING(deviceNameFull_devName0_type0_fakeAddr, devNameFull);
 }

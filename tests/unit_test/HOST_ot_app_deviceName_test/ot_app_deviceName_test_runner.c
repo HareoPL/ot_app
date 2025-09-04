@@ -12,5 +12,7 @@ TEST_GROUP_RUNNER(ot_app_deviceName)
 
    // deviceNameFullGet
    RUN_TEST_CASE(ot_app_deviceName, GivenNoCallingDeviceNameSet_WhenIsCallingDeviceNameFullGet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenCallingDeviceNameSet_WhenIsCallingDeviceNameFullGet_ThenReturnOK);
+
 }
 
