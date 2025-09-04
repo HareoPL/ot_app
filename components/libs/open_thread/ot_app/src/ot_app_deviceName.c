@@ -51,6 +51,10 @@ int8_t otapp_deviceNameSet(const char *deviceName, otapp_deviceType_t deviceType
 
 const char *otapp_deviceNameFullGet()
 {
+    if(strlen(otapp_deviceName) == 0)
+    {
+        return NULL;
+    }
     return otapp_deviceName;
 }
 
