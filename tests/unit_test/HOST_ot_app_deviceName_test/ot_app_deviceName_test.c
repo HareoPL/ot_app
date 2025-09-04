@@ -16,6 +16,7 @@ TEST_GROUP(ot_app_deviceName);
 TEST_SETUP(ot_app_deviceName)
 {
     /* Init before every test */
+    otapp_deviceNameDelete();
 }
 
 TEST_TEAR_DOWN(ot_app_deviceName)
@@ -77,4 +78,14 @@ TEST(ot_app_deviceName, GivenMaxLengthDevName_WhenIsCallingDeviceNameSet_ThenRet
 
     result = otapp_deviceNameSet(deviceName_max_10_byte, UT_DN_OK_DEVICE_TYPE_0);
     TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_OK, result);
+}
+
+// deviceNameFullGet
+TEST(ot_app_deviceName, GivenNoCallingDeviceNameSet_WhenIsCallingDeviceNameFullGet_ThenReturnError)
+{
+    const char *devNameFull;
+
+    // otapp_deviceNameSet(deviceName_max_10_byte, UT_DN_OK_DEVICE_TYPE_0);
+    devNameFull = otapp_deviceNameFullGet();
+    TEST_ASSERT_EQUAL_STRING(NULL, devNameFull);
 }
