@@ -8,6 +8,7 @@
 #define UT_DN_BAD_DEVICE_TYPE_OUTSIDE_SCOPE     OTAPP_END_OF_DEVICE_TYPE
 
 static char *deviceName_0 = {"device1"};
+static char *deviceName_1 = {"device2"};
 static char *deviceName_max_10_byte = {"dMax10byte"};
 static char *deviceName_to_long = {"name11_byte"};
 
@@ -132,3 +133,18 @@ TEST(ot_app_deviceName, GivenSameDevNameFull_WhenIsCallingdeviceNameFullIsSame_T
     result = otapp_deviceNameFullIsSame(deviceNameFull_devName0_type0_fakeAddr);
     TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_IS, result);
 }
+
+// otapp_deviceNameIsSame
+TEST(ot_app_deviceName, GivenNullArgument_WhenIsCallingDeviceNameIsSame_ThenReturnError)
+{
+    int8_t result;
+    result = otapp_deviceNameIsSame(NULL, strlen(deviceName_1));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}
+
+TEST(ot_app_deviceName, GivenNotCallingDeviceNameSet_WhenIsCallingDeviceNameIsSame_ThenReturnError)
+{
+    int8_t result;
+    result = otapp_deviceNameIsSame(deviceNameFull_devName0_type0_fakeAddr, strlen(deviceNameFull_devName0_type0_fakeAddr));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN, result);
+} 
