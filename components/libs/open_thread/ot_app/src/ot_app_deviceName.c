@@ -133,6 +133,7 @@ otapp_deviceType_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t 
         return OTAPP_DEVICENAME_TOO_LONG;
     }
 
+    uint8_t devId;
     char buf[OTAPP_DEVICENAME_FULL_SIZE];
     char *ptr;
     strncpy(buf, deviceNameFull, stringLength);
@@ -140,7 +141,13 @@ otapp_deviceType_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t 
     strtok(buf, "_");
     ptr = strtok(NULL, "_");
 
-    return atoi(ptr);
+    devId = atoi(ptr);
+    if(devId == OTAPP_NO_DEVICE_TYPE)
+    {
+        return OTAPP_DEVICENAME_ERROR;
+    }
+
+    return devId;
 }
 
 int8_t otapp_deviceNameFullAddDomain(char *deviceFullName, uint16_t bufLength)
