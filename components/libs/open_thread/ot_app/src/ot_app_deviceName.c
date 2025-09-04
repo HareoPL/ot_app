@@ -89,7 +89,7 @@ int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength)
         return OTAPP_DEVICENAME_ERROR;
     }
 
-    if(stringLength >= OTAPP_DEVICENAME_FULL_SIZE)
+    if(stringLength >= (OTAPP_DEVICENAME_FULL_SIZE - 1)) // minus '/0'
     {
         return OTAPP_DEVICENAME_TOO_LONG;
     }
@@ -102,7 +102,7 @@ int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength)
     char inDeviceName[OTAPP_DEVICENAME_FULL_SIZE];
     char curDeviceName[OTAPP_DEVICENAME_FULL_SIZE];
 
-    char *curDeviceNamePtr = otapp_deviceNameFullGet();
+    const char *curDeviceNamePtr = otapp_deviceNameFullGet();
     if(NULL == curDeviceNamePtr)
     {
         return OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN;
