@@ -25,7 +25,7 @@ list(APPEND SRCS
 	# ADD your source file here ex. ../test.c	
 	../../../components/utils/hro_utils.c
 	../../../components/libs/open_thread/ot_app/src/ot_app_deviceName.c
-	../HOST_ot_app_common/mocks/mock_ot_app_coap.c
+	../HOST_ot_app_common/mocks/mock_mocks.c
 	# ../../../main/main.c
 
 )
@@ -105,6 +105,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME} unity)
+target_link_libraries(${PROJECT_NAME} fff)
 
 target_compile_options(${PROJECT_NAME} PRIVATE -fprofile-arcs -ftest-coverage)
 target_link_options(${PROJECT_NAME} PRIVATE -fprofile-arcs)

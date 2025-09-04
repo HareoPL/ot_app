@@ -96,6 +96,7 @@ set(GLOBAL_DEFINES
 add_definitions(${GLOBAL_DEFINES})
 
 add_executable(${PROJECT_NAME} ${SRCS})
+target_link_libraries(${PROJECT_NAME} fff)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${INCLUDE_DIRS}
