@@ -9,18 +9,17 @@ cmake_minimum_required(VERSION 3.17)
 set(SRCS)
 set(INCLUDE_DIRS)
 
+
 list(APPEND INCLUDE_DIRS
 	# ADD your include dir here
-	# ../../../project/app/app
-	# ../../../project/app/boot_app
-	# ../../../project/common
 	../../../components/libs/open_thread/ot_app/inc/
 	../../../components/utils
+	../HOST_ot_app_common/mocks/
 	# ../../../main
 )
 
 file(GLOB_RECURSE SRCS
-    # ../../../components/libs/open_thread/ot_app/src/*.c  
+	../HOST_ot_app_common/mocks/*.c 
 )
 
 list(APPEND SRCS
