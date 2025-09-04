@@ -24,8 +24,8 @@ TEST_GROUP_RUNNER(ot_app_deviceName)
    // otapp_deviceNameIsSame
    RUN_TEST_CASE(ot_app_deviceName, GivenNullArgument_WhenIsCallingDeviceNameIsSame_ThenReturnError);
    RUN_TEST_CASE(ot_app_deviceName, GivenNotCallingDeviceNameSet_WhenIsCallingDeviceNameIsSame_ThenReturnError);
-
-
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooShortDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnError);
 
 }
 

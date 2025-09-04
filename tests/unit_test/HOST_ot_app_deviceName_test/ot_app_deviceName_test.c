@@ -148,3 +148,18 @@ TEST(ot_app_deviceName, GivenNotCallingDeviceNameSet_WhenIsCallingDeviceNameIsSa
     result = otapp_deviceNameIsSame(deviceNameFull_devName0_type0_fakeAddr, strlen(deviceNameFull_devName0_type0_fakeAddr));
     TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN, result);
 } 
+
+TEST(ot_app_deviceName, GivenTooLongDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnError)
+{
+    int8_t result;
+    result = otapp_deviceNameIsSame(deviceNameFull_to_long, strlen(deviceNameFull_to_long));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_TOO_LONG, result);
+}
+ 
+TEST(ot_app_deviceName, GivenTooShortDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnError)
+{
+    int8_t result;
+    otapp_deviceNameSet(deviceName_0, UT_DN_OK_DEVICE_TYPE_0);
+    result = otapp_deviceNameIsSame(deviceName_0, strlen(deviceName_0));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}   
