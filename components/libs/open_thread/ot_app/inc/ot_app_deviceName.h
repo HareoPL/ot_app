@@ -27,7 +27,9 @@
 #ifndef UNIT_TEST
     #include "ot_app.h"
 #else
-    #include "mock_ot_app.h"          
+    #include "mock_ot_app.h" 
+    #include "mock_ip6.h"    
+    #include "mock_mocks.h"     
 #endif
 
 #define OTAPP_DEVICENAME_IS                 (1)
