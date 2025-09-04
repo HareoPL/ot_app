@@ -142,7 +142,7 @@ otapp_deviceType_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t 
     ptr = strtok(NULL, "_");
 
     devId = atoi(ptr);
-    if(devId == OTAPP_NO_DEVICE_TYPE)
+    if(devId == OTAPP_NO_DEVICE_TYPE || devId >= OTAPP_END_OF_DEVICE_TYPE)
     {
         return OTAPP_DEVICENAME_ERROR;
     }
