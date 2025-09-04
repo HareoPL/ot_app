@@ -181,3 +181,18 @@ TEST(ot_app_deviceName, GivenSameDevNameFull_WhenIsCallingDeviceNameIsSame_ThenR
     TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_IS, result);
 }
 
+// otapp_deviceNameGetDevId
+TEST(ot_app_deviceName, GivenNullDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnError)
+{
+    int8_t result;   
+    result = otapp_deviceNameGetDevId(NULL, strlen(deviceNameFull_device1_type0_fakeAddr));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}
+
+TEST(ot_app_deviceName, GivenWrongTypeDevInDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnError)
+{
+    int8_t result;   
+    result = otapp_deviceNameGetDevId(deviceNameFull_device1_type0_fakeAddr, strlen(deviceNameFull_device1_type0_fakeAddr));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}
+
