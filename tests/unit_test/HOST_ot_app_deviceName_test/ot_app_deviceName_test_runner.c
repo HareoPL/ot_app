@@ -39,5 +39,10 @@ TEST_GROUP_RUNNER(ot_app_deviceName)
    RUN_TEST_CASE(ot_app_deviceName, GivenNullDevNameFull_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
    RUN_TEST_CASE(ot_app_deviceName, GivenTooSmallBuffer_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
    RUN_TEST_CASE(ot_app_deviceName, GivenProperBufferSizeWithoutDevName_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenProperBufferSizeWithDevName_WhenIsCallingDeviceNameFullAddDomain_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevNameFull_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooShortDevNameFull_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
+
+
 }
 

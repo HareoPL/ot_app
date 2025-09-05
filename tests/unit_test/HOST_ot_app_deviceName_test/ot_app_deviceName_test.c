@@ -252,3 +252,26 @@ TEST(ot_app_deviceName, GivenProperBufferSizeWithoutDevName_WhenIsCallingDeviceN
     result = otapp_deviceNameFullAddDomain(ut_dn_charBuf, OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE);
     TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_TOO_SHORT, result);
 }
+
+TEST(ot_app_deviceName, GivenProperBufferSizeWithDevName_WhenIsCallingDeviceNameFullAddDomain_ThenReturnOK)
+{
+    int8_t result;
+    char *_deviceNameFull = ut_dn_createDeviceNameFull(deviceName_device1, UT_DN_OK_DEVICE_TYPE_1);
+    result = otapp_deviceNameFullAddDomain(_deviceNameFull, OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE);
+    TEST_ASSERT_EQUAL_STRING(deviceName_with_domain_OK, _deviceNameFull);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_OK, result);
+}
+
+TEST(ot_app_deviceName, GivenTooLongDevNameFull_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError)
+{
+    int8_t result;   
+    result = otapp_deviceNameFullAddDomain(deviceNameFull_to_long, OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_TOO_LONG, result);
+}
+
+TEST(ot_app_deviceName, GivenTooShortDevNameFull_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError)
+{
+    int8_t result;   
+    result = otapp_deviceNameFullAddDomain(deviceName_device1, OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_TOO_SHORT, result);
+}
