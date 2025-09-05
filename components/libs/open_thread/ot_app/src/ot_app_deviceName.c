@@ -197,7 +197,7 @@ int8_t otapp_hostNameToDeviceNameFull(char *hostName)
     return OTAPP_DEVICENAME_OK;
 }
 
-int8_t otapp_deviceNameIsMatching(char *deviceFullName)
+int8_t otapp_deviceNameIsMatching(const char *deviceFullName)
 {
      if(deviceFullName == NULL)
     {
