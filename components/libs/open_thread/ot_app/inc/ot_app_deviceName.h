@@ -46,6 +46,7 @@
 #define OTAPP_DEVICENAME_FULL_SIZE          OTAPP_DNS_SRV_LABEL_SIZE
 #define OTAPP_DEVICENAME_SIZE               (OTAPP_DEVICENAME_FULL_SIZE - 22)
 #define OTAPP_DEVICENAME_MIN_SIZE           (OTAPP_DEVICENAME_FULL_SIZE - OTAPP_DEVICENAME_SIZE + 1)
+#define OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE           (2 * OTAPP_DEVICENAME_FULL_SIZE)
 
 /**
  * @brief set device name + device type. Max length of device name: 10 bytes
@@ -102,7 +103,7 @@ otapp_deviceType_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t 
  * @param labelName [in] char ptr to deviceNameFull buffer. The char buffer should be 64 bytes
  *                  [out] connected domain name to deviceNameFull in the same char buffer
  * @return          [out] OTAPP_DEVICENAME_OK
- *                        or if error: OTAPP_DEVICENAME_ERROR, OTAPP_DEVICENAME_TOO_LONG, OTAPP_DEVICENAME_BUFFER_TOO_SMALL
+ *                        or if error: OTAPP_DEVICENAME_ERROR, OTAPP_DEVICENAME_TOO_LONG, OTAPP_DEVICENAME_BUFFER_TOO_SMALL, OTAPP_DEVICENAME_TOO_SHORT
  * @attention char buffer should be 64 bytes (including deviceNameFull) 
  * @note after this, the char buffer should looks like "device1_1_588c81fffe301ea4.default.service.arpa."
  */

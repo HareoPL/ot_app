@@ -157,14 +157,19 @@ int8_t otapp_deviceNameFullAddDomain(char *deviceFullName, uint16_t bufLength)
         return OTAPP_DEVICENAME_ERROR;
     }
 
+    if(bufLength < OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE)
+    {
+        return OTAPP_DEVICENAME_BUFFER_TOO_SMALL;
+    }
+
     if(strlen(deviceFullName) >= OTAPP_DEVICENAME_FULL_SIZE)
     {
         return OTAPP_DEVICENAME_TOO_LONG;
     }
 
-    if(bufLength < (2 * OTAPP_DEVICENAME_FULL_SIZE))
+    if(strlen(deviceFullName) < OTAPP_DEVICENAME_MIN_SIZE)
     {
-        return OTAPP_DEVICENAME_BUFFER_TOO_SMALL;
+        return OTAPP_DEVICENAME_TOO_SHORT;
     }
 
     strcat(deviceFullName, otapp_deviceName_domain);
