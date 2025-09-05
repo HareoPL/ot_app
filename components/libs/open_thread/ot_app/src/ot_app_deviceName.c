@@ -121,7 +121,7 @@ int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength)
     return OTAPP_DEVICENAME_IS_NOT;
 }
 
-otapp_deviceType_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t stringLength)
+int16_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t stringLength)
 {
     if(deviceNameFull == NULL )
     {
@@ -206,15 +206,9 @@ int8_t otapp_deviceNameIsMatching(char *deviceFullName)
 
     if(otapp_deviceNameFullIsSame(deviceFullName) == OTAPP_DEVICENAME_IS_NOT) 
     {
-        const char *thisDeviceNameFull = otapp_deviceNameFullGet();
-        uint16_t thisSizeOfDevName = strlen(thisDeviceNameFull);
-
-        if(otapp_deviceNameIsSame(deviceFullName, strlen(deviceFullName)) == OTAPP_DEVICENAME_IS || otapp_deviceNameGetDevId(thisDeviceNameFull, thisSizeOfDevName) == OTAPP_CONTROL_PANEL) // if This device is configured as control pannel, it should known all devices. it is center control device
+        if(otapp_deviceNameIsSame(deviceFullName, strlen(deviceFullName)) == OTAPP_DEVICENAME_IS)
         {
-            // todo warunek parowania: jesli current device to switch a incomming device to light to parujemy. 
-            // najlepiej takie warunki zrobic w osobnej funkcji gdzie latwo bedzie mozna dodac liste warunkow. 
-           
-            return OTAPP_DEVICENAME_IS;
+           return OTAPP_DEVICENAME_IS;
         }
         else
         {
