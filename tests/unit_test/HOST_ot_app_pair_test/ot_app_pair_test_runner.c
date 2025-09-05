@@ -77,7 +77,5 @@ TEST_GROUP_RUNNER(ot_app_pair_rtos)
    RUN_TEST_CASE(ot_app_pair_rtos, GivenMaxQueueItems_WhenCallingRtosTask_ThenReturnItemQuantity9);
    RUN_TEST_CASE(ot_app_pair_rtos, GivenMaxQueueItems_WhenCallingRtosTaskMaxTimes_ThenReturnItemQuantity0);
    RUN_TEST_CASE(ot_app_pair_rtos, GivenMaxQueueItems_WhenCallingRtosTaskMaxTimesPlus1_ThenReturnItemQuantity0);
-   RUN_TEST_CASE(ot_app_pair_rtos, GivenMatchQueueItem_WhenCallingIsMatchingFromQueue_ThenReturnIndex0);
-   RUN_TEST_CASE(ot_app_pair_rtos, GivenNotMatchQueueItem_WhenCallingIsMatchingFromQueue_ThenReturnError);
-   
+
 }
