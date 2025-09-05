@@ -19,12 +19,20 @@ static char *deviceNameFull_device1_type1_fakeAddr = {"device1_1_001122334455667
 
 static const char *ut_dn_domain = ".default.service.arpa.";
 static char *deviceName_with_domain_OK = {"device1_1_0011223344556677.default.service.arpa."};
+static char *deviceName_with_domain_too_long = {"device1_1_0011223344556677.default.service.arpa.service.arpa.service.arpa."};
 
 static char ut_dn_charBuf[OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE];
 char *ut_dn_createDeviceNameFull(const char *deviceName, const uint8_t deviceType) 
 {
     snprintf(ut_dn_charBuf, OTAPP_DNS_SRV_LABEL_SIZE - 1, "%s_%d_0011223344556677", deviceName, deviceType);
     
+    return ut_dn_charBuf;
+}
+char *ut_dn_createHostName(const char *deviceName, const uint8_t deviceType)
+{
+    ut_dn_createDeviceNameFull(deviceName, deviceType);
+    strcat(ut_dn_charBuf, ut_dn_domain);
+
     return ut_dn_charBuf;
 }
 
@@ -274,4 +282,29 @@ TEST(ot_app_deviceName, GivenTooShortDevNameFull_WhenIsCallingDeviceNameFullAddD
     int8_t result;   
     result = otapp_deviceNameFullAddDomain(deviceName_device1, OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE);
     TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_TOO_SHORT, result);
+}
+
+// otapp_hostNameToDeviceNameFull
+TEST(ot_app_deviceName, GivenNullHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnError)
+{
+    int8_t result;   
+    result = otapp_hostNameToDeviceNameFull(NULL);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}
+
+TEST(ot_app_deviceName, GivenWithoutDomainHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnError)
+{
+    int8_t result;   
+    result = otapp_hostNameToDeviceNameFull(deviceNameFull_device1_type1_fakeAddr);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}
+
+TEST(ot_app_deviceName, GivenTrueHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnOK_PTR_STR)
+{
+    int8_t result;
+    char *_hostName = ut_dn_createHostName(deviceName_device1, UT_DN_OK_DEVICE_TYPE_1);
+    result = otapp_hostNameToDeviceNameFull(_hostName);
+
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_OK , result);
+    TEST_ASSERT_EQUAL_STRING(deviceNameFull_device1_type1_fakeAddr, _hostName);
 }

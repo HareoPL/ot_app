@@ -43,6 +43,10 @@ TEST_GROUP_RUNNER(ot_app_deviceName)
    RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevNameFull_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
    RUN_TEST_CASE(ot_app_deviceName, GivenTooShortDevNameFull_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
 
+   // otapp_hostNameToDeviceNameFull
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenWithoutDomainHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTrueHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnOK_PTR_STR);
 
 }
 
