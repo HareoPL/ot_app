@@ -3,6 +3,8 @@
 
 
 #define UT_DN_OK_DEVICE_TYPE_1                  OTAPP_CONTROL_PANEL
+#define UT_DN_OK_DEVICE_TYPE_2_SWITCH           OTAPP_SWITCH
+#define UT_DN_OK_DEVICE_TYPE_3_LIGHT            OTAPP_LIGHTING_ON_OFF
 
 #define UT_DN_BAD_DEVICE_TYPE_0                 OTAPP_NO_DEVICE_TYPE
 #define UT_DN_BAD_DEVICE_TYPE_OUTSIDE_SCOPE     OTAPP_END_OF_DEVICE_TYPE
@@ -19,7 +21,6 @@ static char *deviceNameFull_device1_type1_fakeAddr = {"device1_1_001122334455667
 
 static const char *ut_dn_domain = ".default.service.arpa.";
 static char *deviceName_with_domain_OK = {"device1_1_0011223344556677.default.service.arpa."};
-static char *deviceName_with_domain_too_long = {"device1_1_0011223344556677.default.service.arpa.service.arpa.service.arpa."};
 
 static char ut_dn_charBuf[OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE];
 char *ut_dn_createDeviceNameFull(const char *deviceName, const uint8_t deviceType) 
@@ -307,4 +308,40 @@ TEST(ot_app_deviceName, GivenTrueHostName_WhenIsCallingHostNameToDeviceNameFull_
 
     TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_OK , result);
     TEST_ASSERT_EQUAL_STRING(deviceNameFull_device1_type1_fakeAddr, _hostName);
+}
+
+// otapp_deviceNameIsMatching
+TEST(ot_app_deviceName, GivenNullDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnError)
+{
+    int8_t result;   
+    result = otapp_deviceNameIsMatching(NULL);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}
+
+TEST(ot_app_deviceName, GivenSameDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnError)
+{
+    int8_t result;
+    otapp_deviceNameSet(deviceName_device1, UT_DN_OK_DEVICE_TYPE_2_SWITCH);
+    result = otapp_deviceNameIsMatching(otapp_deviceNameFullGet());
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_IS_NOT, result);
+}
+
+TEST(ot_app_deviceName, GivenMatchingDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnOK)
+{
+    int8_t result;
+    char *_deviceNameFull = ut_dn_createDeviceNameFull(deviceName_device1, UT_DN_OK_DEVICE_TYPE_1);
+
+    otapp_deviceNameSet(deviceName_device1, UT_DN_OK_DEVICE_TYPE_2_SWITCH);
+    result = otapp_deviceNameIsMatching(_deviceNameFull);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_IS, result);
+}
+
+TEST(ot_app_deviceName, GivenNotMatchingDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnError)
+{
+    int8_t result;
+    char *_deviceNameFull = ut_dn_createDeviceNameFull(deviceName_device2, UT_DN_OK_DEVICE_TYPE_1);
+
+    otapp_deviceNameSet(deviceName_device1, UT_DN_OK_DEVICE_TYPE_2_SWITCH);
+    result = otapp_deviceNameIsMatching(_deviceNameFull);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_IS_NOT, result);
 }

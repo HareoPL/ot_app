@@ -48,5 +48,11 @@ TEST_GROUP_RUNNER(ot_app_deviceName)
    RUN_TEST_CASE(ot_app_deviceName, GivenWithoutDomainHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnError);
    RUN_TEST_CASE(ot_app_deviceName, GivenTrueHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnOK_PTR_STR);
 
+   // otapp_deviceNameIsMatching
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenSameDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenMatchingDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_deviceName, GivenNotMatchingDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnError);
+
 }
 
