@@ -185,12 +185,14 @@ int8_t otapp_hostNameToDeviceNameFull(char *hostName)
     }
 
     char *chrPtr;
-    chrPtr = strtok(hostName, ".");
 
+    chrPtr = strchr(hostName, '.');
     if(chrPtr == NULL)
     {
         return OTAPP_DEVICENAME_ERROR;
     }
+
+    chrPtr = strtok(hostName, "."); 
 
     return OTAPP_DEVICENAME_OK;
 }
