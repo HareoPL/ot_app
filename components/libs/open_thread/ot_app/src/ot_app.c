@@ -25,6 +25,7 @@
 #include "ot_app_pair.h"
 #include "ot_app_dataset_tlv.h"
 #include "ot_app_deviceName.h"
+#include "ot_app_srp_client.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,31 +34,25 @@
 #include "esp_ot_cli.h"
 
 #include "esp_openthread.h"
-#include "openthread/udp.h"
 #include "openthread/dataset.h"
-#include "openthread/srp_client.h"
+
 
 #include <inttypes.h>
 
-static const char *TAG = "ot_app";
+// static const char *TAG = "ot_app";
 
-static const char *otapp_serviceName = "_coap._udp";
-static const char *otapp_browseDefaultServiceName = "_coap._udp.default.service.arpa.";
-
-
-static otSrpClientService otapp_otSrpClientService;
-
-otInstance *openThreadInstance;
+static otInstance *openThreadInstance;
 const static otIp6Address *otapp_Ip6Address;
 
-static otUdpSocket udp_socket;
-otOperationalDatasetTlvs dataset;
+static otOperationalDatasetTlvs dataset;
 static otExtAddress otapp_factoryEUI_64;
 
 static char otapp_charBuf[OTAPP_CHAR_BUFFER_SIZE];
-SemaphoreHandle_t otapp_mutexBuf;
+static SemaphoreHandle_t otapp_mutexBuf;
 
-const otIp6Address ot_app_multicastAddr = {
+
+
+static const otIp6Address ot_app_multicastAddr = {
     .mFields.m8 = {
         0xff, 0x03, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00,
@@ -66,16 +61,61 @@ const otIp6Address ot_app_multicastAddr = {
     }
 };
 
-const otIp6Address *otapp_getMulticastAddr()
+const otIp6Address *otapp_multicastAddressGet()
 {
     return &ot_app_multicastAddr;
+}
+
+const otIp6Address *otapp_ip6AddressGet()
+{
+    return otapp_Ip6Address;
+}
+
+const otIp6Address *otapp_ip6AddressRefresh()
+{
+    otapp_Ip6Address = otThreadGetMeshLocalEid(otapp_getOpenThreadInstancePtr());
+    return otapp_Ip6Address;
+}
+
+void otapp_ip6AddressPrint(const otIp6Address *aAddress)
+{
+    if (aAddress != NULL)
+    {
+        char buf[OT_IP6_ADDRESS_STRING_SIZE];
+
+        otIp6AddressToString(aAddress, buf, OTAPP_CHAR_BUFFER_SIZE); 
+        printf("%s\n", buf);
+    }
+}
+
+void otapp_macAddrPrint(const otExtAddress *macAddr)
+{
+    if(macAddr != NULL)
+    {
+        printf("Factory EUI-64: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
+               macAddr->m8[0], macAddr->m8[1], macAddr->m8[2], macAddr->m8[3],
+               macAddr->m8[4], macAddr->m8[5], macAddr->m8[6], macAddr->m8[7]);
+    }else
+    {
+        printf("ERROR: Factory EUI-64: - null ptr \n");
+    }
+}
+
+const otExtAddress *otapp_macAddrGet(void)
+{
+    return &otapp_factoryEUI_64;
+}
+
+static void otapp_macAddrInit(void)
+{
+    otLinkGetFactoryAssignedIeeeEui64(otapp_getOpenThreadInstancePtr(), &otapp_factoryEUI_64);
+    otapp_macAddrPrint(&otapp_factoryEUI_64);
 }
 
 otInstance *otapp_getOpenThreadInstancePtr()
 {
     return openThreadInstance;
 }
-
 
 /////////////////////////
 // char buffer
@@ -106,430 +146,19 @@ void otapp_setDataset_tlv(void)
     esp_openthread_auto_start(&dataset);
 }
 
-/////////////////////////
-// UDP init
-//
-void otapp_receive_callback(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo) 
-{
-    char *buf = otapp_charBufGet_withMutex();
-
-    if (buf != NULL)
-    {
-        int len = otMessageRead(aMessage, 0, buf, OTAPP_CHAR_BUFFER_SIZE);
-        ESP_LOGI(TAG, "Received UDP packet: %.*s", len, buf);
-
-        otapp_charBufRelease();
-    }else
-    {
-        printf("NULL PTR from otapp_charBufGet_withMutex");
-    }
-}
-
-void otapp_udpStart(void) 
-{
-    otSockAddr bind_addr;
-    memset(&bind_addr, 0, sizeof(bind_addr));
-    otIp6AddressFromString("::", &bind_addr.mAddress); // nasłuch na wszystkich adresach
-    bind_addr.mPort =OTAPP_UDP_PORT;
-
-    otError err = otUdpOpen(openThreadInstance, &udp_socket, otapp_receive_callback, NULL);
-    if (err != OT_ERROR_NONE) {
-        ESP_LOGE(TAG, "otUdpOpen failed: %d", err);
-        return;
-    }
-
-    err = otUdpBind(openThreadInstance, &udp_socket, &bind_addr, OT_NETIF_THREAD);
-    if (err != OT_ERROR_NONE) {
-        ESP_LOGE(TAG, "otUdpBind failed: %d", err);
-        return;
-    }
-
-    ESP_LOGI(TAG, "UDP socket initialized and bound to port %d",OTAPP_UDP_PORT);
-}
-
-void otapp_printIp6Address(const otIp6Address *aAddress)
-{
-    if (aAddress != NULL)
-    {
-        char buf[OT_IP6_ADDRESS_STRING_SIZE];
-
-        otIp6AddressToString(aAddress, buf, OTAPP_CHAR_BUFFER_SIZE); 
-        printf("%s\n", buf);
-    }
-}
-                                 
 static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context) 
 {
     if (flags & OT_CHANGED_THREAD_RLOC_ADDED) 
     {
-        otapp_Ip6Address = otThreadGetMeshLocalEid(otapp_getOpenThreadInstancePtr());
+        otapp_srpClientUpdateHostAddress(otapp_getOpenThreadInstancePtr());
 
         printf(">>>>>>> device address has been updated: ");
-        otapp_printIp6Address(otapp_Ip6Address);
+        otapp_ip6AddressPrint(otapp_Ip6Address);
     }
     if (flags & OT_CHANGED_THREAD_RLOC_REMOVED) 
     {
         printf(">>>>>>> device address has been deleted");
     }
-}
-
-void otapp_macAddrPrint(const otExtAddress *macAddr)
-{
-    if(macAddr != NULL)
-    {
-        printf("Factory EUI-64: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
-               macAddr->m8[0], macAddr->m8[1], macAddr->m8[2], macAddr->m8[3],
-               macAddr->m8[4], macAddr->m8[5], macAddr->m8[6], macAddr->m8[7]);
-    }else
-    {
-        printf("ERROR: Factory EUI-64: - null ptr \n");
-    }
-}
-
-
-///////////////////////
-// dnsClient functions
-//
-void otapp_dnsClientResolvePrint(otError aError, const otDnsAddressResponse *aResponse)
-{
-    char         hostName[OT_DNS_MAX_NAME_SIZE];
-    otIp6Address address;
-    uint32_t     ttl;
-
-    otDnsAddressResponseGetHostName(aResponse, hostName, sizeof(hostName));
-
-    printf("DNS resolve: \n");
-    printf("DNS response for %s - ", hostName);
-
-    if (aError == OT_ERROR_NONE)
-    {
-        uint16_t index = 0;
-
-        while (otDnsAddressResponseGetAddress(aResponse, index, &address, &ttl) == OT_ERROR_NONE)
-        {
-            
-            printf(" TTL: %lu IP: ", ttl);
-            otapp_printIp6Address(&address);
-            printf("\n");
-
-            index++;
-        }
-    }
-}
-
-void otapp_otDnsAddressCallback(otError aError, const otDnsAddressResponse *aResponse, void *aContext)
-{
-    otapp_dnsClientResolvePrint(aError, aResponse);
-}
-
-/**
- * @brief get DNS resolve using full host name
- * 
- * @param instance [in] ptr to openthread instance
- * @param hostName [in] full host name with domain exampel "device1.default.service.arpa."
- */
-void otapp_dnsClientResolve(otInstance *instance, const char *hostName)
-{   
-    otError           error = OT_ERROR_NONE;
-    const otDnsQueryConfig *config = otDnsClientGetDefaultConfig(instance);
-
-    error = otDnsClientResolveAddress(instance, hostName, otapp_otDnsAddressCallback, NULL, config);
-    if(error != OT_ERROR_NONE)
-    {
-        printf("Error: otDnsClientResolveAddress");
-    }
-}
-
-// void otapp_dnsClientBrowsePrintServiceInfo(otDnsServiceInfo *aServiceInfo)
-// {
-//     printf(" Port: %d, Priority:%d, Weight:%d, TTL:%lu \n", aServiceInfo->mPort, aServiceInfo->mPriority, aServiceInfo->mWeight, aServiceInfo->mTtl);
-//     printf(" Host: %s \n", aServiceInfo->mHostNameBuffer);
-//     printf(" HostAddress: ");
-//     otapp_printIp6Address(&aServiceInfo->mHostAddress);
-//     printf(" TTL:%lu \n", aServiceInfo->mHostAddressTtl);
-//     printf(" TXT: ");
-
-//     if (!aServiceInfo->mTxtDataTruncated)
-//     {
-//         printf("mTxtDataTruncated:%d \n", aServiceInfo->mTxtDataTruncated);
-//     }
-//     else
-//     {
-//         printf("[");
-//         for(uint16_t byte = 0; byte < aServiceInfo->mTxtDataSize; byte++)
-//         {
-//             printf("%02X", aServiceInfo->mTxtData[byte]);
-//         }        
-//         printf("...] \n");
-//     }
-// }
-
-// uint8_t txtBuffer[OTAPP_DNS_SRV_TXT_SIZE]; 
-
-void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResponse *aResponse, void *aContext)
-{
-  
-    otDnsBrowseResponseGetServiceName(aResponse, otapp_DNS_services[0].nameBuffer, OTAPP_DNS_SRV_NAME_SIZE);
-
-    
-    printf("DNS browse response for %s \n", otapp_DNS_services[0].nameBuffer);
-
-    if (aError == OT_ERROR_NONE)
-    {
-        uint16_t index = 0;
-        char *buffer = otapp_charBufGet_withMutex();
-
-        if(buffer == NULL)
-        {
-            printf("ERROR NULL PTR FROM otapp_charBufGet_withMutex()");
-            return;
-        }
-
-        if(index == OTAPP_DNS_SERVICES_MAX)
-        {
-            printf("OTAPP_DNS_SERVICES_MAX has been reached");
-            otapp_charBufRelease();
-
-            return;
-        }
-
-        while (otDnsBrowseResponseGetServiceInstance(aResponse, index, otapp_DNS_services[index].labelBuffer, OTAPP_DNS_SRV_LABEL_SIZE) == OT_ERROR_NONE)
-        {
-            printf("label: %s \n", otapp_DNS_services[index].labelBuffer);
-
-            strcpy(buffer, otapp_DNS_services[index].labelBuffer);
-            strcat(buffer, ".default.service.arpa.");
-            otapp_dnsClientResolve(otapp_getOpenThreadInstancePtr(), buffer);
-
-            // otapp_serviceInfo.mHostNameBuffer     = otapp_DNS_services[index].nameBuffer;
-            // otapp_serviceInfo.mHostNameBufferSize = OTAPP_DNS_SRV_NAME_SIZE;
-            // otapp_serviceInfo.mTxtData            = txtBuffer;
-            // otapp_serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
-
-            // aError = otDnsBrowseResponseGetServiceInfo(aResponse, otapp_DNS_services[index].labelBuffer, &otapp_serviceInfo);
-            // if(aError == OT_ERROR_NONE)
-            // {
-            //    otapp_dnsClientBrowsePrintServiceInfo(&otapp_serviceInfo);
-            // }
-
-            printf("\n");
-            index++;
-        }
-        otapp_charBufRelease();
-    }
-}
-
-void otapp_dnsClientBrowse(otInstance *instance, const char *serviceName)
-{
-    otError error = OT_ERROR_NONE; 
-    static const otDnsQueryConfig *config;
-    config = otDnsClientGetDefaultConfig(instance);
-
-    error = otDnsClientBrowse(instance, serviceName, otapp_dnsClientBrowseResponseCallback, NULL, config);
-    if (error != OT_ERROR_NONE)
-    {
-        printf("Error: DNS client browse: %d\n", error);
-        return;
-    }
-}
-
-///////////////////////
-// srpClient functions
-//
-otError otapp_srpClientRefreshService(otInstance *instance);
-static uint32_t otapp_srpLeaseValue;
-
-void otapp_srpServiceLeaseInitCount(otInstance *instance)
-{
-    otapp_srpLeaseValue = otSrpClientGetLeaseInterval(instance) + OTAPP_DNS_LEASE_TASK_DELAY; // because while created task, the task is immediately running without any delay 
-}
-
-uint32_t otapp_srpServiceLeaseGetCount(void)
-{
-    return otapp_srpLeaseValue;
-}
-
-void otapp_srpServiceLeaseCountDecrease(void)
-{
-    otapp_srpLeaseValue = otapp_srpLeaseValue - OTAPP_DNS_LEASE_TASK_DELAY;
-}
-
-uint8_t otapp_srpServiceLeaseCheckExpiry(uint32_t lease)
-{
-    return (lease <= OTAPP_DNS_LEASE_GUARD);
-}
-
-void otapp_srpServiceLeaseCheckTask(void *arg)
-{
-    (void)arg;    
-  
-    TickType_t previousWakeTime;
-    otInstance *instance;
-
-    previousWakeTime = xTaskGetTickCount();
-    instance = otapp_getOpenThreadInstancePtr();
-
-    otapp_srpServiceLeaseInitCount(instance);
-
-    while (1)
-    {
-        otapp_srpServiceLeaseCountDecrease();
-        ESP_LOGI(TAG, "Current SRP lease interval: %" PRIu32 " seconds", otapp_srpServiceLeaseGetCount());
-
-        if (otapp_srpServiceLeaseCheckExpiry(otapp_srpServiceLeaseGetCount()))
-        {
-           otapp_srpClientRefreshService(instance);
-           otapp_srpServiceLeaseInitCount(instance);          
-        }
-
-        vTaskDelayUntil(&previousWakeTime,  pdMS_TO_TICKS(OTAPP_DNS_LEASE_TASK_DELAY * 1000)); // in ms
-    }
-}
-
-void otapp_srpServiceLeaseCheckTaskInit(void)
-{
-    static uint8_t initFlag = 0;
-
-    if(!initFlag)
-    {
-        BaseType_t result = xTaskCreate(otapp_srpServiceLeaseCheckTask, "SRP_Check_Service_Lease_Task", 4096, NULL, 5, NULL);
-    
-        if (result == pdPASS)
-        {
-            initFlag = 1;
-            ESP_LOGI(TAG, "SRP_Check_Service_Lease_Task created successfully");
-        }
-        else
-        {
-            ESP_LOGE(TAG, "Failed to create SRP_Check_Service_Lease_Task");
-        }
-    }else
-    {
-         ESP_LOGI(TAG, "SRP_Check_Lease_Task has been created");
-    }
-}
-
-static void otapp_srpClientSetHostName(otInstance *instance, const char *hostName)
-{
-    otError error;
-
-    error = otSrpClientSetHostName(instance, hostName);
-    if (error != OT_ERROR_NONE)
-    {
-        printf("Error: hostname SRP NOT set: %d\n", error);
-        return;
-    }
-}
-
-static void otapp_srpClientEnableAutoHostAddress(otInstance *instance)
-{
-    otError error;
-    error = otSrpClientEnableAutoHostAddress(instance);
-    if (error != OT_ERROR_NONE)
-    {
-        printf("Error: SRP set IPv6 host addresses: %d\n", error);
-        return;
-    }
-}
-
-otError otapp_srpClientAddService(otInstance *instance, otSrpClientItemState mState)
-{
-    otError error;
-
-    otapp_otSrpClientService.mName = otapp_serviceName;               
-    otapp_otSrpClientService.mInstanceName = otapp_deviceNameFullGet();    
-    otapp_otSrpClientService.mSubTypeLabels = NULL;              
-    otapp_otSrpClientService.mTxtEntries = NULL;                 
-    otapp_otSrpClientService.mPort = OTAPP_COAP_PORT;               
-    otapp_otSrpClientService.mPriority = 0;                      
-    otapp_otSrpClientService.mWeight = 0;                       
-    otapp_otSrpClientService.mNumTxtEntries = 0;                
-    otapp_otSrpClientService.mState = mState; 
-    otapp_otSrpClientService.mData = 0;                         
-    otapp_otSrpClientService.mNext = NULL;                     
-    otapp_otSrpClientService.mLease = OTAPP_DNS_LEASE_TIME;                   
-    otapp_otSrpClientService.mKeyLease = OTAPP_DNS_M_KEY_LEASE_TIME;                
-    
-    if(mState == OT_SRP_CLIENT_ITEM_STATE_TO_REFRESH)
-    {
-        error = otSrpClientClearService(instance, &otapp_otSrpClientService);
-        if (error != OT_ERROR_NONE)
-        {
-            printf("Error: SRP service clear: %d\n", error);
-            return error;
-        }
-    }
-
-    error = otSrpClientAddService(instance, &otapp_otSrpClientService);
-    if (error != OT_ERROR_NONE)
-    {
-        printf("Error: SRP service add: %d\n", error);
-        return error;
-    }
-
-    return OT_ERROR_NONE; 
-}
-
-otError otapp_srpClientRefreshService(otInstance *instance)
-{
-    otError error;
-
-    error = otapp_srpClientAddService(instance, OT_SRP_CLIENT_ITEM_STATE_TO_REFRESH);
-    if (error != OT_ERROR_NONE)
-    {
-        printf("Error: SRP service refreshing: %d\n", error);
-        return error;
-    }
-
-    ESP_LOGI(TAG, "SRP SERVICES has been refreshed \n");
-
-    return error;
-}
-
-void otapp_otSrpClientCallback(otError aError, const otSrpClientHostInfo *aHostInfo, const otSrpClientService *aServices, const otSrpClientService *aRemovedServices, void *aContext)
-{
-    if(aError == OT_ERROR_NONE)
-    {
-        if(aHostInfo->mState == OT_SRP_CLIENT_ITEM_STATE_REGISTERED)
-        {
-            otapp_srpServiceLeaseCheckTaskInit();   
-            
-            otapp_dnsClientBrowse(otapp_getOpenThreadInstancePtr(), otapp_browseDefaultServiceName);
-
-            otapp_coapSendDeviceNamePut();
-        }       
-    }
-}
-
-void otapp_srpClientAutoStartCallback(const otSockAddr *aServerSockAddr, void *aContext)
-{
-    if(NULL != aServerSockAddr)
-    {
-        printf("SRP SERVER detected on IP: ");
-        otapp_printIp6Address(&aServerSockAddr->mAddress);
-    }else
-    {
-         printf("SRP SERVER lost\n");
-    }
-}
-
-static void otapp_srpClientInit(otInstance *instance)
-{
-    otSrpClientStop(instance);
-    otapp_srpClientSetHostName(instance, otapp_deviceNameFullGet());
-    otapp_srpClientEnableAutoHostAddress(instance);
-    otapp_srpClientAddService(instance, OT_SRP_CLIENT_ITEM_STATE_TO_ADD);
-     
-    if(otSrpClientIsAutoStartModeEnabled(instance))
-    {
-        printf("SRP client has already ran\n");
-        return;
-    }else
-    {
-       otSrpClientEnableAutoStartMode(instance, otapp_srpClientAutoStartCallback, NULL); 
-    }
-    
-    printf("SRP client Auto start Enabled \n");
 }
 
 
@@ -540,15 +169,11 @@ static void otapp_srpClientInit(otInstance *instance)
 void otapp_network_init() // this function will be initialize in ot_task_worker rtos task (esp_ot_cli.c)
 {
     otapp_setDataset_tlv();
-
-    otLinkGetFactoryAssignedIeeeEui64(otapp_getOpenThreadInstancePtr(), &otapp_factoryEUI_64);
-    otapp_macAddrPrint(&otapp_factoryEUI_64);
-
+    
+    otapp_macAddrInit();
     otapp_deviceNameSet("device1", OTAPP_SWITCH);
-    // otapp_udpStart(); 
     otapp_coap_init();    
-    otapp_srpClientInit(otapp_getOpenThreadInstancePtr());
-    otSrpClientSetCallback(otapp_getOpenThreadInstancePtr(), otapp_otSrpClientCallback, NULL); 
+    otapp_srpInit();
 }
 
 void otapp_init(void) //app init
@@ -557,4 +182,5 @@ void otapp_init(void) //app init
     otapp_cli_init();    
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
     otapp_mutexBuf = xSemaphoreCreateMutex();
+    otapp_pair_init();
 }
