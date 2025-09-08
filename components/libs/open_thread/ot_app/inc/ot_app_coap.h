@@ -24,9 +24,29 @@
 
 #include "esp_openthread.h"
 #include <openthread/message.h>
+#include <openthread/coap.h>
 
 #define OTAPP_COAP_PORT 5683 ///< Default CoAP port, as specified in RFC 7252
 #define OTAPP_COAP_URI_MAX 20
+
+#define OTAPP_COAP_URI_OK       (-1)
+#define OTAPP_COAP_URI_ERROR    (-2)
+
+typedef enum {
+    OTAPP_URI_NO_URI_INDEX = 0,
+    
+    OTAPP_URI_WELL_KNOWN_CORE,
+    OTAPP_URI_TEST,
+    OTAPP_URI_TEST_LED,
+    OTAPP_URI_PARING_SERVICES,
+
+    OTAPP_URI_END_OF_INDEX,
+}otapp_coap_uriIndex_t;
+
+typedef struct {
+    otapp_coap_uriIndex_t    uriId;
+    otCoapResource           resource;
+}otapp_coap_uri_t;
 
 typedef enum {
     OTAPP_MESSAGE_OK = 0,
@@ -34,20 +54,6 @@ typedef enum {
     OTAPP_MESSAGE_TEST,
 }otapp_coap_messageId_t;
 
-//  it must be put in order like otapp_coap_resource[] table
-typedef enum {
-    OTAPP_URI_NO_URI_INDEX = 0,
-    
-    OTAPP_URI_WELL_KNOWN_CORE,
-    OTAPP_URI_TEST,
-    OTAPP_URI_DEVICE_TEST,
-    OTAPP_URI_PARING_SERVICES,
-
-    OTAPP_URI_END_OF_INDEX,
-}otapp_coap_uriTableIndex_t;
-
-
-void otapp_coap_init(void);
 void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const char *responceContent);
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo);
 
@@ -60,6 +66,6 @@ void otapp_coapSendtoTestPut();
 void otapp_coapSendtoTestGet();
 void otapp_coapSendDeviceNamePut();
 
-char *otapp_coap_getUriName(otapp_coap_uriTableIndex_t uriIndex);
+const char *otapp_coap_getUriNameFromDefault(otapp_coap_uriIndex_t uriIndex);
 
 #endif  /* OT_APP_COAP_H_ */

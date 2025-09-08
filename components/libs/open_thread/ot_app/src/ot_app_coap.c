@@ -19,27 +19,28 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#include "main.h"
+
 #include "ot_app_coap.h"
-#include "ot_app.h"
 #include "ot_app_deviceName.h"
+#include "ot_app_drv.h"
 
-#include <openthread/ip6.h>
-#include <openthread/coap.h>
+ #ifdef UNIT_TEST
+    #include "mock_ip6.h"
+    #include "mock_ot_app.h"
 
-////////////////////////
-// add uri here:
-#include "ot_app_coap_uri_well-known-core.h"
+ #else
+    #include <openthread/ip6.h>
+    #include "ot_app.h"
+#endif
+
 #include "ot_app_coap_uri.h"
 
-// remember to also add name in otapp_coap_uriTableIndex_t enum
-static otCoapResource otapp_coap_resource[] = {
-    {".well-known/core", otapp_coap_uri_well_knownCoreHandle, NULL, NULL},
-    {"test", otapp_coap_uri_testHandle, NULL, NULL},
-    {"paring_services", otapp_coap_uri_paringServicesHandle, NULL, NULL}
-
+static otapp_coap_uri_t otapp_coap_uriDefault[] ={
+    {OTAPP_URI_PARING_SERVICES, {"paring_services", otapp_coap_uri_paringServicesHandle, NULL, NULL}},
+    {OTAPP_URI_TEST,            {"test", otapp_coap_uri_testHandle, NULL, NULL}},                  // for test
+    {OTAPP_URI_TEST_LED,        {"test/led", otapp_coap_uri_ledControlHandle, NULL, NULL}},      // for test
 };
-#define OTAPP_COAP_RESOURCE_SIZE (sizeof(otapp_coap_resource) / sizeof(otapp_coap_resource[0]))
+#define OTAPP_COAP_URI_DEFAULT_SIZE (sizeof(otapp_coap_uriDefault) / sizeof(otapp_coap_uriDefault[0]))
 
 typedef struct {
     otapp_coap_messageId_t msgID;
@@ -52,10 +53,6 @@ static const otapp_coap_message_t otapp_coap_messages[] = {
     {OTAPP_MESSAGE_TEST, "Hello coap !!"},
 };
 #define OTAPP_COAP_MESSAGE_SIZE (sizeof(otapp_coap_messages) / sizeof(otapp_coap_messages[0]))
-
-//////////////////////////////
-// do not edit below
-//
 
 static otMessageInfo mMessage;
 
@@ -72,10 +69,28 @@ const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID)
     return NULL;
 } 
 
-char *otapp_coap_getUriName(otapp_coap_uriTableIndex_t uriIndex)
+const char *otapp_coap_getUriName(const otapp_coap_uri_t *uriTable, uint8_t tableSize, otapp_coap_uriIndex_t uriIndex)
 {
-    return otapp_coap_resource[uriIndex - 1].mUriPath;
+    if(uriTable == NULL || tableSize == 0 || uriIndex == OTAPP_URI_NO_URI_INDEX || uriIndex == OTAPP_URI_END_OF_INDEX)
+    {
+        return NULL;
+    }
+
+    for (uint8_t i = 0; i < tableSize; i++)
+    {
+        if(uriTable[i].uriId == uriIndex)
+        {            
+            return uriTable[i].resource.mUriPath;
+        }
+    }
+    
+    return NULL;
 } 
+
+const char *otapp_coap_getUriNameFromDefault(otapp_coap_uriIndex_t uriIndex)
+{
+    return otapp_coap_getUriName(otapp_coap_uriDefault, OTAPP_COAP_URI_DEFAULT_SIZE, uriIndex);
+}
 
 void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
 {
@@ -86,13 +101,13 @@ void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMes
     }
 }
 
-void otapp_coap_requestHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-{
-    if (aMessage)
-    {
-        // Obsłuż odpowiedź (przeczytaj payload, kod odpowiedzi itd.)
-    }
-}
+// void otapp_coap_requestHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+// {
+//     if (aMessage)
+//     {
+//         // Obsłuż odpowiedź (przeczytaj payload, kod odpowiedzi itd.)
+//     }
+// }
 
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo)
 {
@@ -102,9 +117,15 @@ void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo)
         const otIp6Address *sender_addr = &aMessageInfo->mPeerAddr;
         uint16_t sender_port = aMessageInfo->mPeerPort;
              
-        printf("Sender address: ");
-        otapp_printIp6Address(sender_addr);  
-        printf(", port: %u\n", sender_port);
+        printf("Sender mPeer address: ");
+        otapp_ip6AddressPrint(sender_addr);  
+        printf(", port: %u\n\n", sender_port);
+
+        sender_addr = &aMessageInfo->mSockAddr;
+        sender_port = aMessageInfo->mSockPort;
+        printf("Sender mPeer address: ");
+        otapp_ip6AddressPrint(sender_addr);  
+        printf(", port: %u\n\n", sender_port);
 
     }
 }
@@ -256,7 +277,7 @@ void otapp_coap_clientSendGet(const otIp6Address *peer_addr, const char *aUriPat
 void otapp_coapSendtoTestGet()
 {
     printf("CoAP sent get to uri: test\n");
-    otapp_coap_clientSendGet(otapp_getMulticastAddr(), otapp_coap_getUriName(OTAPP_URI_TEST));
+    otapp_coap_clientSendGet(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_TEST));
 }
 
 // char *charLed = {"device/led"};
@@ -264,34 +285,58 @@ char *charLedPayload = {"LED_ON"};
 void otapp_coapSendtoTestPut()
 {
     printf("CoAP sent put to uri: device/led \n");
-    otapp_coap_clientSendPut(otapp_getMulticastAddr(), otapp_coap_getUriName(OTAPP_URI_DEVICE_TEST), charLedPayload);
+    otapp_coap_clientSendPut(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_TEST_LED), charLedPayload);
 }
 void otapp_coapSendDeviceNamePut()
 {
     printf("CoAP sent multicast device name \n");
-    otapp_coap_clientSendPut(otapp_getMulticastAddr(), otapp_coap_getUriName(OTAPP_URI_PARING_SERVICES), otapp_deviceNameFullGet());
+    otapp_coap_clientSendPut(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_PARING_SERVICES), otapp_deviceNameFullGet());
 }
 
-void otapp_coap_initCoapResource()
-{
-    for (uint32_t i = 0; i < OTAPP_COAP_RESOURCE_SIZE; i++)
+int8_t otapp_coap_initCoapResource(otapp_coap_uri_t *uriTable, uint8_t tableSize)
+{   
+    if(uriTable == NULL || tableSize == 0)
     {
-        otCoapAddResource(otapp_getOpenThreadInstancePtr(), &otapp_coap_resource[i]);
+        return OTAPP_COAP_URI_OK;
     }
+
+    for (uint32_t i = 0; i < tableSize; i++)
+    {
+        otCoapAddResource(otapp_getOpenThreadInstancePtr(), &uriTable[i].resource);
+    }
+
+    return OTAPP_COAP_URI_OK;
 }
 
-void otapp_coap_init()
+int8_t otapp_coap_init(ot_app_devDrv_t *devDriver)
 {
     otError error;
- 
+    
+    if (devDriver == NULL)
+    {
+       return OTAPP_COAP_URI_ERROR;
+    }
+
     error = otCoapStart(otapp_getOpenThreadInstancePtr(), OT_DEFAULT_COAP_PORT);
     if (error != OT_ERROR_NONE)
     {
-        // Obsłużimożliwe błędy inicjacji
+       return OTAPP_COAP_URI_ERROR;
     }
     // init coap handler
-    otCoapSetDefaultHandler(otapp_getOpenThreadInstancePtr(), otapp_coap_requestHandler, NULL);
+    // otCoapSetDefaultHandler(otapp_getOpenThreadInstancePtr(), otapp_coap_requestHandler, NULL);
+        error = otapp_coap_initCoapResource(otapp_coap_uriDefault, OTAPP_COAP_URI_DEFAULT_SIZE);
+    if (error != OTAPP_COAP_URI_OK)
+    {
+       return OTAPP_COAP_URI_ERROR;
+    }
+
     
-    otapp_coap_initCoapResource();
+    error = otapp_coap_initCoapResource(devDriver->uriGetList(), devDriver->uriGetListSize());
+    if (error != OTAPP_COAP_URI_OK)
+    {
+       return OTAPP_COAP_URI_ERROR;
+    }
+
+    return OTAPP_COAP_URI_OK;
 }
 
