@@ -1,5 +1,5 @@
 /**
- * @file ot_udp.h
+ * @file ot_app.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
@@ -19,8 +19,8 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef THREAD_UDP_H_
-#define THREAD_UDP_H_
+#ifndef THREAD_OT_APP_H_
+#define THREAD_OT_APP_H_
 
 #include "hro_utils.h"
 #include "ot_app_coap.h"
@@ -29,7 +29,8 @@
 #include "esp_openthread.h"
 #include "openthread/dns_client.h"
 
-#define OTAPP_ERROR     (-1)
+#define OTAPP_OK        (-1)
+#define OTAPP_ERROR     (-2)
 
 
 #define OTAPP_UDP_PORT 12345
@@ -43,6 +44,7 @@
 #define OTAPP_DNS_SRV_TXT_SIZE      512
 
 #define OTAPP_DEVICE_NAME_FULL_SIZE      OTAPP_DNS_SRV_LABEL_SIZE
+typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
 
 typedef enum {
     OTAPP_NO_DEVICE_TYPE = 0,
@@ -126,7 +128,7 @@ const otExtAddress *otapp_macAddrGet(void);
  * @brief todo
  * 
  */
-void otapp_init(void);
+int8_t otapp_init(ot_app_devDrv_t *deviceDrv);
 
 /**
  * @brief todo
@@ -135,6 +137,6 @@ void otapp_init(void);
 void otapp_network_init();
 
 
-#endif  /* THREAD_UDP_H_ */
+#endif  /* THREAD_OT_APP_H_ */
 
 

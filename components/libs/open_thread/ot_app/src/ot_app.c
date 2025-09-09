@@ -1,5 +1,5 @@
 /**
- * @file thread_udp.c
+ * @file ot_app.c
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
@@ -26,6 +26,7 @@
 #include "ot_app_dataset_tlv.h"
 #include "ot_app_deviceName.h"
 #include "ot_app_srp_client.h"
+#include "ot_app_drv.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,6 +41,8 @@
 #include <inttypes.h>
 
 // static const char *TAG = "ot_app";
+
+static ot_app_devDrv_t *otapp_devDrv;
 
 static otInstance *openThreadInstance;
 const static otIp6Address *otapp_Ip6Address;
@@ -172,15 +175,23 @@ void otapp_network_init() // this function will be initialize in ot_task_worker 
     
     otapp_macAddrInit();
     otapp_deviceNameSet("device1", OTAPP_SWITCH);
-    otapp_coap_init();    
+    otapp_coap_init(otapp_devDrv);    
     otapp_srpInit();
 }
 
-void otapp_init(void) //app init
+int8_t otapp_init(ot_app_devDrv_t *deviceDrv) //app init
 {
+    if(deviceDrv == NULL)
+    {
+        return OTAPP_ERROR;
+    }
+    otapp_devDrv = deviceDrv;
+
     openThreadInstance = esp_openthread_get_instance();
     otapp_cli_init();    
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
     otapp_mutexBuf = xSemaphoreCreateMutex();
-    otapp_pair_init();
+    otapp_pair_init(otapp_devDrv);
+    
+    return OTAPP_OK;
 }

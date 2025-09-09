@@ -88,6 +88,8 @@ typedef struct {
  * 
  * @return int8_t 
  */
+int8_t otapp_pair_init(ot_app_devDrv_t *driver);
+
 /**
  * @brief observer Callback. 
  * @param errorState     [in] error state. OTAPP_PAIR_OK or OTAPP_PAIR_ERROR

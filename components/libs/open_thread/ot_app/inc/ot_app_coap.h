@@ -32,6 +32,8 @@
 #define OTAPP_COAP_URI_OK       (-1)
 #define OTAPP_COAP_URI_ERROR    (-2)
 
+typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
+
 typedef enum {
     OTAPP_URI_NO_URI_INDEX = 0,
     
@@ -54,6 +56,8 @@ typedef enum {
     OTAPP_MESSAGE_TEST,
 }otapp_coap_messageId_t;
 
+
+int8_t otapp_coap_init(ot_app_devDrv_t *devDriver);
 void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const char *responceContent);
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo);
 
