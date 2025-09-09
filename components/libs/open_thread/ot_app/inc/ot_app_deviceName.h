@@ -126,7 +126,7 @@ int8_t otapp_hostNameToDeviceNameFull(char *hostName);
  * @param deviceFullName 
  * @return int8_t 
  */
-int8_t otapp_deviceNameIsMatching(char *deviceFullName);
+int8_t otapp_deviceNameIsMatching(const char *deviceFullName);
 
 /**
  * @brief todo
