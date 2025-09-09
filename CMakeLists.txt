@@ -12,6 +12,7 @@ set(EXTRA_COMPONENT_DIRS ${CMAKE_CURRENT_LIST_DIR}/components/libs)
 list(APPEND EXTRA_COMPONENT_DIRS ${CMAKE_CURRENT_LIST_DIR}/components/libs/open_thread)
 list(APPEND EXTRA_COMPONENT_DIRS ${CMAKE_CURRENT_LIST_DIR}/components/sys)
 list(APPEND EXTRA_COMPONENT_DIRS ${CMAKE_CURRENT_LIST_DIR}/components/utils)
+list(APPEND EXTRA_COMPONENT_DIRS ${CMAKE_CURRENT_LIST_DIR}/app_devices)
 set(OPENOCD_COMMANDS "-f esp32c6-builtin.cfg")
 project(esp32c6_prj)
 

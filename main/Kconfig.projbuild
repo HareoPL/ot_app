@@ -25,6 +25,12 @@
 
 
 # endmenu
+menu "Project configuration"
+    config OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    bool "Enable CoAP Observe API support"
+    default y
+    
+endmenu
 
 menu "Example Configuration"
 
