@@ -22,9 +22,16 @@
 #ifndef OT_APP_COAP_H_
 #define OT_APP_COAP_H_
 
-#include "esp_openthread.h"
-#include <openthread/message.h>
-#include <openthread/coap.h>
+#include "hro_utils.h"
+
+#ifdef UNIT_TEST
+    #include "mock_ot_app_coap.h"
+    #include "mock_ip6.h"
+#else
+    #include "esp_openthread.h"
+    #include <openthread/message.h>
+    #include <openthread/coap.h>
+#endif
 
 #define OTAPP_COAP_PORT 5683 ///< Default CoAP port, as specified in RFC 7252
 #define OTAPP_COAP_URI_MAX 20
@@ -34,16 +41,18 @@
 
 typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
 
-typedef enum {
-    OTAPP_URI_NO_URI_INDEX = 0,
-    
-    OTAPP_URI_WELL_KNOWN_CORE,
-    OTAPP_URI_TEST,
-    OTAPP_URI_TEST_LED,
-    OTAPP_URI_PARING_SERVICES,
+#ifndef UNIT_TEST
+    typedef enum {
+        OTAPP_URI_NO_URI_INDEX = 0,
+        
+        OTAPP_URI_WELL_KNOWN_CORE,
+        OTAPP_URI_TEST,
+        OTAPP_URI_TEST_LED,
+        OTAPP_URI_PARING_SERVICES,
 
-    OTAPP_URI_END_OF_INDEX,
-}otapp_coap_uriIndex_t;
+        OTAPP_URI_END_OF_INDEX,
+    }otapp_coap_uriIndex_t;
+#endif
 
 typedef struct {
     otapp_coap_uriIndex_t    uriId;

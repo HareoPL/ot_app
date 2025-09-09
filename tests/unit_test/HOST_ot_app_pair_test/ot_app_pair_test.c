@@ -51,7 +51,7 @@ static otIp6Address ipAddr_bad_to_short_lenght = {
 static otIp6Address *ipAddr_same = &ipAddr_ok_1;
 static otIp6Address *ipAddr_new = &ipAddr_ok_2;
 
-static void ut_oap_DeviceUriIndexAddFillAll(otapp_coap_uriTableIndex_t uriIndex)
+static void ut_oap_DeviceUriIndexAddFillAll(otapp_coap_uriIndex_t uriIndex)
 {
     for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
     {

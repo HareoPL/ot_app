@@ -289,7 +289,7 @@ PRIVATE int8_t otapp_pair_deviceNameIsSame(otapp_pair_DeviceList_t *pairDeviceLi
  * @param queueIteam 
  * @return PRIVATE 
  */
-PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_DeviceList_t *pairDeviceList, otapp_pair_queueItem_t *queueIteam);
+PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_queueItem_t *queueIteam);
 
 /**
  * @brief todo
@@ -312,7 +312,7 @@ PRIVATE int8_t otapp_pair_initTask(void);
  * @param deviceNameFull 
  * @return PRIVATE 
  */
-PRIVATE int8_t otapp_pair_observerPairedDeviceNotify(int8_t errorState, const char *deviceNameFull);
+PRIVATE int8_t otapp_pair_observerPairedDeviceNotify(otapp_pair_Device_t *newDevice);
 
 /**
  * @brief todo

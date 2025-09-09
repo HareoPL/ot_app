@@ -87,5 +87,11 @@ struct otIp6Address
  */
 typedef struct otIp6Address otIp6Address;
 
+typedef struct otMessage
+{
+}otMessage;
+typedef struct otMessageInfo
+{   
+} otMessageInfo;
 
 #endif  /* MOCK_IP6_H_ */

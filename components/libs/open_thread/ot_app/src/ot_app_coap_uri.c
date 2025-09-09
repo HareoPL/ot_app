@@ -64,7 +64,14 @@ void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, con
         uint8_t strCompare = 0;
 
 
-            uint16_t len = otMessageGetLength(request) - otMessageGetOffset(request);    
+            uint16_t len = otMessageGetLength(request) - otMessageGetOffset(request);
+
+            if(len > OTAPP_DEVICENAME_FULL_SIZE)
+            {
+                printf("ERROR otapp_coap_uri_paringServicesHandle OTAPP_DEVICENAME_FULL_SIZE");
+                return ;
+            }
+
             uint16_t lenOfReadedBytes = otMessageRead(request, otMessageGetOffset(request), incommingHostName, len);
             incommingHostName[lenOfReadedBytes] = '\0';
 
