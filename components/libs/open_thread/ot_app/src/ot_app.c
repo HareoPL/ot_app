@@ -174,7 +174,7 @@ void otapp_network_init() // this function will be initialize in ot_task_worker 
     otapp_setDataset_tlv();
     
     otapp_macAddrInit();
-    otapp_deviceNameSet("device1", OTAPP_SWITCH);
+    otapp_deviceNameSet(otapp_devDrv->deviceName, *otapp_devDrv->deviceType);
     otapp_coap_init(otapp_devDrv);    
     otapp_srpInit();
 }

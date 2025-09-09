@@ -452,7 +452,7 @@ PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_devi
     }
 
     otapp_pair_rule_t *rules = deviceDrv->pairRuleGetList();
-    uint8_t rulesSize = deviceDrv->pairRuleGetListSize();
+    uint8_t rulesSize = deviceDrv->pairRuleGetListSize;
 
     for(uint8_t i = 0; i < rulesSize; i++) 
     {

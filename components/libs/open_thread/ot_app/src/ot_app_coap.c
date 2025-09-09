@@ -331,7 +331,7 @@ int8_t otapp_coap_init(ot_app_devDrv_t *devDriver)
     }
 
     
-    error = otapp_coap_initCoapResource(devDriver->uriGetList(), devDriver->uriGetListSize());
+    error = otapp_coap_initCoapResource(devDriver->uriGetList(), devDriver->uriGetListSize);
     if (error != OTAPP_COAP_URI_OK)
     {
        return OTAPP_COAP_URI_ERROR;

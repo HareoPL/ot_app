@@ -57,7 +57,7 @@
  *                            or if error: OTAPP_DEVICENAME_ERROR, OTAPP_DEVICENAME_TOO_LONG
  * 
  */
-int8_t otapp_deviceNameSet(const char *deviceName, otapp_deviceType_t deviceType);
+int8_t otapp_deviceNameSet(const char *deviceName, const otapp_deviceType_t deviceType);
 
 /**
  * @brief get full name of current device

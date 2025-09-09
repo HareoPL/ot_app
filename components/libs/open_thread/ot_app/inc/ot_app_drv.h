@@ -28,19 +28,21 @@
 #include "stdint.h"
 
 
-typedef uint8_t (*sizeGet_callback_t)(void);
+typedef uint8_t ot_app_size_t;
 typedef otapp_pair_rule_t *(*pairRuleGet_callback_t)(void);
 typedef otapp_coap_uri_t *(*uriGet_callback_t)(void);
 
 
 typedef struct ot_app_devDrv_t{
+        otapp_pair_observerCallback_t pairedObserver;        
         pairRuleGet_callback_t      pairRuleGetList;
-        sizeGet_callback_t          pairRuleGetListSize;
-
         uriGet_callback_t           uriGetList;
-        sizeGet_callback_t          uriGetListSize;
 
-        otapp_pair_observerCallback_t pairedObserver;
+        const char *deviceName;
+        const otapp_deviceType_t *deviceType;
+
+        ot_app_size_t               pairRuleGetListSize;
+        ot_app_size_t               uriGetListSize;
 
 }ot_app_devDrv_t;
 
