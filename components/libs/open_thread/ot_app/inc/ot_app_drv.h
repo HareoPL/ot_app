@@ -39,6 +39,9 @@ typedef struct ot_app_devDrv_t{
 
         uriGet_callback_t           uriGetList;
         sizeGet_callback_t          uriGetListSize;
+
+        otapp_pair_observerCallback_t pairedObserver;
+
 }ot_app_devDrv_t;
 
 #endif  /* OT_APP_DRV_H_ */

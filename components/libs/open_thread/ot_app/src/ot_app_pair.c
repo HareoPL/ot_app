@@ -51,6 +51,52 @@ static otapp_pair_DeviceList_t otapp_pair_DeviceList;
 static QueueHandle_t otapp_pair_queueHandle;
 static otapp_pair_queueItem_t otapp_pair_queueIteam;
 
+//////////////////
+// observer
+static otapp_pair_observerCallback_t otapp_pair_observerPairedDeviceCallback[OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE] = {NULL};
+
+// Matching
+int8_t otapp_pair_observerPairedDeviceRegisterCallback(otapp_pair_observerCallback_t callback)
+{
+    if(callback == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    for (uint8_t i = 0; i < OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE; i++)
+    {
+        if(otapp_pair_observerPairedDeviceCallback[i] == NULL)
+        {
+            otapp_pair_observerPairedDeviceCallback[i] = callback;
+            return OTAPP_PAIR_OK;
+        }
+    }
+    
+    return OTAPP_PAIR_ERROR;
+}
+
+PRIVATE int8_t otapp_pair_observerPairedDeviceNotify(otapp_pair_Device_t *newDevice)
+{
+    if(newDevice == NULL )
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    for (uint8_t i = 0; i < OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE; i++)
+    {
+        if(otapp_pair_observerPairedDeviceCallback[i] != NULL)
+        {
+            otapp_pair_observerPairedDeviceCallback[i](newDevice);
+            return OTAPP_PAIR_OK;
+        }
+    }
+
+   return OTAPP_PAIR_OK;
+}
+
+// end of observer
+//////////////////
+
 int8_t otapp_pair_addToQueue(otapp_pair_queueItem_t *queueItem) 
 {
     if(queueItem == NULL || otapp_pair_queueHandle == NULL)

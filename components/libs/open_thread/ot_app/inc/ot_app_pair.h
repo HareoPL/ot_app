@@ -53,6 +53,12 @@
 #define OTAPP_PAIR_QUEUE_LENGTH         10
 #define OTAPP_PAIR_TASK_STACK_DEPTH     (128 * 3)
 #define OTAPP_PAIR_TASK_PRIORITY        5
+#define OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE 10
+typedef struct {
+    char devName[OTAPP_PAIR_NAME_FULL_SIZE]; // deviceNameFull
+    otIp6Address ipAddr;
+    uint8_t uriIndex[OTAPP_PAIR_URI_MAX];    
+}otapp_pair_Device_t;
 
 typedef struct otapp_pair_DeviceList_t otapp_pair_DeviceList_t;
 
@@ -71,8 +77,20 @@ typedef struct {
  * 
  * @return int8_t 
  */
-int8_t otapp_pair_init(void);
+/**
+ * @brief observer Callback. 
+ * @param errorState     [in] error state. OTAPP_PAIR_OK or OTAPP_PAIR_ERROR
+ * @param deviceNameFull [in] char ptr to matching deviceNameFull
+ */
+typedef void (*otapp_pair_observerCallback_t)(otapp_pair_Device_t *newDevice);
 
+/**
+ * @brief TODO
+ * 
+ * @param callback 
+ * @return int8_t 
+ */
+int8_t otapp_pair_observerPairedDeviceRegisterCallback(otapp_pair_observerCallback_t callback);
 
 /**
  * @brief add new device to the pairing list
@@ -273,6 +291,15 @@ PRIVATE int8_t otapp_pair_initQueue(void);
  * @return PRIVATE 
  */
 PRIVATE int8_t otapp_pair_initTask(void);
+
+/**
+ * @brief todo
+ * 
+ * @param errorState 
+ * @param deviceNameFull 
+ * @return PRIVATE 
+ */
+PRIVATE int8_t otapp_pair_observerPairedDeviceNotify(int8_t errorState, const char *deviceNameFull);
 #endif  /* UNIT_TEST */
 
 #endif  /* OT_APP_PAIR_H_ */
