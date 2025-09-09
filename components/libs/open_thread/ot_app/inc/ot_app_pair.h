@@ -53,7 +53,12 @@
 #define OTAPP_PAIR_QUEUE_LENGTH         10
 #define OTAPP_PAIR_TASK_STACK_DEPTH     (128 * 3)
 #define OTAPP_PAIR_TASK_PRIORITY        5
+
+#define OTAPP_PAIR_RULES_ALLOWED_SIZE           10
+#define OTAPP_PAIR_RULES_ALLOWED_ITEM_MAX_SIZE  OTAPP_END_OF_DEVICE_TYPE
+
 #define OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE 10
+
 typedef struct {
     char devName[OTAPP_PAIR_NAME_FULL_SIZE]; // deviceNameFull
     otIp6Address ipAddr;
@@ -61,6 +66,12 @@ typedef struct {
 }otapp_pair_Device_t;
 
 typedef struct otapp_pair_DeviceList_t otapp_pair_DeviceList_t;
+
+typedef struct {
+    otapp_deviceType_t main;
+    otapp_deviceType_t allowed[OTAPP_PAIR_RULES_ALLOWED_SIZE]; 
+} otapp_pair_rule_t;
+
 
 typedef enum {
     OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST     
@@ -300,6 +311,18 @@ PRIVATE int8_t otapp_pair_initTask(void);
  * @return PRIVATE 
  */
 PRIVATE int8_t otapp_pair_observerPairedDeviceNotify(int8_t errorState, const char *deviceNameFull);
+
+/**
+ * @brief todo
+ * 
+ * @param deviceDrv 
+ * @param mainDeviceID 
+ * @param incommingDeviceID 
+ * @return int8_t 
+ */
+PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_deviceType_t mainDeviceID, otapp_deviceType_t incommingDeviceID);
+
+
 #endif  /* UNIT_TEST */
 
 #endif  /* OT_APP_PAIR_H_ */

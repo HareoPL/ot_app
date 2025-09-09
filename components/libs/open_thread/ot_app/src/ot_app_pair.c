@@ -448,7 +448,32 @@ void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t
     }
 }
 
-PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_DeviceList_t *pairDeviceList, otapp_pair_queueItem_t *queueIteam)
+PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_deviceType_t mainDeviceID, otapp_deviceType_t incommingDeviceID)
+{    
+    if(deviceDrv == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    otapp_pair_rule_t *rules = deviceDrv->pairRuleGetList();
+    uint8_t rulesSize = deviceDrv->pairRuleGetListSize();
+
+    for(uint8_t i = 0; i < rulesSize; i++) 
+    {
+        if(rules[i].main == mainDeviceID) 
+        {
+            for(int j = 0; OTAPP_PAIR_RULES_ALLOWED_SIZE; j++) 
+            {
+                if(rules[i].allowed[j] == incommingDeviceID) 
+                {
+                    return OTAPP_PAIR_IS;
+                }
+            }
+        }
+    }
+    return OTAPP_PAIR_IS_NOT;
+}
+
 {
     if(pairDeviceList == NULL || queueIteam == NULL)
     {
