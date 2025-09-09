@@ -139,12 +139,12 @@ char *otapp_pair_DeviceNameGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t 
  * 
  * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle()
  * @param deviceNameFull  [in] char ptr of full device name ("device1_1_588c81fffe301ea4")
- * @param uriIndex        [in] uriIndex from otapp_coap_uriTableIndex_t
+ * @param uriIndex        [in] uriIndex from otapp_coap_uriIndex_t
  * @return int16_t        [out] return MSB = device index (pairDeviceList->list[]),
  *                                     LSB = uri index (pairDeviceList->list[].uriIndex[]) 
  *                                      or  OTAPP_PAIR_ERROR (-1)
  */
-int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, otapp_coap_uriTableIndex_t uriIndex);
+int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, otapp_coap_uriIndex_t uriIndex);
 
 /**
  * @brief get URI index from uriIndex of device list 
@@ -152,10 +152,10 @@ int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, co
  * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle() 
  * @param indexDevice     [in] index of device 
  * @param indexUri        [in] index of URI 
- * @return otapp_coap_uriTableIndex_t [out] otapp_coap_uriTableIndex_t 
+ * @return otapp_coap_uriIndex_t [out] otapp_coap_uriIndex_t 
  *                                          or OTAPP_PAIR_NO_URI if there is not saved uri
  */
-otapp_coap_uriTableIndex_t otapp_pair_deviceUriIndexGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, uint8_t indexUri);
+otapp_coap_uriIndex_t otapp_pair_deviceUriIndexGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, uint8_t indexUri);
 
 /**
  * @brief delete paired device
