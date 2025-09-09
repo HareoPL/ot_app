@@ -22,8 +22,8 @@
 #ifndef MAIN_H_
 #define MAIN_H_
 
-#include <stdio.h>
-#include "stdint.h"
+
+#include "hro_utils.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -34,7 +34,6 @@
 #include "esp_log.h"
 #include "esp_err.h"
 
-#include "hro_utils.h"
 
 #define DEBUG
 

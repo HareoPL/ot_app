@@ -22,19 +22,29 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include "main.h"
+#include <stdio.h>
+#include "stdint.h"
 
-#define UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS
-// #define UNIT_TEST
-
-
-#ifndef UNIT_TEST
+#ifndef UNIT_TEST    
+    #define UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS
     #define PRIVATE static
+    #define BREAK_U_TEST
 #else
     #define PRIVATE
+    #define BREAK_U_TEST break;
+#endif
+
+#define HRO_TOOL_PACKED_BEGIN
+#define HRO_TOOL_PACKED_FIELD   __attribute__((packed))
+#define HRO_TOOL_PACKED_END     __attribute__((packed))
+#define HRO_TOOL_WEAK           __attribute__((weak))
+
+#ifndef NULL
+    #define NULL ((void *)0)
 #endif
 
 #ifdef UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS  
+    #include "main.h"
     #define UTILS_RTOS_CHECK_FREE_STACK() \
         do{ \
             const char *task_name = pcTaskGetName(NULL); \
@@ -44,5 +54,11 @@
 #else
     #define UTILS_RTOS_CHECK_FREE_STACK() do{}while(0)
 #endif 
+
+#ifndef UNUSED
+    #define UNUSED(x) (void)(x)
+#endif
+
+
 
 #endif  /* UTILS_H_ */
