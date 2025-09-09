@@ -19,7 +19,7 @@
             "problemMatcher": [],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                // "isDefault": true
             },
 
         },
@@ -121,5 +121,105 @@
                 "isDefault": false
             },
         },
+        //
+        //
+        // FOR TESTING 
+        //
+        // 
+         {
+            "label": "test Build",
+            "type": "shell",
+            "command": "ninja -v",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}/build/unit_test"
+            },
+            "group": {
+                "kind": "build",
+                // "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "test clean",
+            "type": "shell",
+            "command": "ninja -v clean",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}/build/unit_test"
+            },
+            "group": {
+                "kind": "build",
+                // "isDefault": true
+            }
+        },
+        {
+            "label": "rerun test",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "test clean",
+                "test Build",
+                "test run"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "test run",
+            "type": "shell",
+            "command": "ctest --output-on-failure -V",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}/build/"
+            },
+            "group": "test"
+        },
+        {
+            "label": "test Rebuild Cmake, run test",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "CMake Rebuild config of unit_test",
+                "test Build",
+                "test run"
+            ],
+            "group": {
+                "kind": "build",
+                // "isDefault": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "CMake update config of unit_test",
+            "type": "shell",
+            "command": "cmake -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE --no-warn-unused-cli -S./tests/unit_test -B./build/unit_test -G Ninja",
+            "group": {
+                "kind": "build"
+            },
+            "problemMatcher": {
+                "base": "$gcc"
+            }
+        }, 
+         {
+            "label": "CMake Rebuild config of unit_test",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "CMake delete build unit_test",
+                "CMake update config of unit_test"
+            ],
+            "group": {
+                "kind": "test"
+            }
+        },
+        {
+            "label": "CMake delete build unit_test",
+            "type": "shell",
+            "command": "rm -rf build/unit_test",
+            "group": {
+                "kind": "build"
+            }
+        },                           
     ]
 }
