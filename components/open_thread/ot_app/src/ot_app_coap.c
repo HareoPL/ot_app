@@ -123,7 +123,7 @@ void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo)
 
         sender_addr = &aMessageInfo->mSockAddr;
         sender_port = aMessageInfo->mSockPort;
-        printf("Sender mPeer address: ");
+        printf("Sender mSock address: ");
         otapp_ip6AddressPrint(sender_addr);  
         printf(", port: %u\n\n", sender_port);
 
