@@ -60,8 +60,13 @@ otapp_coap_uri_t *ad_temp_uriGetList()
 
 // RULES
 static otapp_pair_rule_t ad_temp_deviceRules[] = {
-    {ad_temp_deviceType, {OTAPP_LIGHTING_ON_OFF, OTAPP_LIGHTING_DIMM, OTAPP_LIGHTING_RGB}},   
+    {ad_temp_deviceType, {OTAPP_PAIR_NO_RULES}}, // NO RULES, pair every incoming device
 };
+
+// static otapp_pair_rule_t ad_temp_deviceRules[] = {
+//     {ad_temp_deviceType, {OTAPP_LIGHTING_ON_OFF, OTAPP_LIGHTING_DIMM, OTAPP_LIGHTING_RGB}},   
+// };
+
 #define AD_TEMP_RULES_SIZE (sizeof(ad_temp_deviceRules) / sizeof(ad_temp_deviceRules[0]))
 
 otapp_pair_rule_t *ad_temp_pairRulesGetList()

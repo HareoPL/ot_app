@@ -461,13 +461,18 @@ PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_devi
     otapp_pair_rule_t *rules = deviceDrv->pairRuleGetList();
     uint8_t rulesSize = deviceDrv->pairRuleGetListSize;
 
+    if(rules == NULL || rulesSize > OTAPP_PAIR_RULES_ALLOWED_SIZE)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
     for(uint8_t i = 0; i < rulesSize; i++) 
     {
         if(rules[i].main == mainDeviceID) 
         {
             for(int j = 0; OTAPP_PAIR_RULES_ALLOWED_SIZE; j++) 
             {
-                if(rules[i].allowed[j] == incommingDeviceID) 
+                if(rules[i].allowed[j] == OTAPP_PAIR_NO_RULES || rules[i].allowed[j] == incommingDeviceID) 
                 {
                     return OTAPP_PAIR_IS;
                 }
