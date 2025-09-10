@@ -288,9 +288,16 @@ int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char 
        {
             return OTAPP_PAIR_DEVICE_NO_SPACE;
        }
+    }else
+    {
+        tableIndex = otapp_pair_DeviceIndexGet(pairDeviceList, deviceNameFull); 
+        if(otapp_pair_ipAddressUpdate(pairDeviceList, tableIndex, ipAddr) == OTAPP_PAIR_UPDATED)
+        {
+           return OTAPP_PAIR_UPDATED; 
+        }
     }
-   
-    return OTAPP_PAIR_DEVICE_NAME_EXIST;
+    
+    return OTAPP_PAIR_NO_NEED_UPDATE ;
 }
 
 int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, otapp_coap_uriIndex_t uriIndex)
@@ -524,16 +531,37 @@ void otapp_pair_task(void *params)
                     result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), otapp_pair_queueIteam.deviceNameFull, &otapp_pair_queueIteam.ipAddress);
                     // todo otapp_pair_DeviceUriIndexAdd raczej przez kolejne wywolanie ? 
                     // bo trzeba opracowac mechanizm uri OTAPP_URI_WELL_KNOWN_CORE
-                    if(result < 0)
+                    
+                    switch (result)
                     {
-                        printf("has NOT been paired. Error: %d \n", result);                        
-                    }else
-                    {
-                        deviceList = otapp_pair_getHandle();
-                        newDevice = &deviceList->list[result];
-                        printf("has been success paired on index %d \n", result);
+                    case OTAPP_PAIR_ERROR:                    
+                    case OTAPP_PAIR_DEVICE_NAME_TO_LONG:                    
+                    case OTAPP_PAIR_DEVICE_NO_SPACE:                    
+                        printf("has NOT been paired. Error: %d \n", result);
+                        break;
 
-                        otapp_pair_observerPairedDeviceNotify(newDevice);                        
+                    case OTAPP_PAIR_UPDATED:                    
+                        printf("has been updated (ip Addr)");
+                        break;
+
+                    case OTAPP_PAIR_NO_NEED_UPDATE:                    
+                        printf("is exist and no need update");
+                        break;                   
+                   
+                    default:
+                        if(result >= 0)
+                        {
+                            printf("has been success paired on index %d \n", result);
+
+                            deviceList = otapp_pair_getHandle();
+                            newDevice = &deviceList->list[result];
+                            otapp_pair_observerPairedDeviceNotify(newDevice); 
+                        }else
+                        {
+                            printf(" Error: %d \n", result);
+                        }                        
+
+                        break;
                     }
                 }
             }
