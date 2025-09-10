@@ -33,15 +33,16 @@
 
 #define OTAPP_PAIR_IS                       (1)
 #define OTAPP_PAIR_IS_NOT                   (2)
-#define OTAPP_PAIR_UPDATED                  (OTAPP_PAIR_IS)
-#define OTAPP_PAIR_NO_NEED_UPDATE           (OTAPP_PAIR_IS_NOT)
 
 #define OTAPP_PAIR_OK                       (-1)
-#define OTAPP_PAIR_ERROR                    (-2)
-#define OTAPP_PAIR_NO_EXIST                 (-3)
-#define OTAPP_PAIR_DEVICE_NAME_EXIST        (-4)
-#define OTAPP_PAIR_DEVICE_NAME_TO_LONG      (-5)
-#define OTAPP_PAIR_DEVICE_NO_SPACE          (-6)
+#define OTAPP_PAIR_UPDATED                  (-2)
+#define OTAPP_PAIR_NO_NEED_UPDATE           (-3)
+
+#define OTAPP_PAIR_ERROR                    (-4)
+#define OTAPP_PAIR_NO_EXIST                 (-5)
+#define OTAPP_PAIR_DEVICE_NAME_EXIST        (-6)
+#define OTAPP_PAIR_DEVICE_NAME_TO_LONG      (-7)
+#define OTAPP_PAIR_DEVICE_NO_SPACE          (-8)
 
 #define OTAPP_PAIR_DEVICES_MAX    OTAPP_PAIRED_DEVICES_MAX // max number of devices to save them from DNS query
 #define OTAPP_PAIR_URI_MAX        OTAPP_PAIRED_URI_MAX 
