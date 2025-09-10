@@ -84,7 +84,7 @@ void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, con
         printf("Sender data: %s bytes: %d \n ", queueItem.deviceNameFull, lenOfReadedBytes);
         otapp_coap_printSenderIP(aMessageInfo);
 
-        printf("Add item to queue\n ");
+        printf("URI: Add item to queue\n ");
         otapp_pair_addToQueue(&queueItem);    
     }
 }

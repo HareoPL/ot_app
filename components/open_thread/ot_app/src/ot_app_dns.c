@@ -52,9 +52,8 @@ PRIVATE int8_t otapp_dnsPairDevice(const otDnsAddressResponse *aResponse)
     
     queueItem.type = OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST;
     strcpy(queueItem.deviceNameFull, charBuff);
-    memcpy(&queueItem.ipAddress, otapp_ip6AddressGet(), sizeof(otIp6Address));
 
-    printf("otapp_pair_addToQueue \n");
+    printf("DNS: Add item to queue\n");
     otapp_pair_addToQueue(&queueItem);
    
     otapp_charBufRelease();
