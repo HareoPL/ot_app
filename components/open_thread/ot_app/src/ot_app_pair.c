@@ -487,8 +487,7 @@ PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_queueItem_t *queu
     int16_t mainDevID;
     int16_t incomingDevID;
     const char *thisDevNameFull;
-
-    printf("Pairing new device: %s... ", queueIteam->deviceNameFull);
+    
 
     if(otapp_deviceNameIsMatching(queueIteam->deviceNameFull) == OTAPP_DEVICENAME_IS)
     {
@@ -508,7 +507,7 @@ PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_queueItem_t *queu
             return OTAPP_PAIR_IS;
         }        
     }
-    
+   
     return OTAPP_PAIR_IS_NOT;
 }
 
@@ -526,6 +525,8 @@ void otapp_pair_task(void *params)
         {
             if (otapp_pair_queueIteam.type == OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST)
             {
+                printf("Pairing new device: %s ", otapp_pair_queueIteam.deviceNameFull);
+
                 if(otapp_pair_deviceIsMatchingFromQueue(&otapp_pair_queueIteam) == OTAPP_PAIR_IS)
                 {
                     result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), otapp_pair_queueIteam.deviceNameFull, &otapp_pair_queueIteam.ipAddress);
@@ -541,11 +542,12 @@ void otapp_pair_task(void *params)
                         break;
 
                     case OTAPP_PAIR_UPDATED:                    
-                        printf("has been updated (ip Addr)");
+                        printf("has been updated index: %d (ip Addr): ", result);
+                        otapp_ip6AddressPrint(&otapp_pair_queueIteam.ipAddress);
                         break;
 
                     case OTAPP_PAIR_NO_NEED_UPDATE:                    
-                        printf("is exist and no need update");
+                        printf("is exist and no need update\n");
                         break;                   
                    
                     default:
@@ -563,6 +565,9 @@ void otapp_pair_task(void *params)
 
                         break;
                     }
+                }else
+                {
+                    printf("= current device \n ");
                 }
             }
 
