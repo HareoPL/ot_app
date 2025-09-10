@@ -126,7 +126,20 @@ TEST(ot_app_pair, GivenTwiceSameDeviceName_WhenCallingDeviceAdd_ThenReturnError)
              otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr_ok_1);
     result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr_ok_1);
 
-    TEST_ASSERT_EQUAL(OTAPP_PAIR_DEVICE_NAME_EXIST, result);   
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_NO_NEED_UPDATE, result);   
+}
+TEST(ot_app_pair, GivenTwiceWithDifferentIp_WhenCallingDeviceAdd_ThenReturnOK)
+{
+    otIp6Address *new_ip;
+    int8_t devId;
+
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr_ok_1);
+    devId = otapp_pair_DeviceIndexGet(otapp_pair_getHandle(), deviceNameFull_0);
+    otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_0, &ipAddr_ok_2);
+
+    new_ip = otapp_pair_ipAddressGet(otapp_pair_getHandle(), devId);
+
+    TEST_ASSERT_EQUAL_HEX8_ARRAY(&ipAddr_ok_2, new_ip, sizeof(otIp6Address));   
 }
 
 TEST(ot_app_pair, GivenTooLengthDeviceName_WhenCallingDeviceAdd_ThenReturnError)
