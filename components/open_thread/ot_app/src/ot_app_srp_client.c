@@ -203,8 +203,7 @@ void otapp_otSrpClientCallback(otError aError, const otSrpClientHostInfo *aHostI
             otapp_srpServiceLeaseCheckTaskInit();   
             
             otapp_dnsClientBrowse(otapp_getOpenThreadInstancePtr(), otapp_browseDefaultServiceName);
-
-            otapp_coapSendDeviceNamePut();
+           
         }       
     }
 }

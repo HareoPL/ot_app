@@ -153,6 +153,7 @@ static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context
 {
     if (flags & OT_CHANGED_THREAD_RLOC_ADDED) 
     {
+        otapp_coapSendDeviceNamePut();
         otapp_srpClientUpdateHostAddress(otapp_getOpenThreadInstancePtr());
 
         printf(">>>>>>> device address has been updated: ");
