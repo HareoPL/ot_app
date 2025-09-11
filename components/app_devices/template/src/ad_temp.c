@@ -78,7 +78,7 @@ otapp_pair_rule_t *ad_temp_pairRulesGetList()
 
 void ad_temp_pairedCallback(otapp_pair_Device_t *newDevice)
 {
-    printf("Dev Temp detect NEW DEVICE! %s \n", newDevice->devName);
+    printf("Dev Temp detect NEW DEVICE! %s \n", newDevice->devNameFull);
 }
 
 // drv

@@ -151,7 +151,7 @@ PRIVATE int8_t otapp_pair_deviceNameIsSame(otapp_pair_DeviceList_t *pairDeviceLi
         return OTAPP_PAIR_ERROR;
     }
 
-    if(strcmp(deviceNameFull, pairDeviceList->list[indexDevice].devName) == 0)
+    if(strcmp(deviceNameFull, pairDeviceList->list[indexDevice].devNameFull) == 0)
     {
         return OTAPP_PAIR_IS;
     }
@@ -191,7 +191,7 @@ char *otapp_pair_DeviceNameGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t 
         return NULL;
     }
 
-    return pairDeviceList->list[indexDevice].devName;
+    return pairDeviceList->list[indexDevice].devNameFull;
 }
 
 otapp_pair_DeviceList_t *otapp_pair_getHandle(void)
@@ -209,7 +209,7 @@ int8_t otapp_pair_DeviceDelete(otapp_pair_DeviceList_t *pairDeviceList, const ch
     int8_t tableIndex = otapp_pair_DeviceIsExist(pairDeviceList, deviceNameFull);
     if(tableIndex >= 0)
     {
-        memset(pairDeviceList->list[tableIndex].devName, 0, OTAPP_PAIR_NAME_FULL_SIZE);
+        memset(pairDeviceList->list[tableIndex].devNameFull, 0, OTAPP_PAIR_NAME_FULL_SIZE);
         memset(&pairDeviceList->list[tableIndex].ipAddr, 0, sizeof(otIp6Address));
         memset(pairDeviceList->list[tableIndex].uriIndex, 0, OTAPP_PAIR_URI_MAX);
         pairDeviceList->takenPosition[tableIndex] = 0;
@@ -228,7 +228,7 @@ int8_t otapp_pair_DeviceDeleteAll(otapp_pair_DeviceList_t *pairDeviceList)
 
     for (uint8_t i = 0; i < OTAPP_PAIR_DEVICES_MAX; i++)
     {
-        memset(pairDeviceList->list[i].devName, 0, OTAPP_PAIR_NAME_FULL_SIZE);
+        memset(pairDeviceList->list[i].devNameFull, 0, OTAPP_PAIR_NAME_FULL_SIZE);
         memset(&pairDeviceList->list[i].ipAddr, 0, sizeof(otIp6Address));
         pairDeviceList->takenPosition[i] = 0;
                 
@@ -277,7 +277,7 @@ int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char 
             {
                 return OTAPP_PAIR_DEVICE_NAME_TO_LONG;
             }
-            strncpy(pairDeviceList->list[tableIndex].devName, deviceNameFull, strLen);
+            strncpy(pairDeviceList->list[tableIndex].devNameFull, deviceNameFull, strLen);
             memcpy(&pairDeviceList->list[tableIndex].ipAddr, ipAddr, sizeof(otIp6Address)); 
 
             otapp_pair_spaceTake(pairDeviceList, tableIndex);

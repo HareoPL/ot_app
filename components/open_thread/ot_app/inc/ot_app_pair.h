@@ -63,7 +63,7 @@
 #define OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE 10
 
 typedef struct {
-    char devName[OTAPP_PAIR_NAME_FULL_SIZE]; // deviceNameFull
+    char devNameFull[OTAPP_PAIR_NAME_FULL_SIZE]; // deviceNameFull
     otIp6Address ipAddr;
     uint8_t uriIndex[OTAPP_PAIR_URI_MAX];    
 }otapp_pair_Device_t;
