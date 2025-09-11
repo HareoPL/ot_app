@@ -120,6 +120,11 @@ otInstance *otapp_getOpenThreadInstancePtr()
     return openThreadInstance;
 }
 
+ot_app_devDrv_t *otapp_getDevDrvInstance(void)
+{
+    return otapp_devDrv;
+}
+
 /////////////////////////
 // char buffer
 //

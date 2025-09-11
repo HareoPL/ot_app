@@ -71,6 +71,13 @@ typedef enum {
 /**
  * @brief todo
  * 
+ * @return ot_app_devDrv_t* 
+ */
+ot_app_devDrv_t *otapp_getDevDrvInstance(void);
+
+/**
+ * @brief todo
+ * 
  * @return otInstance* 
  */
 otInstance *otapp_getOpenThreadInstancePtr(void);
