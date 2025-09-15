@@ -36,7 +36,9 @@
 #include "ot_app_coap_uri.h"
 
 static otapp_coap_uri_t otapp_coap_uriDefault[] ={
+    {OTAPP_URI_WELL_KNOWN_CORE, {".well-known/core", ad_temp_uri_well_knownCoreHandle, NULL, NULL},},
     {OTAPP_URI_PARING_SERVICES, {"paring_services", otapp_coap_uri_paringServicesHandle, NULL, NULL}},
+    {OTAPP_URI_SUBSCRIBED_URIS, {"subscribed_uris", otapp_coap_uri_subscribedHandle, NULL, NULL}},
     {OTAPP_URI_TEST,            {"test", otapp_coap_uri_testHandle, NULL, NULL}},                  // for test
     {OTAPP_URI_TEST_LED,        {"test/led", otapp_coap_uri_ledControlHandle, NULL, NULL}},      // for test
 };
