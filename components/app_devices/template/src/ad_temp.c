@@ -81,6 +81,11 @@ void ad_temp_pairedCallback(otapp_pair_Device_t *newDevice)
     printf("Dev Temp detect NEW DEVICE! %s \n", newDevice->devNameFull);
 }
 
+void ad_temp_subscribed_uris(otapp_pair_Device_t *newDevice)
+{
+    printf("Dev Temp from subs! %s \n", newDevice->devNameFull);
+}
+
 // drv
 ot_app_devDrv_t switchDriver = {
     .pairRuleGetList = ad_temp_pairRulesGetList,
@@ -89,7 +94,7 @@ ot_app_devDrv_t switchDriver = {
     .uriGetList = ad_temp_uriGetList,
     .uriGetListSize = AD_TEMP_URI_SIZE,
 
-    .pairedObserver = ad_temp_pairedCallback,
+    .obs_subscribedUri = ad_temp_subscribed_uris,
 
     .deviceName = AD_TEMP_DEVICE_NAME,
     .deviceType = &ad_temp_deviceType,

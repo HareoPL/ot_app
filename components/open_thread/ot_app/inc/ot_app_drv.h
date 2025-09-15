@@ -22,6 +22,7 @@
 #ifndef OT_APP_DRV_H_
 #define OT_APP_DRV_H_
 
+#include "ot_app.h"
 #include "ot_app_coap.h"
 #include "ot_app_pair.h"
 
@@ -32,11 +33,13 @@ typedef uint8_t ot_app_size_t;
 typedef otapp_pair_rule_t *(*pairRuleGet_callback_t)(void);
 typedef otapp_coap_uri_t *(*uriGet_callback_t)(void);
 
-
 typedef struct ot_app_devDrv_t{
-        otapp_pair_observerCallback_t pairedObserver;        
+        otapp_pair_observerCallback_t obs_subscribedUri; // it will be called from subscribed_uris uri
+        otapp_pair_observerCallback_t obs_pairedDevice;  // it will be called when new device has been properly paired
+
         pairRuleGet_callback_t      pairRuleGetList;
         uriGet_callback_t           uriGetList;
+        const char *uriResources;
 
         const char *deviceName;
         const otapp_deviceType_t *deviceType;
