@@ -22,29 +22,39 @@
 
 
 #include "ad_temp.h"
-#include "ot_app.h"
-#include "ot_app_coap.h"
-#include "ot_app_pair.h"
+
 #include "ot_app_drv.h"
 
 #define AD_TEMP_DEVICE_NAME ("device1")
 static const otapp_deviceType_t ad_temp_deviceType = OTAPP_SWITCH;
 
 // URI
-static const char ad_temp_resourceContentTEST[] = 
-    "</temp>;rt=\"sensor\","
-    "</led>;rt=\"actuator\"";
 
-void ad_temp_uri_well_knownCoreHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
-{
-    otapp_coap_printSenderIP(aMessageInfo);
-
-    if (request)
-    {
-        otapp_coap_sendResponse(request, aMessageInfo, ad_temp_resourceContentTEST);
-    }
-}
-
+/* Common Web Linking Parameters in CoRE Link Format (RFC 6690):
+ *
+ * rt       - Resource Type: Describes the semantic type of the resource.
+ *            Example values: "temperature-c", "sensor"
+ *
+ * if       - Interface Description: Describes the interface or interaction method.
+ *            Example values: "on,off,set-color"
+ *
+ * title    - Human-readable title to describe the resource.
+ *            Example: "Outdoor temperature sensor"
+ *
+ * ct       - Content Type: Media type of the resource representation (Content-Format in CoAP).
+ *            Example: 50 (JSON), 0 (plain text)
+ *
+ * sz       - Size: Size of the resource in bytes.
+ *            Example: 123
+ *
+ * obs      - Observable: Indicates that the resource supports observation (Observe feature).
+ *            Typically used as a flag with no value.
+ * otCoapOptionContentFormat
+ */
+static const char ad_temp_uriResources[] =  // format: Web Linking RFC 6690
+    "</led>;rt=\"actuator\";if=\"on,off\";title=\"Simple LED actuator\";ct=0;obs,"                      // OT_COAP_OPTION_CONTENT_FORMAT_TEXT_PLAIN
+    "</led_rgb>;rt=\"actuator\";if=\"on,off,set-color\";title=\"RGB LED actuator\";ct=50;obs;sz=4";     // OT_COAP_OPTION_CONTENT_FORMAT_JSON
+   
 
 static otapp_coap_uri_t ad_temp_uri[] ={
     {OTAPP_URI_WELL_KNOWN_CORE, {".well-known/core", ad_temp_uri_well_knownCoreHandle, NULL, NULL},},
@@ -99,6 +109,7 @@ ot_app_devDrv_t switchDriver = {
 
     .deviceName = AD_TEMP_DEVICE_NAME,
     .deviceType = &ad_temp_deviceType,
+    .uriResources = ad_temp_uriResources,
 };
 
 
