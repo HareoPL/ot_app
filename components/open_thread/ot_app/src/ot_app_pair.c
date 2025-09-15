@@ -614,7 +614,7 @@ int8_t otapp_pair_init(ot_app_devDrv_t *devDriver)
     
     otapp_pair_devDrv = devDriver;
 
-    otapp_pair_observerPairedDeviceRegisterCallback(otapp_pair_devDrv->pairedObserver);
+    otapp_pair_observerPairedDeviceRegisterCallback(otapp_pair_devDrv->obs_pairedDevice);
 
     result = otapp_pair_initQueue();
     if(result != OTAPP_PAIR_OK)

@@ -94,6 +94,7 @@ ot_app_devDrv_t switchDriver = {
     .uriGetList = ad_temp_uriGetList,
     .uriGetListSize = AD_TEMP_URI_SIZE,
 
+    .obs_pairedDevice = ad_temp_pairedCallback,
     .obs_subscribedUri = ad_temp_subscribed_uris,
 
     .deviceName = AD_TEMP_DEVICE_NAME,
