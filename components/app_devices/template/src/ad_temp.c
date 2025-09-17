@@ -31,6 +31,17 @@ static const otapp_deviceType_t ad_temp_deviceType = OTAPP_SWITCH;
 static ot_app_devDrv_t *drv;
 // URI
 
+typedef enum {
+        AD_TEMP_NO_URI_INDEX = 0,
+
+        AD_TEMP_LIGHT_ON_OFF,
+        AD_TEMP_LIGHT_DIMM,
+        AD_TEMP_LIGHT_RGB,
+
+        AD_TEMP_END_OF_INDEX,
+    }ad_temp_uriIndex_t;
+
+
 /* Common Web Linking Parameters in CoRE Link Format (RFC 6690):
  *
  * rt       - Resource Type: Describes the semantic type of the resource.
@@ -53,13 +64,30 @@ static ot_app_devDrv_t *drv;
  * otCoapOptionContentFormat
  */
 static const char ad_temp_uriResources[] =  // format: Web Linking RFC 6690
-    "</led>;rt=\"actuator\";if=\"on,off\";title=\"Simple LED actuator\";ct=0;obs,"                      // OT_COAP_OPTION_CONTENT_FORMAT_TEXT_PLAIN
-    "</led_rgb>;rt=\"actuator\";if=\"on,off,set-color\";title=\"RGB LED actuator\";ct=50;obs;sz=4";     // OT_COAP_OPTION_CONTENT_FORMAT_JSON
+    "</light/on_off>;rt=\"actuator\";if=\"on,off\";title=\"Light on-off\";ct=0;obs,"                      // OT_COAP_OPTION_CONTENT_FORMAT_TEXT_PLAIN
+    "</light/dimm>;rt=\"actuator\";if=\"on,off,dimm\";title=\"Light dimmable\";ct=50;obs;sz=4,"      // OT_COAP_OPTION_CONTENT_FORMAT_JSON
+    "</light/rgb>;rt=\"actuator\";if=\"on,off,set-color\";title=\"Light RGB\";ct=50;obs;sz=4";     // OT_COAP_OPTION_CONTENT_FORMAT_JSON
    
+void ad_temp_uri_light_on_off_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+
+}
+
+void ad_temp_uri_light_dimm_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+
+}
+
+void ad_temp_uri_light_rgb_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+
+}
 
 static otapp_coap_uri_t ad_temp_uri[] ={
-    {OTAPP_URI_WELL_KNOWN_CORE, {".well-known/core", ad_temp_uri_well_knownCoreHandle, NULL, NULL},},
-
+    {AD_TEMP_LIGHT_ON_OFF,  {"light/on_off", ad_temp_uri_light_on_off_CoreHandle, NULL, NULL},},
+    {AD_TEMP_LIGHT_DIMM,    {"light/dimm", ad_temp_uri_light_dimm_CoreHandle, NULL, NULL},},
+    {AD_TEMP_LIGHT_RGB,     {"light/dimm", ad_temp_uri_light_rgb_CoreHandle, NULL, NULL},},
+ 
 };
 #define AD_TEMP_URI_SIZE (sizeof(ad_temp_uri) / sizeof(ad_temp_uri[0]))
 
