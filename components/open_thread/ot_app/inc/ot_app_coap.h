@@ -72,14 +72,16 @@ int8_t otapp_coap_init(ot_app_devDrv_t *devDriver);
 void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const char *responceContent);
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo);
 
-void otapp_coap_clientSendPut(const otIp6Address *peer_addr, const char *aUriPath, const char *payloadMsg);
-void otapp_coap_clientSendGet(const otIp6Address *peer_addr, const char *aUriPath);
+// void otapp_coap_clientSendPut(const otIp6Address *peer_addr, const char *aUriPath, const char *payloadMsg);
+// void otapp_coap_clientSendGet(const otIp6Address *peer_addr, const char *aUriPath);
 
 const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID);
 
 void otapp_coapSendtoTestPut();
 void otapp_coapSendtoTestGet();
 void otapp_coapSendDeviceNamePut();
+void otapp_coapSendGetUri_Well_known(const otIp6Address *ipAddr, otCoapResponseHandler responseHandler, void *aContext);
+void otapp_coapSendPutUri_subscribed_uris(const otIp6Address *ipAddr, const uint8_t *data, uint16_t dataSize);
 
 const char *otapp_coap_getUriNameFromDefault(otapp_coap_uriIndex_t uriIndex);
 
