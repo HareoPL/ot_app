@@ -28,6 +28,7 @@
 #define AD_TEMP_DEVICE_NAME ("device1")
 static const otapp_deviceType_t ad_temp_deviceType = OTAPP_SWITCH;
 
+static ot_app_devDrv_t *drv;
 // URI
 
 /* Common Web Linking Parameters in CoRE Link Format (RFC 6690):
@@ -96,24 +97,21 @@ void ad_temp_subscribed_uris(otapp_pair_Device_t *newDevice)
     printf("Dev Temp from subs! %s \n", newDevice->devNameFull);
 }
 
-// drv
-ot_app_devDrv_t switchDriver = {
-    .pairRuleGetList = ad_temp_pairRulesGetList,
-    .pairRuleGetListSize = AD_TEMP_RULES_SIZE,
 
-    .uriGetList = ad_temp_uriGetList,
-    .uriGetListSize = AD_TEMP_URI_SIZE,
+void ad_tempInit()
+{    
+    drv = ot_app_drv_getInstance();
+    drv->pairRuleGetList = ad_temp_pairRulesGetList;
+    drv->pairRuleGetListSize = AD_TEMP_RULES_SIZE;
 
-    .obs_pairedDevice = ad_temp_pairedCallback,
-    .obs_subscribedUri = ad_temp_subscribed_uris,
+    drv->uriGetList = ad_temp_uriGetList;
+    drv->uriGetListSize = AD_TEMP_URI_SIZE;
 
-    .deviceName = AD_TEMP_DEVICE_NAME,
-    .deviceType = &ad_temp_deviceType,
-    .uriResources = ad_temp_uriResources,
-};
+    drv->obs_pairedDevice = ad_temp_pairedCallback;
+    drv->obs_subscribedUri = ad_temp_subscribedUrisCallback;
 
+    drv->deviceName = AD_TEMP_DEVICE_NAME;
+    drv->deviceType = &ad_temp_deviceType;
+    drv->uriResources = ad_temp_uriResources;
 
-ot_app_devDrv_t *ad_devDrvGetTemp(void)
-{
-    return &switchDriver;
 }

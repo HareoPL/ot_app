@@ -135,7 +135,7 @@ const otExtAddress *otapp_macAddrGet(void);
  * @brief todo
  * 
  */
-int8_t otapp_init(ot_app_devDrv_t *deviceDrv);
+int8_t otapp_init(void);
 
 /**
  * @brief todo
