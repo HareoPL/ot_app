@@ -36,7 +36,14 @@ static ot_app_devDrv_t ot_app_devDrv = {
     .pairRuleGetListSize = 0,
     .uriGetListSize = 0,
 
-
+    .api.obs = {
+        .getHandle = oac_uri_obs_getSubListHandle,
+        .notify = oac_uri_obs_notify,
+        .parseMessage = oac_uri_obs_parseMessage,
+        .subscribe = oac_uri_obs_subscribe,
+        .unsubscribe = oac_uri_obs_unsubscribe,
+        .XdeleteAll = oac_uri_obs_deleteAll,
+        }
 };
 
 ot_app_devDrv_t *ot_app_drv_getInstance()
