@@ -68,7 +68,7 @@ PRIVATE int8_t oac_uri_obs_spaceIsFree(oac_uri_observer_t *subListHandle)
 
 PRIVATE int8_t oac_uri_obs_spaceTake(oac_uri_observer_t *subListHandle, uint8_t subListIndex)
 {
-    if(subListHandle == NULL)
+    if(subListHandle == NULL || subListIndex >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
     {
         return OAC_URI_OBS_ERROR;
     }
