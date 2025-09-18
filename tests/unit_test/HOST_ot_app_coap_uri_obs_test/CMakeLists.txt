@@ -11,8 +11,9 @@ set(INCLUDE_DIRS)
 
 list(APPEND INCLUDE_DIRS
 	# ADD your include dir here
-	# ../../../components/open_thread/ot_app/inc/
+	../../../components/open_thread/ot_app/inc/
 	../../../utils
+	../HOST_ot_app_common/mocks/
 	# ../../../main
 )
 
@@ -23,7 +24,8 @@ file(GLOB_RECURSE SRCS
 list(APPEND SRCS
 	# ADD your source file here ex. ../test.c	
 	../../../utils/hro_utils.c
-	# ../../../components/open_thread/ot_app/src/ot_app_pair.c
+	../../../components/open_thread/ot_app/src/ot_app_coap_uri_obs.c
+	../HOST_ot_app_common/mocks/mock_ot_app_coap.c
 	# ../../../main/main.c
 
 )
