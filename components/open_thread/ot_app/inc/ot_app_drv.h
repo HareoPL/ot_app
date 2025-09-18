@@ -22,13 +22,17 @@
 #ifndef OT_APP_DRV_H_
 #define OT_APP_DRV_H_
 
-#include "ot_app.h"
 #include "ot_app_coap.h"
 #include "ot_app_pair.h"
 #include "ot_app_coap_uri_obs.h"
 
 #include "stdint.h"
 
+#ifndef UNIT_TEST
+    #include "ot_app.h"
+#else
+    #include "mock_ot_app.h"          
+#endif
 
 typedef uint8_t ot_app_size_t;
 typedef otapp_pair_rule_t *(*pairRuleGet_callback_t)(void);

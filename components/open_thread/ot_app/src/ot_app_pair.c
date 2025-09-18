@@ -28,6 +28,7 @@
     #include "mock_freertos_queue.h"
     #include "mock_freertos_task.h"
     #include "mock_ot_app_deviceName.h"
+    #include "mock_ip6.h"
  #else
     #include "freertos/FreeRTOS.h"
     #include "freertos/task.h"

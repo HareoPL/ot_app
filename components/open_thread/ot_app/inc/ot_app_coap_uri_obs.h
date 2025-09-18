@@ -23,7 +23,6 @@
 #define OT_APP_COAP_URI_OBS_H_
 
 #include "hro_utils.h"
-#include <openthread/coap.h>
 
 #define OAC_URI_OBS_TOKEN_LENGTH            4
 #define OAC_URI_OBS_SUBSCRIBERS_MAX_NUM     20
