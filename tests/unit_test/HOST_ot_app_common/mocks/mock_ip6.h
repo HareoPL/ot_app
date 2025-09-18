@@ -16,6 +16,8 @@
 #define OT_TOOL_PACKED_END __attribute__((packed))
 #define OT_TOOL_WEAK __attribute__((weak))
 
+typedef struct otExtAddress otExtAddress;
+typedef struct otInstance otInstance;
 /**
  * @struct otIp6InterfaceIdentifier
  *
