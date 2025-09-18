@@ -22,8 +22,12 @@
 
 #include "ot_app_coap_uri_obs.h"
 #include "string.h"
-#include "ot_app_coap.h"
 
+#ifdef UNIT_TEST
+    #include "mock_ot_app_coap.h"
+#else
+    #include "ot_app_coap.h"
+#endif
 typedef struct oac_uri_observer_t{
     union {
         struct {
