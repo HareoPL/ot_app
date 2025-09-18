@@ -226,10 +226,17 @@ oac_uri_dataPacket_t *oac_uri_obs_parseMessage(uint8_t *buffer, uint16_t bufferS
     return &oac_dataPacket;
 }
 
-void oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle)
+int8_t oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle)
 {
+    if(subListHandle == NULL)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
     for (uint8_t i = 0; i < OAC_URI_OBS_SUBSCRIBERS_MAX_NUM; i++)
     {
-        memset(&subListHandle[i], 0, sizeof(subListHandle));
-    }   
+        memset(&subListHandle[i], 0, sizeof(subListHandle[0]));
+    }
+    
+    return OAC_URI_OBS_OK;
 }

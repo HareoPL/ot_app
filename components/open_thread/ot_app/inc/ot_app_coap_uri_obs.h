@@ -104,11 +104,12 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t ser
 oac_uri_dataPacket_t *oac_uri_obs_parseMessage(uint8_t *buffer, uint16_t bufferSize);
 
 /**
- * @brief todo
+ * @brief 
  * 
  * @param subListHandle 
+ * @return int8_t 
  */
-void oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle);
+int8_t oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle);
 
 
 
