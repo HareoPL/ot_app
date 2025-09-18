@@ -120,9 +120,9 @@ void ad_temp_pairedCallback(otapp_pair_Device_t *newDevice)
     printf("Dev Temp detect NEW DEVICE! %s \n", newDevice->devNameFull);
 }
 
-void ad_temp_subscribedUrisCallback(otapp_pair_Device_t *newDevice)
+void ad_temp_subscribedUrisCallback(oac_uri_dataPacket_t *newDevice)
 {
-    printf("Dev Temp from subs! %s \n", newDevice->devNameFull);
+    printf("Dev Temp from subs! \n");
 }
 
 
