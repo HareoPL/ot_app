@@ -51,14 +51,67 @@ typedef struct {
 
 typedef struct oac_uri_observer_t oac_uri_observer_t; // forward declaration
 
+/**
+ * @brief todo
+ * 
+ * @return oac_uri_observer_t* 
+ */
 oac_uri_observer_t *oac_uri_obs_getSubListHandle(void);
-int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);
-oac_uri_dataPacket_t *oac_uri_obs_parseMessage(uint8_t *buffer, uint16_t bufferSize);
+
+/**
+ * @brief todo
+ * 
+ * @return oac_uri_dataPacket_t* 
+ */
+oac_uri_dataPacket_t *oac_uri_obs_getdataPacketHandle(void);
+
+/**
+ * @brief todo
+ * 
+ * @param subListHandle 
+ * @param subscribeData 
+ * @return int8_t 
+ */
 int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData);
+
+/**
+ * @brief todo
+ * 
+ * @param subListHandle 
+ * @param token 
+ * @return int8_t 
+ */
 int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, const oacu_token_t *token);
+
+/**
+ * @brief todo
+ * 
+ * @param subListHandle 
+ * @param serverUri 
+ * @param dataToNotify 
+ * @param dataSize 
+ * @return int8_t 
+ */
+int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);
+
+/**
+ * @brief todo
+ * 
+ * @param buffer 
+ * @param bufferSize 
+ * @return oac_uri_dataPacket_t* 
+ */
+oac_uri_dataPacket_t *oac_uri_obs_parseMessage(uint8_t *buffer, uint16_t bufferSize);
+
+/**
+ * @brief todo
+ * 
+ * @param subListHandle 
+ */
 void oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle);
 
-// oac_uri_dataPacket_t *oac_uri_obs_getdataPacketHandle(void);
+
+
 #ifdef UNIT_TEST
 
 /**
@@ -66,7 +119,44 @@ void oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle);
  * @return int8_t         [out] free index position of oac_obsSubList[]
  *                              or  OAC_URI_OBS_ERROR (-1)
  */
-PRIVATE int8_t oac_uri_obsIsFreeSpace();
+PRIVATE int8_t oac_uri_obs_spaceIsFree(oac_uri_observer_t *subListHandle);
+
+/**
+ * @brief todo
+ * 
+ * @param subListHandle 
+ * @param subListIndex 
+ * @return PRIVATE 
+ */
+PRIVATE int8_t oac_uri_obs_spaceTake(oac_uri_observer_t *subListHandle, uint8_t subListIndex);
+
+/**
+ * @brief todo
+ * 
+ * @param subListHandle 
+ * @param subListIndex 
+ * @return PRIVATE 
+ */
+PRIVATE int8_t oac_uri_obs_spaceIsTaken(oac_uri_observer_t *subListHandle, uint8_t subListIndex);
+
+/**
+ * @brief todo
+ * 
+ * @param subListHandle 
+ * @param subListIndex 
+ * @param tokenToCheck 
+ * @return PRIVATE 
+ */
+PRIVATE int8_t oac_uri_obs_tokenIsSame(oac_uri_observer_t *subListHandle, uint8_t subListIndex, const oacu_token_t *tokenToCheck);
+
+/**
+ * @brief todo
+ * 
+ * @param subListHandle 
+ * @param token 
+ * @return PRIVATE 
+ */
+PRIVATE int8_t oac_uri_obs_tokenIsExist(oac_uri_observer_t *subListHandle, const oacu_token_t *token);
 
 #endif /* UNIT_TEST */
 
