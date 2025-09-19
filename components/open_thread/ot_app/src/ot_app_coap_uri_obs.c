@@ -79,7 +79,7 @@ PRIVATE int8_t oac_uri_obs_spaceTake(oac_uri_observer_t *subListHandle, uint8_t 
 
 PRIVATE int8_t oac_uri_obs_spaceIsTaken(oac_uri_observer_t *subListHandle, uint8_t subListIndex)
 { 
-    if(subListHandle == NULL)
+    if(subListHandle == NULL || subListIndex >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
     {
         return OAC_URI_OBS_ERROR;
     }
@@ -240,3 +240,116 @@ int8_t oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle)
     
     return OAC_URI_OBS_OK;
 }
+
+/////////////////////////
+
+//  void regobserv()
+//  {
+//     // otCoapMessageGenerateToken();
+//     uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage); 
+// const uint8_t *otCoapMessageGetToken(const otMessage *aMessage);
+    
+//  }
+
+//  #include <openthread/coap.h>
+//  // register observer 
+// static void CoapRequestHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+// {
+//     otError error;
+//     otMessage *response;
+
+//     response = otCoapNewMessage((otInstance *)aContext, NULL);
+//     if (response == NULL)
+//     {
+//         return;
+//     }
+
+//     error = otCoapMessageInitResponse(response, aMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, OT_COAP_CODE_CONTENT);
+//     if (error != OT_ERROR_NONE)
+//     {
+//         otMessageFree(response);
+//         return;
+//     }
+
+//     // Generujemy token zgodny z tokenem w zapytaniu klienta (zazwyczaj kopiujemy token z zapytania)
+//     error = otCoapCopyMessageToken(response, aMessage);
+
+
+//     // Dodanie opcji Observe do odpowiedzi - numer sekwencji powiadomień
+//     otCoapMessageAppendObserveOption(response, 0);
+
+//     error = otCoapSendResponse((otInstance *)aContext, response, aMessageInfo);
+//     if (error != OT_ERROR_NONE)
+//     {
+//         otMessageFree(response);
+//     }
+// }
+// 
+
+
+// #include <openthread/coap.h>
+
+// static void HandleCoapResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError)
+// {
+//     if (aError == OT_ERROR_NONE && aMessage != NULL)
+//     {
+//         // Obsługa odpowiedzi serwera - np. potwierdzenie rejestracji observe
+//     }
+//     else
+//     {
+//         // Obsługa błędu
+//     }
+// }
+
+// void SendCoapObserveRequest(otInstance *aInstance, const otIp6Address *aServerAddress)
+// {
+//     otError error;
+//     otMessage *message;
+//     otMessageInfo messageInfo;
+//     uint8_t tokenLength = 4; // długość tokena (np. 4 bajty)
+
+//     // Tworzymy nową wiadomość CoAP typu Confirmable (CON)
+//     message = otCoapNewMessage(aInstance, NULL);
+//     if (message == NULL)
+//     {
+//         return;
+//     }
+
+//     // Inicjujemy zapytanie z metodą GET
+//     otCoapMessageInit(message, OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_GET);
+    
+//     // Ustawiamy URI zasobu do obserwacji, np. "my/observe/resource"
+//     error = otCoapMessageAppendUriPathOption(message, "my");
+//     error = otCoapMessageAppendUriPathOption(message, "observe");
+//     error = otCoapMessageAppendUriPathOption(message, "resource");
+//     if (error != OT_ERROR_NONE)
+//     {
+//         otMessageFree(message);
+//         return;
+//     }
+
+//     // Generujemy token dla obserwacji (unikalny)
+//    otCoapMessageGenerateToken(message, tokenLength);
+    
+
+//     // Dodajemy opcję Observe z wartością 0, co oznacza rejestrację obserwatora
+//     error = otCoapMessageAppendObserveOption(message, 0);
+//     if (error != OT_ERROR_NONE)
+//     {
+//         otMessageFree(message);
+//         return;
+//     }
+
+//     // Przygotowujemy adres wysyłki (IPv6 + port CoAP - domyślnie 5683)
+//     memset(&messageInfo, 0, sizeof(messageInfo));
+//     messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
+//     memcpy(&messageInfo.mPeerAddr, aServerAddress, sizeof(otIp6Address));
+
+//     // Wysyłamy żądanie do serwera CoAP
+//     error = otCoapSendRequest(aInstance, message, &messageInfo, HandleCoapResponse, NULL);
+//     if (error != OT_ERROR_NONE)
+//     {
+//         otMessageFree(message);
+//         return;
+//     }
+// }
