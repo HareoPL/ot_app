@@ -5,6 +5,9 @@
 #define TEST_OBS_LIST_INDEX_MAX         (OAC_URI_OBS_SUBSCRIBERS_MAX_NUM - 1)
 #define TEST_OBS_LIST_INDEX_OVERFLOW    OAC_URI_OBS_SUBSCRIBERS_MAX_NUM
 
+#define TEST_OBS_RETURN_TRUE    1
+#define TEST_OBS_RETURN_FALSE   0
+
 #define TEST_OBS_HANDLE oac_uri_obs_getSubListHandle()
 
 void test_obs_fillTake();
@@ -105,4 +108,44 @@ TEST(ot_app_coap_uri_obs, GivenFillList_WhenCallingSpaceIsFree_ThenError)
     test_obs_fillTake();
     result_ = oac_uri_obs_spaceIsFree(TEST_OBS_HANDLE);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_LIST_FULL, result_);
+}
+
+// spaceIsTaken()
+TEST(ot_app_coap_uri_obs, GivenNULLArg_WhenCallingSpaceIsTaken_ThenReturnError)
+{
+    oacu_result_t result_;
+    result_ = oac_uri_obs_spaceIsTaken(NULL, TEST_OBS_LIST_INDEX_0);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenOverflowIndexArg_WhenCallingSpaceIsTaken_ThenReturnError)
+{
+    oacu_result_t result_;
+    result_ = oac_uri_obs_spaceIsTaken(TEST_OBS_HANDLE, TEST_OBS_LIST_INDEX_OVERFLOW);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenTrueIndexArg_WhenCallingSpaceIsTaken_ThenReturnOk_0)
+{
+    oacu_result_t result_;
+    result_ = oac_uri_obs_spaceIsTaken(TEST_OBS_HANDLE, TEST_OBS_LIST_INDEX_0);
+    TEST_ASSERT_EQUAL(TEST_OBS_RETURN_FALSE, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenMaxIndexArg_WhenCallingSpaceIsTaken_ThenReturnOk_0)
+{
+    oacu_result_t result_;
+    result_ = oac_uri_obs_spaceIsTaken(TEST_OBS_HANDLE, TEST_OBS_LIST_INDEX_0);
+    TEST_ASSERT_EQUAL(TEST_OBS_RETURN_FALSE, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenTrueArg_WhenFillTakeAndCallingSpaceIsTaken_ThenReturnOk_1)
+{
+    oacu_result_t result_;
+    test_obs_fillTake();
+    result_ = oac_uri_obs_spaceIsTaken(TEST_OBS_HANDLE, TEST_OBS_LIST_INDEX_0);
+    TEST_ASSERT_EQUAL(TEST_OBS_RETURN_TRUE, result_);
+
+    result_ = oac_uri_obs_spaceIsTaken(TEST_OBS_HANDLE, TEST_OBS_LIST_INDEX_MAX);
+    TEST_ASSERT_EQUAL(TEST_OBS_RETURN_TRUE, result_);
 }

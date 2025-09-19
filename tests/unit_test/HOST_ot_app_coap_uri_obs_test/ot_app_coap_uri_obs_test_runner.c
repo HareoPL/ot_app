@@ -2,6 +2,7 @@
 
 TEST_GROUP_RUNNER(ot_app_coap_uri_obs)
 {
+   // SpaceTake()
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullArg_WhenCallingSpaceTake_ThenError);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenOverflowIndexArg_WhenCallingSpaceTake_ThenError);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTrueIndexArg_WhenCallingSpaceTake_ThenOK);
@@ -15,5 +16,14 @@ TEST_GROUP_RUNNER(ot_app_coap_uri_obs)
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullArg_WhenCallingSpaceIsFree_ThenError);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTrueArg_WhenCallingSpaceIsFree_ThenOk);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenFillList_WhenCallingSpaceIsFree_ThenError);
+
+   // spaceIsTaken()
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNULLArg_WhenCallingSpaceIsTaken_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenOverflowIndexArg_WhenCallingSpaceIsTaken_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTrueIndexArg_WhenCallingSpaceIsTaken_ThenReturnOk_0);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenMaxIndexArg_WhenCallingSpaceIsTaken_ThenReturnOk_0);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTrueArg_WhenFillTakeAndCallingSpaceIsTaken_ThenReturnOk_1);
+
+
 
 }
