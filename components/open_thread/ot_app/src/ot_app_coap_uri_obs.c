@@ -241,6 +241,32 @@ int8_t oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle)
     return OAC_URI_OBS_OK;
 }
 
+
+#ifdef UNIT_TEST
+    
+    oac_uri_observer_t test_obs={
+        .takenPosition = 1,
+        .serverData.ipAddr.mFields.m8 = {
+                        0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
+                        0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34},
+        .serverData.token = {
+                        0xFA, 0x04, 0xB6, 0xD1},
+        .serverData.uriIndex_client = 1,
+        .serverData.uriIndex_server = 2,
+    };
+
+    int8_t test_obs_fillListExampleData(oac_uri_observer_t *subListHandle)
+    {
+        for (uint8_t i = 0; i < OAC_URI_OBS_SUBSCRIBERS_MAX_NUM; i++)
+        {
+           memcpy(&subListHandle[i], &test_obs, sizeof(test_obs));
+        }
+        
+        return OAC_URI_OBS_OK;
+    }
+#endif
+
+
 /////////////////////////
 
 //  void regobserv()
