@@ -13,6 +13,7 @@
 
 oacu_token_t test_obs_token_3Byte[] = {0xFA, 0x04, 0xB6};
 oacu_token_t test_obs_token_4Byte[] = {0xFA, 0x04, 0xB6, 0xD1};
+oacu_token_t test_obs_token_4Byte_2[] = {0x04, 0xB6, 0xD1, 0xFA};
 oacu_token_t test_obs_token_5Byte[] = {0xFA, 0x04, 0xB6, 0xD1, 0xF1};
 
 static otIp6Address test_obs_ipAddr_ok_1 = {
@@ -189,5 +190,36 @@ TEST(ot_app_coap_uri_obs, GivenDiffrentTokenToCheck_WhenCallingTokenIsSame_ThenR
     test_obs_fillListExampleData(TEST_OBS_HANDLE);
     result_ = oac_uri_obs_tokenIsSame(TEST_OBS_HANDLE, TEST_OBS_LIST_INDEX_0, test_obs_token_3Byte);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_IS_NOT, result_);
+}
+
+// tokenIsExist()
+TEST(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingTokenIsExist_ThenReturnError)
+{
+    oacu_result_t result_;
+    result_ = oac_uri_obs_tokenIsExist(NULL, NULL);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenNullToken_WhenCallingTokenIsExist_ThenReturnError)
+{
+    oacu_result_t result_;
+    result_ = oac_uri_obs_tokenIsExist(TEST_OBS_HANDLE, NULL);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenNotExistToken_WhenCallingTokenIsExist_ThenReturnIsNot)
+{
+    oacu_result_t result_;
+    test_obs_fillListExampleData(TEST_OBS_HANDLE);
+    result_ = oac_uri_obs_tokenIsExist(TEST_OBS_HANDLE, test_obs_token_4Byte_2);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_IS_NOT, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenExistToken_WhenCallingTokenIsExist_ThenReturnIndex0)
+{
+    oacu_result_t result_;
+    test_obs_fillListExampleData(TEST_OBS_HANDLE);
+    result_ = oac_uri_obs_tokenIsExist(TEST_OBS_HANDLE, test_obs_token_4Byte);
+    TEST_ASSERT_EQUAL(TEST_OBS_LIST_INDEX_0, result_);
 }
 
