@@ -24,6 +24,9 @@ TEST_GROUP_RUNNER(ot_app_coap_uri_obs)
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenMaxIndexArg_WhenCallingSpaceIsTaken_ThenReturnOk_0);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTrueArg_WhenFillTakeAndCallingSpaceIsTaken_ThenReturnOk_1);
 
-
-
+   // tokenIsSame()
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingTokenIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullTokenToCheckArg_WhenCallingTokenIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenSameTokenToCheck_WhenCallingTokenIsSame_ThenReturnIs);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenDiffrentTokenToCheck_WhenCallingTokenIsSame_ThenReturnIsNot);
 }

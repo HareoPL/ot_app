@@ -107,8 +107,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 
 target_link_libraries(${PROJECT_NAME} unity)
 
-target_compile_options(${PROJECT_NAME} PRIVATE -fprofile-arcs -ftest-coverage)
-target_link_options(${PROJECT_NAME} PRIVATE -fprofile-arcs)
+target_compile_options(${PROJECT_NAME} PRIVATE -fprofile-arcs -ftest-coverage -Wall -Wextra) 
+target_link_options(${PROJECT_NAME} PRIVATE -fprofile-arcs -Wl,--no-undefined -Wl,--fatal-warnings) 
 
 if(ENABLE_PRINT_SRCS_FILE)
 	message(STATUS " ")
