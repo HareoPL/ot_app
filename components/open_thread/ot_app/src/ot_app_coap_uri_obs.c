@@ -205,7 +205,7 @@ int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, const oacu_tok
 
 int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize)
 {
-    if(subListHandle == NULL || dataToNotify == NULL)
+    if(subListHandle == NULL || dataToNotify == NULL || serverUri == 0)
     {
         return OAC_URI_OBS_ERROR;
     }
