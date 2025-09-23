@@ -187,7 +187,13 @@ int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, const oacu_tok
     }
     
     result_ = oac_uri_obs_tokenIsExist(subListHandle, token);
-    if(result_ != OAC_URI_OBS_IS_NOT || result_ != OAC_URI_OBS_ERROR)
+
+    if(result_ == OAC_URI_OBS_ERROR)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+    
+    if(result_ != OAC_URI_OBS_IS_NOT)
     {
         subListHandle[result_].takenPosition = 0;
         memset(&subListHandle[result_].serverData, 0, sizeof(subListHandle[result_].serverData));
