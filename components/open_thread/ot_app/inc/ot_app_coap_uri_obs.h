@@ -24,6 +24,12 @@
 
 #include "hro_utils.h"
 
+#ifdef UNIT_TEST
+    #include "mock_ot_app_coap.h"
+#else
+    #include "ot_app_coap.h"
+#endif
+
 #define OAC_URI_OBS_TOKEN_LENGTH            4
 #define OAC_URI_OBS_SUBSCRIBERS_MAX_NUM     20
 #define OAC_URI_OBS_BUFFER_SIZE             256
@@ -49,7 +55,21 @@ typedef struct {
     uint8_t buffer[OAC_URI_OBS_BUFFER_SIZE];
 } oac_uri_dataPacket_t;
 
-typedef struct oac_uri_observer_t oac_uri_observer_t; // forward declaration
+typedef struct oac_uri_observer_t{
+    union {
+        struct {
+            oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
+            oacu_uriIndex_t uriIndex_client; 
+        }clientData; // use it when you are going to send subscribe request
+        struct {
+            oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
+            oacu_uriIndex_t uriIndex_client; // uri index from client
+            oacu_uriIndex_t uriIndex_server; // uri index from server 
+            otIp6Address ipAddr; 
+        }serverData; // use it when you are going to register subscriber
+    };
+    uint8_t takenPosition;
+} oac_uri_observer_t;
 
 /**
  * @brief todo
@@ -136,7 +156,7 @@ PRIVATE int8_t oac_uri_obs_spaceTake(oac_uri_observer_t *subListHandle, uint8_t 
  * 
  * @param subListHandle 
  * @param subListIndex 
- * @return PRIVATE 
+ * @return int8_t  // return 0 or 1 
  */
 PRIVATE int8_t oac_uri_obs_spaceIsTaken(oac_uri_observer_t *subListHandle, uint8_t subListIndex);
 
@@ -159,6 +179,7 @@ PRIVATE int8_t oac_uri_obs_tokenIsSame(oac_uri_observer_t *subListHandle, uint8_
  */
 PRIVATE int8_t oac_uri_obs_tokenIsExist(oac_uri_observer_t *subListHandle, const oacu_token_t *token);
 
+int8_t test_obs_fillListExampleData(oac_uri_observer_t *subListHandle);
 #endif /* UNIT_TEST */
 
 #endif  /* OT_APP_COAP_URI_OBS_H_ */

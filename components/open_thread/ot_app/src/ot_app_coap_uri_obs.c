@@ -23,27 +23,6 @@
 #include "ot_app_coap_uri_obs.h"
 #include "string.h"
 
-#ifdef UNIT_TEST
-    #include "mock_ot_app_coap.h"
-#else
-    #include "ot_app_coap.h"
-#endif
-typedef struct oac_uri_observer_t{
-    union {
-        struct {
-            oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
-            oacu_uriIndex_t uriIndex_client; 
-        }clientData; // use it when you are going to send subscribe request
-        struct {
-            oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
-            oacu_uriIndex_t uriIndex_client; // uri index from client
-            oacu_uriIndex_t uriIndex_server; // uri index from server 
-            otIp6Address ipAddr; 
-        }serverData; // use it when you are going to register subscriber
-    };
-    uint8_t takenPosition;
-} oac_uri_observer_t;
-
 static oac_uri_observer_t oac_obsSubList[OAC_URI_OBS_SUBSCRIBERS_MAX_NUM];
 static oac_uri_dataPacket_t oac_dataPacket;
 
