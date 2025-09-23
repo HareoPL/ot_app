@@ -40,10 +40,18 @@ TEST_GROUP_RUNNER(ot_app_coap_uri_obs)
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingSubscribe_ThenReturnError);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullSubDataArg_WhenCallingSubscribe_ThenReturnError);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNewSub_WhenCallingSubscribe_ThenReturnOK);
-   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTwiceSameSub_WhenCallingSubscribe_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTwiceSameSub_WhenCallingSubscribe_ThenReturnError);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenSubStrWithoutIP_WhenCallingSubscribe_ThenReturnError);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenSubStrWithoutToken_WhenCallingSubscribe_ThenReturnError);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenSubStrWithoutUriIC_WhenCallingSubscribe_ThenReturnError);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenSubStrWithoutUriIS_WhenCallingSubscribe_ThenReturnError);
+
+   // unsubscribe()
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingUnubscribe_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullTokenArg_WhenCallingUnubscribe_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNotExistToken_WhenSubStrIsEmptyAndCallingUnubscribe_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNotExistToken_WhenSubStrIsNotEmptyCallingUnubscribe_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenExistToken_WhenCallingUnubscribe_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, CheckUnsubscribedToken_WhenCallingUnubscribe_ThenReturnError);
 
 }

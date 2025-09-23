@@ -47,7 +47,7 @@ static oac_uri_observer_t test_obs_obsWithoutToken={
         .serverData.uriIndex_server = 2,
 };
 
-static oac_uri_observer_t test_obs_obsWithoutUriIC={        
+static oac_uri_observer_t test_obs_obsWithoutUriIndexClient={        
         .serverData.ipAddr.mFields.m8 = {
                         0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
                         0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34},
@@ -56,7 +56,7 @@ static oac_uri_observer_t test_obs_obsWithoutUriIC={
        .serverData.uriIndex_server = 2,
 };
 
-static oac_uri_observer_t test_obs_obsWithoutUriIS={        
+static oac_uri_observer_t test_obs_obsWithoutUriIdexServer={        
         .serverData.ipAddr.mFields.m8 = {
                         0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
                         0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34},
@@ -305,7 +305,7 @@ TEST(ot_app_coap_uri_obs, GivenNewSub_WhenCallingSubscribe_ThenReturnOK)
     TEST_ASSERT_EQUAL(OAC_URI_OBS_OK, result_);
 }
 
-TEST(ot_app_coap_uri_obs, GivenTwiceSameSub_WhenCallingSubscribe_ThenReturnOK)
+TEST(ot_app_coap_uri_obs, GivenTwiceSameSub_WhenCallingSubscribe_ThenReturnError)
 {
     oacu_result_t result_;
 
@@ -334,7 +334,7 @@ TEST(ot_app_coap_uri_obs, GivenSubStrWithoutUriIC_WhenCallingSubscribe_ThenRetur
 {
     oacu_result_t result_;
 
-    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsWithoutUriIC);
+    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsWithoutUriIndexClient);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
 }
 
@@ -342,6 +342,59 @@ TEST(ot_app_coap_uri_obs, GivenSubStrWithoutUriIS_WhenCallingSubscribe_ThenRetur
 {
     oacu_result_t result_;
 
-    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsWithoutUriIS);
+    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsWithoutUriIdexServer);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+// unsubscribe()
+TEST(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingUnubscribe_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    result_ = oac_uri_obs_unsubscribe(NULL, test_obs_token_4Byte);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenNullTokenArg_WhenCallingUnubscribe_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    result_ = oac_uri_obs_unsubscribe(TEST_OBS_HANDLE, NULL);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenNotExistToken_WhenSubStrIsEmptyAndCallingUnubscribe_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    result_ = oac_uri_obs_unsubscribe(TEST_OBS_HANDLE, test_obs_token_4Byte);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_TOKEN_NOT_EXIST, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenNotExistToken_WhenSubStrIsNotEmptyCallingUnubscribe_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsTrue);
+    result_ = oac_uri_obs_unsubscribe(TEST_OBS_HANDLE, test_obs_token_4Byte_2);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_TOKEN_NOT_EXIST, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenExistToken_WhenCallingUnubscribe_ThenReturnOK)
+{
+    oacu_result_t result_;
+    
+    oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsTrue);
+    result_ = oac_uri_obs_unsubscribe(TEST_OBS_HANDLE, test_obs_token_4Byte);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_OK, result_);
+}
+
+TEST(ot_app_coap_uri_obs, CheckUnsubscribedToken_WhenCallingUnubscribe_ThenReturnError)
+{
+    oacu_result_t result_;
+    
+    oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsTrue);
+    oac_uri_obs_unsubscribe(TEST_OBS_HANDLE, test_obs_token_4Byte);
+    result_ = oac_uri_obs_unsubscribe(TEST_OBS_HANDLE, test_obs_token_4Byte);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_TOKEN_NOT_EXIST, result_);
 }
