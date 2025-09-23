@@ -22,7 +22,7 @@ static otIp6Address test_obs_ipAddr_ok_1 = {
                     0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34}
 };
 
-static oac_uri_observer_t test_obs_observer={        
+static oac_uri_observer_t test_obs_obsTrue={        
         .serverData.ipAddr.mFields.m8 = {
                         0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
                         0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34},
@@ -32,6 +32,38 @@ static oac_uri_observer_t test_obs_observer={
         .serverData.uriIndex_server = 2,
 };
 
+static oac_uri_observer_t test_obs_obsWithoutIp={ 
+        .serverData.token = {
+                        0xFA, 0x04, 0xB6, 0xD1},
+        .serverData.uriIndex_client = 1,
+        .serverData.uriIndex_server = 2,
+};
+
+static oac_uri_observer_t test_obs_obsWithoutToken={        
+        .serverData.ipAddr.mFields.m8 = {
+                        0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
+                        0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34},
+        .serverData.uriIndex_client = 1,
+        .serverData.uriIndex_server = 2,
+};
+
+static oac_uri_observer_t test_obs_obsWithoutUriIC={        
+        .serverData.ipAddr.mFields.m8 = {
+                        0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
+                        0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34},
+        .serverData.token = {
+                        0xFA, 0x04, 0xB6, 0xD1},
+       .serverData.uriIndex_server = 2,
+};
+
+static oac_uri_observer_t test_obs_obsWithoutUriIS={        
+        .serverData.ipAddr.mFields.m8 = {
+                        0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
+                        0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34},
+        .serverData.token = {
+                        0xFA, 0x04, 0xB6, 0xD1},
+        .serverData.uriIndex_client = 1,        
+};
 // oac_uri_dataPacket_t *test_obs_dataPacket;
 
 void test_obs_fillTake();
@@ -253,7 +285,7 @@ TEST(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingSubscribe_ThenReturnErro
 {
     oacu_result_t result_;
 
-    result_ = oac_uri_obs_subscribe(NULL, &test_obs_observer);
+    result_ = oac_uri_obs_subscribe(NULL, &test_obs_obsTrue);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
 }
 
@@ -269,7 +301,7 @@ TEST(ot_app_coap_uri_obs, GivenNewSub_WhenCallingSubscribe_ThenReturnOK)
 {
     oacu_result_t result_;
 
-    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_observer);
+    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsTrue);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_OK, result_);
 }
 
@@ -277,7 +309,39 @@ TEST(ot_app_coap_uri_obs, GivenTwiceSameSub_WhenCallingSubscribe_ThenReturnOK)
 {
     oacu_result_t result_;
 
-    oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_observer);
-    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_observer);
+    oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsTrue);
+    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsTrue);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_TOKEN_EXIST, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenSubStrWithoutIP_WhenCallingSubscribe_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsWithoutIp);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenSubStrWithoutToken_WhenCallingSubscribe_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsWithoutToken);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenSubStrWithoutUriIC_WhenCallingSubscribe_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsWithoutUriIC);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenSubStrWithoutUriIS_WhenCallingSubscribe_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    result_ = oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsWithoutUriIS);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
 }
