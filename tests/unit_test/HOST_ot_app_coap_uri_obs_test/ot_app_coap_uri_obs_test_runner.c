@@ -36,6 +36,11 @@ TEST_GROUP_RUNNER(ot_app_coap_uri_obs)
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNotExistToken_WhenCallingTokenIsExist_ThenReturnIsNot);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenExistToken_WhenCallingTokenIsExist_ThenReturnIndex0);
 
+   // subscribe()
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingSubscribe_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullSubDataArg_WhenCallingSubscribe_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNewSub_WhenCallingSubscribe_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTwiceSameSub_WhenCallingSubscribe_ThenReturnOK);
 
 
 }
