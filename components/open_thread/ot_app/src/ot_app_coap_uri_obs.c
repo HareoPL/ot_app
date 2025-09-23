@@ -131,6 +131,7 @@ int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, oac_uri_observer
         {
             oac_uri_obs_spaceTake(subListHandle, result_);
             memcpy(&subListHandle[result_].serverData, &subscribeData->serverData, sizeof(subscribeData->serverData));  
+            return OAC_URI_OBS_OK;
         }else
         {
             return OAC_URI_OBS_LIST_FULL;
