@@ -115,6 +115,18 @@ oac_uri_dataPacket_t *oac_uri_obs_getdataPacketHandle()
     return &oac_dataPacket;
 }
 
+int8_t oac_uri_obs_checkTableIsInit(uint8_t *tabPtr, uint16_t tabSize)
+{
+    for (uint16_t i = 0; i < tabSize; i++) 
+    {
+        if (tabPtr[i] != 0) 
+        {
+            return OAC_URI_OBS_IS;
+        }
+    }
+    return OAC_URI_OBS_IS_NOT;
+}
+
 int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData)
 {
     oacu_result_t result_;
@@ -124,6 +136,20 @@ int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, oac_uri_observer
         return OAC_URI_OBS_ERROR; 
     }
     
+    if(subscribeData->serverData.uriIndex_client == 0 || subscribeData->serverData.uriIndex_server == 0 )
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    if(oac_uri_obs_checkTableIsInit(subscribeData->serverData.ipAddr.mFields.m8, sizeof(subscribeData->serverData.ipAddr)) == OAC_URI_OBS_IS_NOT)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    if(oac_uri_obs_checkTableIsInit(subscribeData->serverData.token, sizeof(subscribeData->serverData.token)) == OAC_URI_OBS_IS_NOT)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
     if(oac_uri_obs_tokenIsExist(subListHandle, subscribeData->serverData.token) == OAC_URI_OBS_IS_NOT)
     {
         result_ = oac_uri_obs_spaceIsFree(subListHandle);
@@ -190,6 +216,11 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t ser
     
     return OAC_URI_OBS_OK;
 }
+// int8_t oac_uri_obs_sendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath)
+// {
+//     void otapp_coapSendPutSubscribeRequest(ipAddr, aUriPath);
+//     return OAC_URI_OBS_OK;
+// }
 
 // todo powinna byc tutaj kolejka?  chodzi o to ze jesli nie zdozy sie z przetworzeniem w 
 // uriSub to sie straci dane ? czyli trzeba stworzyc nowy task do przetwarzania w kolejce ? 
