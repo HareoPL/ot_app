@@ -115,7 +115,7 @@ oac_uri_dataPacket_t *oac_uri_obs_getdataPacketHandle()
     return &oac_dataPacket;
 }
 
-int8_t oac_uri_obs_checkTableIsInit(uint8_t *tabPtr, uint16_t tabSize)
+PRIVATE int8_t oac_uri_obs_checkTableIsInit(uint8_t *tabPtr, uint16_t tabSize)
 {
     for (uint16_t i = 0; i < tabSize; i++) 
     {
@@ -127,10 +127,8 @@ int8_t oac_uri_obs_checkTableIsInit(uint8_t *tabPtr, uint16_t tabSize)
     return OAC_URI_OBS_IS_NOT;
 }
 
-int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData)
+PRIVATE int8_t oac_uri_obs_subscribeIsValidData(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData)
 {
-    oacu_result_t result_;
-
     if(subListHandle == NULL || subscribeData == NULL)
     {
         return OAC_URI_OBS_ERROR; 
@@ -150,6 +148,18 @@ int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, oac_uri_observer
     {
         return OAC_URI_OBS_ERROR;
     }
+
+    return OAC_URI_OBS_IS;
+}
+
+int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData)
+{
+    oacu_result_t result_;
+    if(oac_uri_obs_subscribeIsValidData(subListHandle, subscribeData) != OAC_URI_OBS_IS)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+    
     if(oac_uri_obs_tokenIsExist(subListHandle, subscribeData->serverData.token) == OAC_URI_OBS_IS_NOT)
     {
         result_ = oac_uri_obs_spaceIsFree(subListHandle);
