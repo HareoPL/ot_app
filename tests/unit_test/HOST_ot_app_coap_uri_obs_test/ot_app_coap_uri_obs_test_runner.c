@@ -54,4 +54,8 @@ TEST_GROUP_RUNNER(ot_app_coap_uri_obs)
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenExistToken_WhenCallingUnubscribe_ThenReturnOK);
    RUN_TEST_CASE(ot_app_coap_uri_obs, CheckUnsubscribedToken_WhenCallingUnubscribe_ThenReturnError);
 
+   // notify()
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingNotify_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenIncorrectUriArg_WhenCallingNotify_ThenReturnError);
+
 }

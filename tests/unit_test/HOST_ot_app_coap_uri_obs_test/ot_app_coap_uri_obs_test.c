@@ -398,3 +398,22 @@ TEST(ot_app_coap_uri_obs, CheckUnsubscribedToken_WhenCallingUnubscribe_ThenRetur
     result_ = oac_uri_obs_unsubscribe(TEST_OBS_HANDLE, test_obs_token_4Byte);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_TOKEN_NOT_EXIST, result_);
 }
+
+// notify()
+TEST(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingNotify_ThenReturnError)
+{
+    oacu_result_t result_;
+    uint8_t data_ = 255;
+
+    result_ = oac_uri_obs_notify(NULL, 1, &data_, 1);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenIncorrectUriArg_WhenCallingNotify_ThenReturnError)
+{
+    oacu_result_t result_;
+    uint8_t data_ = 255;
+
+    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, 0, &data_, 1);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
