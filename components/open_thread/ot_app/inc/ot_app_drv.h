@@ -45,6 +45,7 @@ typedef struct ot_app_drv_obs_t{
          * @return oac_uri_observer_t pointer
          */
         oac_uri_observer_t *(*getHandle)(void);
+        oac_uri_dataPacket_t *(*getDataPacket)(void);
         
         int8_t (*notify)(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);
         oac_uri_dataPacket_t *(*parseMessage)(uint8_t *buffer, uint16_t bufferSize);

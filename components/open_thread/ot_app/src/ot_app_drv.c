@@ -38,6 +38,7 @@ static ot_app_devDrv_t ot_app_devDrv = {
 
     .api.obs = {
         .getHandle = oac_uri_obs_getSubListHandle,
+        .getDataPacket = oac_uri_obs_getdataPacketHandle,
         .notify = oac_uri_obs_notify,
         .parseMessage = oac_uri_obs_parseMessage,
         .subscribe = oac_uri_obs_subscribe,
