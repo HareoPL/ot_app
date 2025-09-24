@@ -57,5 +57,14 @@ TEST_GROUP_RUNNER(ot_app_coap_uri_obs)
    // notify()
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingNotify_ThenReturnError);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenIncorrectUriArg_WhenCallingNotify_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullDataToNotifyArg_WhenCallingNotify_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTrueArgs_WhenCallingNotify_ThenReturnOk);
+
+   // parseMessage()
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullArg_WhenParseMessage_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullDataOutArg_WhenParseMessage_ThenReturnError);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTrueArg_WhenParseMessage_ThenReturnPtrToStract);
+
+   RUN_TEST_CASE(ot_app_coap_uri_obs, CheckNotify_GivenTrueArgs_WhenCallingNotify_ThenReturnOk);
 
 }

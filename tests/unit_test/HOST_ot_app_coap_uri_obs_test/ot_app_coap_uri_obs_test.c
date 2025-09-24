@@ -64,7 +64,8 @@ static oac_uri_observer_t test_obs_obsWithoutUriIdexServer={
                         0xFA, 0x04, 0xB6, 0xD1},
         .serverData.uriIndex_client = 1,        
 };
-// oac_uri_dataPacket_t *test_obs_dataPacket;
+oac_uri_dataPacket_t test_obs_dataPacket;
+oac_uri_dataPacket_t test_obs_dataPacketOut;
 
 void test_obs_fillTake();
 
@@ -81,17 +82,16 @@ TEST_TEAR_DOWN(ot_app_coap_uri_obs)
     /* Cleanup after every test */
 }
 
-// oac_uri_dataPacket_t *test_obs_createDataPacket(oacu_token_t token, oacu_uriIndex_t uriIndex_client, uint8_t *buffer, uint16_t bufferSize)
-// {   
-//     test_obs_dataPacket = oac_uri_obs_getdataPacketHandle();
+oac_uri_dataPacket_t *test_obs_createDataPacket(oacu_token_t *token, oacu_uriIndex_t uriIndex_client, uint8_t *buffer, uint16_t bufferSize)
+{       
+    memset(&test_obs_dataPacket, 0, sizeof(oac_uri_dataPacket_t));
+    memcpy(&test_obs_dataPacket.token, token, OAC_URI_OBS_TOKEN_LENGTH);
+    memcpy(&test_obs_dataPacket.buffer, buffer, bufferSize);
 
-//     memcpy(test_obs_dataPacket->token, &token, sizeof(token));
-//     memcpy(test_obs_dataPacket->buffer, buffer, bufferSize);
-
-//     test_obs_dataPacket->uriIndex_client = uriIndex_client;
+    test_obs_dataPacket.uriIndex_client = uriIndex_client;
     
-//     return test_obs_dataPacket;
-// }
+    return &test_obs_dataPacket;
+}
 
 void test_obs_fillTake()
 {
@@ -416,4 +416,83 @@ TEST(ot_app_coap_uri_obs, GivenIncorrectUriArg_WhenCallingNotify_ThenReturnError
 
     result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, 0, &data_, 1);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenNullDataToNotifyArg_WhenCallingNotify_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, 1, NULL, 0);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenTrueArgs_WhenCallingNotify_ThenReturnOk)
+{
+    oacu_result_t result_;
+    uint8_t data_ = 255;
+
+    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, 2, &data_, 1);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_OK, result_);
+}
+
+// parseMessage()
+TEST(ot_app_coap_uri_obs, GivenNullArg_WhenParseMessage_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    result_ = oac_uri_obs_parseMessage(NULL, &test_obs_dataPacketOut);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenNullDataOutArg_WhenParseMessage_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    oac_uri_dataPacket_t *dataPacketIn;
+    uint8_t data_ = 255; 
+    uint8_t dataSize_ = 1; 
+
+    dataPacketIn = test_obs_createDataPacket(test_obs_token_4Byte, 1, &data_, dataSize_);
+    result_ = oac_uri_obs_parseMessage(NULL, &test_obs_dataPacketOut);
+
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+}
+
+TEST(ot_app_coap_uri_obs, GivenTrueArg_WhenParseMessage_ThenReturnPtrToStract)
+{
+    oacu_result_t result_;
+
+    oac_uri_dataPacket_t *dataPacketIn;
+    uint8_t data_ = 255; 
+    uint8_t dataSize_ = 1; 
+
+    dataPacketIn = test_obs_createDataPacket(test_obs_token_4Byte, 1, &data_, dataSize_);
+    result_ = oac_uri_obs_parseMessage((uint8_t*)dataPacketIn,  &test_obs_dataPacketOut);
+
+     TEST_ASSERT_EQUAL_UINT8_ARRAY(dataPacketIn, &test_obs_dataPacketOut, sizeof(oac_uri_dataPacket_t));
+}
+
+// notify()
+TEST(ot_app_coap_uri_obs, CheckNotify_GivenTrueArgs_WhenCallingNotify_ThenReturnOk)
+{
+    oacu_result_t result_;
+    uint8_t data_ = 254;
+    uint8_t dataSize_ = 1;
+
+    const otIp6Address *ipAddrFromNotify;
+    const uint8_t *dataFromNotify;
+
+    oac_uri_obs_subscribe(TEST_OBS_HANDLE, &test_obs_obsTrue);
+    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, 2, &data_, dataSize_);
+
+    ipAddrFromNotify = otapp_coapSendPutUri_subscribed_uris_fake.arg0_val;
+    dataFromNotify = otapp_coapSendPutUri_subscribed_uris_fake.arg1_val;
+
+    oac_uri_obs_parseMessage(dataFromNotify, &test_obs_dataPacketOut);
+
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(&test_obs_obsTrue.serverData.ipAddr, ipAddrFromNotify, OT_IP6_ADDRESS_SIZE);
+    
+    TEST_ASSERT_EQUAL(data_, test_obs_dataPacketOut.buffer[0]);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_OK, result_);
+
 }
