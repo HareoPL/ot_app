@@ -115,13 +115,13 @@ int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, const oacu_tok
 int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);
 
 /**
- * @brief todo
+ * @brief 
  * 
- * @param buffer 
- * @param bufferSize 
- * @return oac_uri_dataPacket_t* 
+ * @param inBuffer 
+ * @param out 
+ * @return uint8_t 
  */
-oac_uri_dataPacket_t *oac_uri_obs_parseMessage(uint8_t *buffer, uint16_t bufferSize);
+int8_t oac_uri_obs_parseMessage(const uint8_t *inBuffer, oac_uri_dataPacket_t *out);
 
 /**
  * @brief 

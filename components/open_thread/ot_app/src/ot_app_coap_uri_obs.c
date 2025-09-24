@@ -222,6 +222,7 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t ser
             if(subListHandle[i].serverData.uriIndex_server == serverUri)
             {
                 
+                memset(&oac_dataPacket, 0, sizeof(oac_dataPacket));
                 memcpy(&oac_dataPacket, &subListHandle[i].clientData, sizeof(subListHandle->clientData));
                 memcpy(oac_dataPacket.buffer, dataToNotify, dataSize);
 
@@ -241,16 +242,17 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t ser
 // todo powinna byc tutaj kolejka?  chodzi o to ze jesli nie zdozy sie z przetworzeniem w 
 // uriSub to sie straci dane ? czyli trzeba stworzyc nowy task do przetwarzania w kolejce ? 
 
-oac_uri_dataPacket_t *oac_uri_obs_parseMessage(uint8_t *buffer, uint16_t bufferSize)
+int8_t oac_uri_obs_parseMessage(const uint8_t *inBuffer, oac_uri_dataPacket_t *out)
 {
-    if(buffer == NULL || bufferSize >= OAC_URI_OBS_BUFFER_SIZE)
+    if(inBuffer == NULL || out == NULL)
     {
-        return NULL; 
+        return OAC_URI_OBS_ERROR; 
     }
-    
-    memcpy(&oac_dataPacket, buffer, bufferSize);
 
-    return &oac_dataPacket;
+    memset(out, 0, sizeof(oac_uri_dataPacket_t));
+    memcpy(out, inBuffer, sizeof(oac_uri_dataPacket_t));
+
+    return OAC_URI_OBS_OK;
 }
 
 int8_t oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle)
