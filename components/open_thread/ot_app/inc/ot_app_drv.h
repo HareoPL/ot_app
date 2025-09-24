@@ -48,10 +48,10 @@ typedef struct ot_app_drv_obs_t{
         oac_uri_dataPacket_t *(*getDataPacket)(void);
         
         int8_t (*notify)(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);
-        oac_uri_dataPacket_t *(*parseMessage)(uint8_t *buffer, uint16_t bufferSize);
+        int8_t (*parseMessage)(const uint8_t *inBuffer, oac_uri_dataPacket_t *out);
         int8_t (*subscribe)(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData);
         int8_t (*unsubscribe)(oac_uri_observer_t *subListHandle, const oacu_token_t *token);
-        void (*XdeleteAll)(oac_uri_observer_t *subListHandle);
+        int8_t (*XdeleteAll)(oac_uri_observer_t *subListHandle);
 }ot_app_drv_obs_t;
 
 // typedef struct ot_app_drv_coap_t{
