@@ -21,7 +21,12 @@
  */
 #ifndef OT_APP_COAP_URI_TEST_H_
 #define OT_APP_COAP_URI_TEST_H_
-#include "ot_app_coap.h"
+
+#ifdef UNIT_TEST
+    #include "mock_ot_app_coap.h"
+#else
+    #include "ot_app_coap.h"
+#endif
 
 void otapp_coap_uri_testHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo);
 void otapp_coap_uri_ledControlHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo);

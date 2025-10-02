@@ -25,7 +25,7 @@
 
 static oac_uri_observer_t oac_obsSubList[OAC_URI_OBS_SUBSCRIBERS_MAX_NUM];
 static oac_uri_dataPacket_t oac_dataPacket;
-
+static uint8_t oac_txBuffer[OAC_URI_OBS_TOKEN_LENGTH + OAC_URI_OBS_BUFFER_SIZE];
 
 PRIVATE int8_t oac_uri_obs_spaceIsFree(oac_uri_observer_t *subListHandle)
 {    
@@ -221,12 +221,12 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t ser
         {
             if(subListHandle[i].serverData.uriIndex_server == serverUri)
             {
-                
-                memset(&oac_dataPacket, 0, sizeof(oac_dataPacket));
-                memcpy(&oac_dataPacket, &subListHandle[i].clientData, sizeof(subListHandle->clientData));
-                memcpy(oac_dataPacket.buffer, dataToNotify, dataSize);
+                memset(oac_txBuffer, 0, sizeof(oac_txBuffer)),
+                memcpy(oac_txBuffer, subListHandle[i].serverData.token, OAC_URI_OBS_TOKEN_LENGTH);
+                memcpy(oac_txBuffer + OAC_URI_OBS_TOKEN_LENGTH, dataToNotify, dataSize);
 
-                otapp_coapSendPutUri_subscribed_uris(&subListHandle[i].serverData.ipAddr, (uint8_t *)&oac_dataPacket, sizeof(oac_dataPacket));
+                otapp_coapSendPutUri_subscribed_uris(&subListHandle[i].serverData.ipAddr, oac_txBuffer, sizeof(oac_txBuffer));
+
             }
         }
     }
