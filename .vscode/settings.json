@@ -43,7 +43,9 @@
         "limits": "c",
         "memory": "c",
         "new": "c",
-        "text_encoding": "c"
+        "text_encoding": "c",
+        "netfwd": "c",
+        "span": "c"
     },
     "idf.portWin": "COM4",
 

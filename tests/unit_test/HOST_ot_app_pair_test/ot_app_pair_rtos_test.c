@@ -25,7 +25,6 @@ static char *deviceNameFull_7 = {"device1_2_588c81fffe301ea8"};
 static char *deviceNameFull_8 = {"device1_2_588c81fffe301ea9"};
 static char *deviceNameFull_9 = {"device1_2_588c81fffe301e10"};
 static char *deviceNameFull_MaxLength10 = {"device1_2_588c81fffe301ea4___31"};
-static char *deviceNameFull_NOT_MATCH = {"device2_2_588c81fffe301ea1"};
 
 static otIp6Address ipAddr_ok_1 = {
     .mFields.m8 = {0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,

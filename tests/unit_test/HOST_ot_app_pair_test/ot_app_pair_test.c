@@ -51,22 +51,6 @@ static otIp6Address ipAddr_bad_to_short_lenght = {
 static otIp6Address *ipAddr_same = &ipAddr_ok_1;
 static otIp6Address *ipAddr_new = &ipAddr_ok_2;
 
-static void ut_oap_DeviceUriIndexAddFillAll(otapp_coap_uriIndex_t uriIndex)
-{
-    for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
-    {
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_0, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_1, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_2, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_3, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_4, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_5, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_6, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_7, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_8, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_9, uriIndex);
-    }
-}
 
 static int8_t ut_oap_deviceAddFullFill(void)
 {
@@ -204,7 +188,6 @@ TEST(ot_app_pair, GivenTrueVariable_WhenCallingDeviceDelete_ThenReturn3)
 {
     int8_t result;
     ut_oap_deviceAddFullFill();
-    ut_oap_DeviceUriIndexAddFillAll(UT_OAP_URI_TABLE_2);
 
     result = otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_3);
 
@@ -215,7 +198,6 @@ TEST(ot_app_pair, GivenSameDeviceNameTwice_WhenCallingDeviceDelete_ThenReturnErr
 {
     int8_t result;
     ut_oap_deviceAddFullFill();
-    ut_oap_DeviceUriIndexAddFillAll(UT_OAP_URI_TABLE_2);
 
     otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_3);
     result = otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_3);

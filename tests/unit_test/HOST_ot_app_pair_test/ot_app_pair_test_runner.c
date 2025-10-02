@@ -49,21 +49,23 @@ TEST_GROUP_RUNNER(ot_app_pair)
 
 TEST_GROUP_RUNNER(ot_app_pair_UriIndex)
 {
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullDeviceList_WhenCallingUriIndexAdd_ThenReturnError);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullDeviceName_WhenCallingUriIndexAdd_ThenReturnError);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenBadUri_WhenCallingUriIndexAdd_ThenReturnError);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueUri_WhenCallingUriIndexAdd_ThenReturn0);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenMaxUri_WhenCallingUriIndexAdd_ThenReturn19);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenMaxUriPlus1_WhenCallingUriIndexAdd_ThenReturnError);
+      // otapp_pair_uriResourcesCreate
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullArg_WhenCallingUriResourcesCreate_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenZeroUriSize_WhenCallingUriResourcesCreate_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullBufferSize_WhenCallingUriResourcesCreate_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTruArgsSize1_WhenCallingUriResourcesCreate_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTruArgsSize3_WhenCallingUriResourcesCreate_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenOvervflowSize_WhenCallingUriResourcesCreate_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullResultArg_WhenCallingUriResourcesCreate_ThenReturnError);
 
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullDeviceList_WhenCallingDeviceUriIndexGet_ThenReturnError);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenBadIndexDevice_WhenCallingDeviceUriIndexGet_ThenReturnError);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenBadIndexUri_WhenCallingDeviceUriIndexGet_ThenReturnError);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenCorrectArguments_WhenCallingDeviceUriIndexGet_ThenReturn1);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenIndexUriMax_WhenCallingDeviceUriIndexGet_ThenReturn2);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNotExistDeviceName_WhenCallingDeviceUriIndexGet_ThenReturnError);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNotExistUriMax_WhenCallingDeviceUriIndexGet_ThenReturnError);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNewUri_WhenAfterDeletedDeviceCallingDeviceUriIndexGet_ThenReturn1);
+   // otapp_pair_uriParseMessage
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullInBuffer_WhenCallinguriParseMessage_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenZeroBufSize_WhenCallinguriParseMessage_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullOutParsedDataSize_WhenCallinguriParseMessage_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueArgsSize1_WhenCallinguriParseMessage_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueArgsSize3_WhenCallinguriParseMessage_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueArgsSizeMax_WhenCallinguriParseMessage_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenOverflowSize_WhenCallinguriParseMessage_ThenReturnError);
 }
 
 TEST_GROUP_RUNNER(ot_app_pair_rtos)

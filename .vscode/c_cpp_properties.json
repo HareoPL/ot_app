@@ -22,7 +22,9 @@
                 // "${workspaceFolder}/build/compile_commands.json"
             ],
             "defines": [
-            //  "UNIT_TEST"
+            //  "UNIT_TEST",
+            "OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE 1",
+            "OPENTHREAD_CONFIG_COAP_API_ENABLE 1"
             ]
         }
     ],

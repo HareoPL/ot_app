@@ -6,8 +6,9 @@
 #include <string.h>
 
 
-#define OTAPP_PAIRED_DEVICES_MAX    10 // max number of devices to save them from DNS query
-#define OTAPP_PAIRED_URI_MAX        20 
+#define OTAPP_PAIRED_DEVICES_MAX    10  // max number of devices to save them from DNS query
+#define OTAPP_PAIRED_URI_MAX        5   // max number of uris to save 
+#define OTAPP_URI_MAX_NAME_LENGHT   32  // max lenght of uri string name
 
 #define OTAPP_DNS_SRV_NAME_SIZE     64 // OT_DNS_MAX_NAME_SIZE full service name: "_coap._udp.default.service.arpa." 
 #define OTAPP_DNS_SRV_LABEL_SIZE    32 // OT_DNS_MAX_LABEL_SIZE host name: "device1"
@@ -25,13 +26,20 @@ typedef enum {
     
     OTAPP_CONTROL_PANEL = 1 ,
     OTAPP_SWITCH,
+
+    OTAPP_LIGHTING,
     OTAPP_LIGHTING_ON_OFF,
     OTAPP_LIGHTING_DIMM,
     OTAPP_LIGHTING_RGB,
-    OTAPP_SENSOR,
+    
     OTAPP_THERMOSTAT,
-    OTAPP_DOOR_LOCK,
-    OTAPP_MOTION_DETECTOR,
+    OTAPP_THERMOSTAT_SET_TEMP,
+    OTAPP_THERMOSTAT_READ_SET_TEMP,
+    OTAPP_THERMOSTAT_READ_CURRENT_TEMP,
+    
+    OTAPP_SENSOR,               // only out data
+    OTAPP_DOOR_LOCK,            // only out data
+    OTAPP_MOTION_DETECTOR,      // only out data
     OTAPP_REMOTE_CONTROL,
     OTAPP_ENERGY_METER,
     OTAPP_SMART_PLUG,
