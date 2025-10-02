@@ -51,7 +51,6 @@ typedef enum{
 
 typedef struct {
     oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
-    oacu_uriIndex_t uriIndex_client;
     uint8_t buffer[OAC_URI_OBS_BUFFER_SIZE];
 } oac_uri_dataPacket_t;
 

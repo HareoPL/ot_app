@@ -23,12 +23,14 @@
 #define OT_APP_PAIR_H_
 
 #include "hro_utils.h"
+#include "ot_app_coap_uri_obs.h"
+#include "ot_app_coap.h"
+#include "string.h"
 
 #ifndef UNIT_TEST
     #include "ot_app.h"
 #else
-    #include "mock_ot_app.h" 
-         
+    #include "mock_ot_app.h"
 #endif
 
 #define OTAPP_PAIR_IS                       (1)
@@ -45,7 +47,11 @@
 #define OTAPP_PAIR_DEVICE_NO_SPACE          (-8)
 
 #define OTAPP_PAIR_DEVICES_MAX    OTAPP_PAIRED_DEVICES_MAX // max number of devices to save them from DNS query
-#define OTAPP_PAIR_URI_MAX        OTAPP_PAIRED_URI_MAX 
+
+#define OTAPP_PAIR_URI_MAX                          OTAPP_PAIRED_URI_MAX // 5
+#define OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE         (OTAPP_URI_MAX_NAME_LENGHT + sizeof(otapp_deviceType_t) + sizeof(uint8_t))
+#define OTAPP_PAIR_URI_RESOURCE_BUFFER_MAX_SIZE     (OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE * OTAPP_PAIR_URI_MAX)
+
 #define OTAPP_PAIR_URI_MAX_VAL    OTAPP_URI_END_OF_INDEX
 #define OTAPP_PAIR_NAME_FULL_SIZE OTAPP_DEVICE_NAME_FULL_SIZE 
 #define OTAPP_PAIR_NO_URI         OTAPP_URI_NO_URI_INDEX
@@ -58,20 +64,33 @@
 #define OTAPP_PAIR_RULES_ALLOWED_SIZE           10
 #define OTAPP_PAIR_RULES_ALLOWED_ITEM_MAX_SIZE  OTAPP_END_OF_DEVICE_TYPE
 
-#define OTAPP_PAIR_NO_RULES (OTAPP_END_OF_DEVICE_TYPE + 1) 
+#define OTAPP_PAIR_NO_RULES     (OTAPP_END_OF_DEVICE_TYPE + 1) 
+#define OTAPP_PAIR_NO_ALLOWED   OTAPP_NO_DEVICE_TYPE 
 
 #define OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE 10
 
+typedef struct __attribute__((packed)){
+    char uri[OTAPP_URI_MAX_NAME_LENGHT];     
+    otapp_deviceType_t devTypeUriFn;    // It tell you what functions this uri has
+    uint8_t obs;                        // is this uri has observer support 
+}otapp_pair_resUrisParseData_t;
+
+typedef uint8_t otapp_pair_resUrisBuffer_t[OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE];
+
+typedef struct {
+    char uri[OTAPP_URI_MAX_NAME_LENGHT];
+    otapp_deviceType_t devTypeUriFn;    // It tell you what functions this uri has
+    oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];   
+}otapp_pair_uris_t;
 typedef struct {
     char devNameFull[OTAPP_PAIR_NAME_FULL_SIZE]; // deviceNameFull
     otIp6Address ipAddr;
-    uint8_t uriIndex[OTAPP_PAIR_URI_MAX];    
+    otapp_pair_uris_t urisList[OTAPP_PAIR_URI_MAX]; // there will be saved data from resource Uri
 }otapp_pair_Device_t;
 
 typedef struct otapp_pair_DeviceList_t otapp_pair_DeviceList_t;
 
 typedef struct {
-    otapp_deviceType_t main;
     otapp_deviceType_t allowed[OTAPP_PAIR_RULES_ALLOWED_SIZE]; 
 } otapp_pair_rule_t;
 
@@ -138,29 +157,6 @@ int8_t otapp_pair_DeviceIndexGet(otapp_pair_DeviceList_t *pairDeviceList, const 
  *                              or NULL if error
  */
 char *otapp_pair_DeviceNameGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice);
-
-/**
- * @brief add new uriIndex of paired device. First of all you should add new device using otapp_pair_DeviceAdd()
- * 
- * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle()
- * @param deviceNameFull  [in] char ptr of full device name ("device1_1_588c81fffe301ea4")
- * @param uriIndex        [in] uriIndex from enum
- * @return int16_t        [out] return MSB = device index (pairDeviceList->list[]),
- *                                     LSB = uri index (pairDeviceList->list[].uriIndex[]) 
- *                                      or  OTAPP_PAIR_ERROR (-1)
- */
-int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, uint8_t uriIndex);
-
-/**
- * @brief get URI index from uriIndex of device list 
- * 
- * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle() 
- * @param indexDevice     [in] index of device 
- * @param indexUri        [in] index of URI 
- * @return otapp_coap_uriIndex_t [out] otapp_coap_uriIndex_t 
- *                                          or OTAPP_PAIR_NO_URI if there is not saved uri
- */
-otapp_coap_uriIndex_t otapp_pair_deviceUriIndexGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, uint8_t indexUri);
 
 /**
  * @brief delete paired device
@@ -233,6 +229,35 @@ void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t
  * @return int8_t 
  */
 int8_t otapp_pair_addToQueue(otapp_pair_queueItem_t *queueItem);
+
+/**
+ * @brief 
+ * 
+ * @param inBuffer 
+ * @param inBufferSize 
+ * @param result 
+ * @return otapp_pair_resUrisParseData_t* 
+ */
+otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(const uint8_t *inBuffer, uint16_t inBufferSize, int8_t *result, uint16_t *outParsedDataSize);
+
+/**
+ * @brief 
+ * 
+ * @param deviceUrisList 
+ * @param uriData 
+ * @param token 
+ * @return int8_t 
+ */
+int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUrisList, const otapp_pair_resUrisParseData_t *uriData, const oacu_token_t *token);
+
+/**
+ * @brief 
+ * 
+ * @param uri 
+ * @param uriSize 
+ * @return otapp_pair_resUrisBuffer_t* 
+ */
+otapp_pair_resUrisBuffer_t *otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, int8_t *result, uint16_t *outBufSize);
 
 #ifdef UNIT_TEST
 
@@ -325,7 +350,7 @@ PRIVATE int8_t otapp_pair_observerPairedDeviceNotify(otapp_pair_Device_t *newDev
  * @param incommingDeviceID 
  * @return int8_t 
  */
-PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_deviceType_t mainDeviceID, otapp_deviceType_t incommingDeviceID);
+PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_deviceType_t incommingDeviceID);
 
 
 #endif  /* UNIT_TEST */
