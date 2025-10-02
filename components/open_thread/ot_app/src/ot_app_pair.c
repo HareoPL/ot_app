@@ -37,7 +37,7 @@
     
 static const char *TAG = "ot_app_pair";
 
-ot_app_devDrv_t *otapp_pair_devDrv;
+static ot_app_devDrv_t *drv;
 
 typedef struct otapp_pair_DeviceList_t{
     otapp_pair_Device_t list[OTAPP_PAIR_DEVICES_MAX];
@@ -404,17 +404,16 @@ void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t
     }
 }
 
-PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_deviceType_t mainDeviceID, otapp_deviceType_t incommingDeviceID)
+PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_deviceType_t incommingDeviceID)
 {    
     if(deviceDrv == NULL)
     {
         return OTAPP_PAIR_ERROR;
     }
 
-    otapp_pair_rule_t *rules = deviceDrv->pairRuleGetList();
-    uint8_t rulesSize = deviceDrv->pairRuleGetListSize;
-
-    if(rules == NULL || rulesSize > OTAPP_PAIR_RULES_ALLOWED_SIZE)
+    otapp_pair_rule_t *rules = deviceDrv->pairRuleGetList_clb();
+    
+    if(rules == NULL)
     {
         return OTAPP_PAIR_ERROR;
     }
@@ -460,7 +459,7 @@ PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_queueItem_t *queu
         if(mainDevID == OTAPP_DEVICENAME_ERROR || mainDevID == OTAPP_DEVICENAME_TOO_LONG){ return OTAPP_PAIR_ERROR; }
         if(incomingDevID == OTAPP_DEVICENAME_ERROR || incomingDevID == OTAPP_DEVICENAME_TOO_LONG){ return OTAPP_PAIR_ERROR; }
 
-        if(otapp_pair_deviceIsAllowed(otapp_pair_devDrv, mainDevID, incomingDevID) == OTAPP_PAIR_IS)
+        if(otapp_pair_deviceIsAllowed(drv, mainDevID, incomingDevID) == OTAPP_PAIR_IS)
         {
             return OTAPP_PAIR_IS;
         }        
@@ -691,9 +690,9 @@ int8_t otapp_pair_init(ot_app_devDrv_t *devDriver)
 
     int8_t result;
     
-    otapp_pair_devDrv = devDriver;
+    drv = devDriver;
 
-    otapp_pair_observerPairedDeviceRegisterCallback(otapp_pair_devDrv->obs_pairedDevice);
+    otapp_pair_observerPairedDeviceRegisterCallback(drv->obs_pairedDevice_clb);
 
     result = otapp_pair_initQueue();
     if(result != OTAPP_PAIR_OK)
