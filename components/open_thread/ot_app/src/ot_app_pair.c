@@ -29,10 +29,11 @@
     #include "mock_freertos_task.h"
     #include "mock_ot_app_deviceName.h"
     #include "mock_ip6.h"
+    #include "mock_ot_message.h"
  #else
     #include "freertos/FreeRTOS.h"
     #include "freertos/task.h"
-    #include "freertos/queue.h"
+    #include "freertos/queue.h"    
 #endif
     
 static const char *TAG = "ot_app_pair";
@@ -212,7 +213,7 @@ int8_t otapp_pair_DeviceDelete(otapp_pair_DeviceList_t *pairDeviceList, const ch
     {
         memset(pairDeviceList->list[tableIndex].devNameFull, 0, OTAPP_PAIR_NAME_FULL_SIZE);
         memset(&pairDeviceList->list[tableIndex].ipAddr, 0, sizeof(otIp6Address));
-        memset(pairDeviceList->list[tableIndex].uriIndex, 0, OTAPP_PAIR_URI_MAX);
+        memset(&pairDeviceList->list[tableIndex].urisList, 0, (sizeof(otapp_pair_uris_t) * OTAPP_PAIR_URI_MAX));
         pairDeviceList->takenPosition[tableIndex] = 0;
         
         return tableIndex;
@@ -232,8 +233,7 @@ int8_t otapp_pair_DeviceDeleteAll(otapp_pair_DeviceList_t *pairDeviceList)
         memset(pairDeviceList->list[i].devNameFull, 0, OTAPP_PAIR_NAME_FULL_SIZE);
         memset(&pairDeviceList->list[i].ipAddr, 0, sizeof(otIp6Address));
         pairDeviceList->takenPosition[i] = 0;
-                
-        memset(pairDeviceList->list[i].uriIndex, 0, OTAPP_PAIR_URI_MAX);  
+        memset(&pairDeviceList->list[i].urisList, 0, (sizeof(otapp_pair_uris_t) * OTAPP_PAIR_URI_MAX));
     }
 
     return OTAPP_PAIR_OK;
@@ -418,19 +418,27 @@ PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_devi
         return OTAPP_PAIR_ERROR;
     }
 
-    for(uint8_t i = 0; i < rulesSize; i++) 
+    for(int i = 0; OTAPP_PAIR_RULES_ALLOWED_SIZE; i++) 
     {
-        if(rules[i].main == mainDeviceID) 
+        if(rules->allowed[i] == OTAPP_PAIR_NO_RULES || rules->allowed[i] == incommingDeviceID) 
         {
-            for(int j = 0; OTAPP_PAIR_RULES_ALLOWED_SIZE; j++) 
-            {
-                if(rules[i].allowed[j] == OTAPP_PAIR_NO_RULES || rules[i].allowed[j] == incommingDeviceID) 
-                {
-                    return OTAPP_PAIR_IS;
-                }
-            }
+            return OTAPP_PAIR_IS;
         }
     }
+
+    // for(uint8_t i = 0; i < rulesSize; i++) 
+    // {
+    //     if(rules[i].main == mainDeviceID) 
+    //     {
+    //         for(int j = 0; OTAPP_PAIR_RULES_ALLOWED_SIZE; j++) 
+    //         {
+    //             if(rules[i].allowed[j] == OTAPP_PAIR_NO_RULES || rules[i].allowed[j] == incommingDeviceID) 
+    //             {
+    //                 return OTAPP_PAIR_IS;
+    //             }
+    //         }
+    //     }
+    // }
     return OTAPP_PAIR_IS_NOT;
 }
 
@@ -441,7 +449,6 @@ PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_queueItem_t *queu
         return OTAPP_PAIR_ERROR;
     }
 
-    int16_t mainDevID;
     int16_t incomingDevID;
     const char *thisDevNameFull;
     
@@ -454,12 +461,10 @@ PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_queueItem_t *queu
             return OTAPP_PAIR_ERROR;
         }
 
-        mainDevID = otapp_deviceNameGetDevId(thisDevNameFull, strlen(thisDevNameFull));
         incomingDevID = otapp_deviceNameGetDevId(queueIteam->deviceNameFull, strlen(queueIteam->deviceNameFull));
-        if(mainDevID == OTAPP_DEVICENAME_ERROR || mainDevID == OTAPP_DEVICENAME_TOO_LONG){ return OTAPP_PAIR_ERROR; }
         if(incomingDevID == OTAPP_DEVICENAME_ERROR || incomingDevID == OTAPP_DEVICENAME_TOO_LONG){ return OTAPP_PAIR_ERROR; }
 
-        if(otapp_pair_deviceIsAllowed(drv, mainDevID, incomingDevID) == OTAPP_PAIR_IS)
+        if(otapp_pair_deviceIsAllowed(drv, incomingDevID) == OTAPP_PAIR_IS)
         {
             return OTAPP_PAIR_IS;
         }        
