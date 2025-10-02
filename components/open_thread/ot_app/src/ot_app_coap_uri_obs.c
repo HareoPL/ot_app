@@ -233,14 +233,12 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t ser
     
     return OAC_URI_OBS_OK;
 }
-// int8_t oac_uri_obs_sendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath)
-// {
-//     void otapp_coapSendPutSubscribeRequest(ipAddr, aUriPath);
-//     return OAC_URI_OBS_OK;
-// }
 
-// todo powinna byc tutaj kolejka?  chodzi o to ze jesli nie zdozy sie z przetworzeniem w 
-// uriSub to sie straci dane ? czyli trzeba stworzyc nowy task do przetwarzania w kolejce ? 
+int8_t oac_uri_obs_sendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *outToken)
+{
+    otapp_coapSendGetSubscribeRequest(ipAddr, aUriPath, outToken);
+    return OAC_URI_OBS_OK;
+}
 
 int8_t oac_uri_obs_parseMessage(const uint8_t *inBuffer, oac_uri_dataPacket_t *out)
 {

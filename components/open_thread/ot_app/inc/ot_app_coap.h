@@ -25,7 +25,6 @@
 #include "hro_utils.h"
 
 #ifdef UNIT_TEST
-    #include "mock_ot_app_coap.h"
     #include "mock_ip6.h"
 #else
     #include "esp_openthread.h"
@@ -34,7 +33,6 @@
 #endif
 
 #define OTAPP_COAP_PORT 5683 ///< Default CoAP port, as specified in RFC 7252
-#define OTAPP_COAP_URI_MAX 20
 
 #define OTAPP_COAP_URI_OK       (-1)
 #define OTAPP_COAP_URI_ERROR    (-2)
@@ -56,9 +54,9 @@ typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
     }otapp_coap_uriIndex_t;
 #endif
 
-typedef struct {
-    otapp_coap_uriIndex_t    uriId;
-    otCoapResource           resource;
+typedef struct otapp_coap_uri_t{
+    uint32_t            devType; // otapp_deviceType_t
+    otCoapResource      resource;
 }otapp_coap_uri_t;
 
 typedef enum {
@@ -69,7 +67,7 @@ typedef enum {
 
 
 int8_t otapp_coap_init(ot_app_devDrv_t *devDriver);
-void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const char *responceContent);
+void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const uint8_t *responceContent, uint16_t responceLength);
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo);
 
 // void otapp_coap_clientSendPut(const otIp6Address *peer_addr, const char *aUriPath, const char *payloadMsg);
@@ -82,6 +80,7 @@ void otapp_coapSendtoTestGet();
 void otapp_coapSendDeviceNamePut();
 void otapp_coapSendGetUri_Well_known(const otIp6Address *ipAddr, otCoapResponseHandler responseHandler, void *aContext);
 void otapp_coapSendPutUri_subscribed_uris(const otIp6Address *ipAddr, const uint8_t *data, uint16_t dataSize);
+void otapp_coapSendGetSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *outToken);
 
 const char *otapp_coap_getUriNameFromDefault(otapp_coap_uriIndex_t uriIndex);
 

@@ -131,7 +131,15 @@ int8_t oac_uri_obs_parseMessage(const uint8_t *inBuffer, oac_uri_dataPacket_t *o
  */
 int8_t oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle);
 
-
+/**
+ * @brief todo
+ * 
+ * @param ipAddr 
+ * @param aUriPath 
+ * @param outToken 
+ * @return int8_t 
+ */
+int8_t oac_uri_obs_sendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *outToken);
 
 #ifdef UNIT_TEST
 
