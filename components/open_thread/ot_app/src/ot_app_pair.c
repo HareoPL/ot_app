@@ -49,6 +49,8 @@ static otapp_pair_DeviceList_t otapp_pair_DeviceList;
 static QueueHandle_t otapp_pair_queueHandle;
 static otapp_pair_queueItem_t otapp_pair_queueIteam;
 
+static otapp_pair_resUrisParseData_t resUrisParseData[OTAPP_PAIR_URI_MAX];
+static otapp_pair_resUrisBuffer_t resUrisBuffer[OTAPP_PAIR_URI_MAX];
 //////////////////
 // observer
 static otapp_pair_observerCallback_t otapp_pair_observerPairedDeviceCallback[OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE] = {NULL};
@@ -598,14 +600,53 @@ int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUrisList, const otapp_pair_res
 
 }
 
+// Uri_Well_known
+void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
+{
+    if(pairedDevice == NULL) return;
+
+    static uint8_t urisBuffer[OTAPP_PAIR_URI_RESOURCE_BUFFER_MAX_SIZE];
+    static oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
+    int8_t result = 0;
+    uint16_t msgLen = 0;
+    uint16_t readBytes = 0;
+    otapp_pair_resUrisParseData_t *parsedData = NULL;
+    uint16_t parsedDataSize = 0;
+
+    otapp_pair_Device_t *device = (otapp_pair_Device_t*)pairedDevice;
+
+    if (aMessage)
+    {
+        msgLen = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+        readBytes = otMessageRead(aMessage, otMessageGetOffset(aMessage), urisBuffer, msgLen);
+        if(readBytes != msgLen) return;
+
+        parsedData = otapp_pair_uriParseMessage(urisBuffer, readBytes, &result, &parsedDataSize);
+        if(parsedData == NULL || result == OTAPP_PAIR_ERROR) return;
+
+        for (uint8_t i = 0; i < parsedDataSize; i++)
+        {            
+            if(parsedData[i].obs)
+            {                
+                oac_uri_obs_sendSubscribeRequest(&device->ipAddr, parsedData[i].uri, token);
+                otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], token);
+            }else
+            {
+                otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], NULL);
+            }
+        }
+        otapp_pair_observerPairedDeviceNotify(device); 
+    }
+}
 
 void otapp_pair_task(void *params) 
 {
     UNUSED(params);
 
     int8_t result;
-    otapp_pair_DeviceList_t *deviceList;
+    otapp_pair_DeviceList_t *deviceListHandle;
     otapp_pair_Device_t *newDevice;
+    otIp6Address *ipAddr;
 
     while (1)
     {
@@ -617,9 +658,9 @@ void otapp_pair_task(void *params)
 
                 if(otapp_pair_deviceIsMatchingFromQueue(&otapp_pair_queueIteam) == OTAPP_PAIR_IS)
                 {
-                    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), otapp_pair_queueIteam.deviceNameFull, &otapp_pair_queueIteam.ipAddress);
-                    // todo otapp_pair_DeviceUriIndexAdd raczej przez kolejne wywolanie ? 
-                    // bo trzeba opracowac mechanizm uri OTAPP_URI_WELL_KNOWN_CORE
+                    deviceListHandle = otapp_pair_getHandle();
+                    
+                    result = otapp_pair_DeviceAdd(deviceListHandle, otapp_pair_queueIteam.deviceNameFull, &otapp_pair_queueIteam.ipAddress);
                     
                     switch (result)
                     {
@@ -640,12 +681,13 @@ void otapp_pair_task(void *params)
                    
                     default:
                         if(result >= 0)
-                        {
-                            printf("has been success paired on index %d \n", result);
+                        {                            
+                            newDevice = &deviceListHandle->list[result];                            
+                            ipAddr = otapp_pair_ipAddressGet(deviceListHandle, result);
 
-                            deviceList = otapp_pair_getHandle();
-                            newDevice = &deviceList->list[result];
-                            otapp_pair_observerPairedDeviceNotify(newDevice); 
+                            otapp_coapSendGetUri_Well_known(ipAddr, otapp_pair_responseHandlerUriWellKnown, (otapp_pair_Device_t*)newDevice); // .well-known/core
+                         
+                            printf("has been success paired on index %d \n", result);
                         }else
                         {
                             printf(" Error: %d \n", result);
