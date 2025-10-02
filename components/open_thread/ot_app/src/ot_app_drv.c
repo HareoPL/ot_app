@@ -23,28 +23,29 @@
 #include "ot_app_drv.h"
 
 static ot_app_devDrv_t ot_app_devDrv = {
-    .obs_subscribedUri = NULL,      
-    .obs_pairedDevice = NULL,      
+    .obs_subscribedUri_clb = NULL,      
+    .obs_pairedDevice_clb = NULL,      
 
-    .pairRuleGetList = NULL,        
-    .uriGetList = NULL,            
-    .uriResources = NULL,           
-
+    .pairRuleGetList_clb = NULL,        
+    .uriGetList_clb = NULL,  
+    
     .deviceName = NULL,
     .deviceType = NULL,             
 
-    .pairRuleGetListSize = 0,
     .uriGetListSize = 0,
 
-    .api.obs = {
-        .getHandle = oac_uri_obs_getSubListHandle,
+    .api.obs.client = {
         .getDataPacket = oac_uri_obs_getdataPacketHandle,
-        .notify = oac_uri_obs_notify,
         .parseMessage = oac_uri_obs_parseMessage,
+        .sendSubscribeRequest = oac_uri_obs_sendSubscribeRequest,
+    },
+    .api.obs.server = {   
+        .getHandle = oac_uri_obs_getSubListHandle,
+        .notify = oac_uri_obs_notify,
         .subscribe = oac_uri_obs_subscribe,
         .unsubscribe = oac_uri_obs_unsubscribe,
         .XdeleteAll = oac_uri_obs_deleteAll,
-        }
+    },
 };
 
 ot_app_devDrv_t *ot_app_drv_getInstance()
