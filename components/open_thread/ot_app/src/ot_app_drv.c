@@ -46,6 +46,10 @@ static ot_app_devDrv_t ot_app_devDrv = {
         .unsubscribe = oac_uri_obs_unsubscribe,
         .XdeleteAll = oac_uri_obs_deleteAll,
     },
+    .api.coap = {
+        .sendBytePut = otapp_coap_clientSendPutByte,
+        .sendByteGet = otapp_coap_clientSendGetByte,
+    },
 };
 
 ot_app_devDrv_t *ot_app_drv_getInstance()

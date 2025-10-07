@@ -34,17 +34,20 @@ static ot_app_devDrv_t *drv;
 
 void ad_temp_uri_light_on_off_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-
+    printf("@@@@@@@@@@@@@@@ FROM light_on_off \n");
+    otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_TEST), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_TEST)) );
 }
 
 void ad_temp_uri_light_dimm_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-
+    printf("@@@@@@@@@@@@@@@ FROM light_dimm\n");
+    otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_TEST), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_TEST)) );
 }
 
 void ad_temp_uri_light_rgb_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-
+    printf("@@@@@@@@@@@@@@@ FROM light_rgb\n");
+    otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_TEST), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_TEST)) );
 }
 
 // max uris:            OTAPP_PAIRED_URI_MAX
@@ -91,10 +94,22 @@ otapp_pair_rule_t *ad_temp_pairRulesGetList()
 
 //////////////////////
 //observer 
+void testHandleGetByte(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
+{
+
+}
 
 void ad_temp_pairedCallback(otapp_pair_Device_t *newDevice)
 {
+    printf("\n");
     printf("Dev Temp detect NEW DEVICE! %s \n", newDevice->devNameFull);
+    printf("      uri 0: %s\n", newDevice->urisList[0].uri);
+    printf("      uri 1: %s\n", newDevice->urisList[1].uri);
+    printf("      uri 2: %s\n", newDevice->urisList[2].uri);
+    printf("\n");
+    drv->api.coap.sendByteGet(&newDevice->ipAddr, newDevice->urisList[0].uri, testHandleGetByte, NULL);
+    drv->api.coap.sendByteGet(&newDevice->ipAddr, newDevice->urisList[1].uri, testHandleGetByte, NULL);
+    drv->api.coap.sendByteGet(&newDevice->ipAddr, newDevice->urisList[2].uri, testHandleGetByte, NULL);
 }
 
 void ad_temp_subscribedUrisCallback(oac_uri_dataPacket_t *newDevice)

@@ -62,13 +62,14 @@ typedef struct ot_app_drv_obs_t{
         }server;
 }ot_app_drv_obs_t;
 
-// typedef struct ot_app_drv_coap_t{
-//         // send 
-// }ot_app_drv_coap_t;
+typedef struct ot_app_drv_coap_t{
+       void (*sendBytePut)(const otIp6Address *peer_addr, const char *aUriPath, const uint8_t *payloadMsg, const uint16_t payloadMsgSize, otCoapResponseHandler responseHandler,  void *aContext);
+       void (*sendByteGet)(const otIp6Address *peer_addr, const char *aUriPath, otCoapResponseHandler responseHandler, void *aContext);
+}ot_app_drv_coap_t;
 
 typedef struct ot_app_devDrvAPI_t{
        ot_app_drv_obs_t         obs;    // uri observer functions
-//        ot_app_drv_coap_t        coap;   // coap functions  
+       ot_app_drv_coap_t        coap;   // coap functions  
 }ot_app_devDrvAPI_t;
 
 typedef struct ot_app_devDrv_t{
