@@ -237,6 +237,15 @@ void otapp_coap_client_send(const otIp6Address *peer_addr,
     // message initialize as Confirmable GET
     otCoapMessageInit(message, OT_COAP_TYPE_CONFIRMABLE, code);
 
+    // add observer token and option
+    if(outToken != NULL)
+    {
+        otCoapMessageGenerateToken(message, OAC_URI_OBS_TOKEN_LENGTH);
+        memcpy(outToken, otCoapMessageGetToken(message), OAC_URI_OBS_TOKEN_LENGTH);
+
+        otCoapMessageAppendObserveOption(message, 0);
+    }
+
     // add URI
     error = otCoapMessageAppendUriPathOptions(message, aUriPath);
     if(error != OT_ERROR_NONE) { goto exit; }
@@ -251,15 +260,7 @@ void otapp_coap_client_send(const otIp6Address *peer_addr,
         error = otMessageAppend(message, payloadMsg, payloadMsgSize);
         if (error != OT_ERROR_NONE) { goto exit; }
     }
-
-    if(outToken != NULL)
-    {
-        otCoapMessageGenerateToken(message, OAC_URI_OBS_TOKEN_LENGTH);
-        memcpy(outToken, otCoapMessageGetToken(message), OAC_URI_OBS_TOKEN_LENGTH);
-        // outToken = otapp_coap_token;
-
-        otCoapMessageAppendObserveOption(message, 0);
-    }
+    
     // send request. otapp_coap_responseHandler 
     error = otCoapSendRequest(otapp_getOpenThreadInstancePtr(), message, &messageInfo, responseHandler, aContext); // 
     if (error != OT_ERROR_NONE) { goto exit; }
