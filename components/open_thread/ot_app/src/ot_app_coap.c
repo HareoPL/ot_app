@@ -59,7 +59,7 @@ static const otapp_coap_message_t otapp_coap_messages[] = {
 };
 #define OTAPP_COAP_MESSAGE_SIZE (sizeof(otapp_coap_messages) / sizeof(otapp_coap_messages[0]))
 
-static otMessageInfo mMessage;
+static otMessageInfo messageInfo;
 
 const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID)
 {
@@ -216,10 +216,10 @@ void otapp_coap_client_send(const otIp6Address *peer_addr,
     otError error;
     otMessage *message = NULL;
 
-    mMessage.mPeerAddr = *peer_addr;
-    mMessage.mPeerPort = OT_DEFAULT_COAP_PORT;
-    mMessage.mHopLimit = 0; // standard limit
-    mMessage.mIsHostInterface = false; // package comes out of openthread interface
+    messageInfo.mPeerAddr = *peer_addr;
+    messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
+    messageInfo.mHopLimit = 0; // standard limit
+    messageInfo.mIsHostInterface = false; // package comes out of openthread interface
 
     if(NULL == peer_addr || NULL == aUriPath)
     {
@@ -261,7 +261,7 @@ void otapp_coap_client_send(const otIp6Address *peer_addr,
         otCoapMessageAppendObserveOption(message, 0);
     }
     // send request. otapp_coap_responseHandler 
-    error = otCoapSendRequest(otapp_getOpenThreadInstancePtr(), message, &mMessage, responseHandler, aContext); // 
+    error = otCoapSendRequest(otapp_getOpenThreadInstancePtr(), message, &messageInfo, responseHandler, aContext); // 
     if (error != OT_ERROR_NONE) { goto exit; }
 
 exit:
@@ -301,36 +301,39 @@ void otapp_coap_clientSendGetByte(const otIp6Address *peer_addr, const char *aUr
 
 void otapp_coapSendtoTestGet()
 {
-    printf("CoAP sent get to uri: test\n");
     otapp_coap_clientSendGet(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_TEST), otapp_coap_responseHandler, NULL, NULL);
+    printf("CoAP sent get to uri: test\n");
 }
 
 // char *charLed = {"device/led"};
 char *charLedPayload = {"LED_ON"};
 void otapp_coapSendtoTestPut()
 {
-    printf("CoAP sent put to uri: device/led \n");
     otapp_coap_clientSendPutChar(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_TEST_LED), charLedPayload, otapp_coap_responseHandler);
+    printf("CoAP sent put to uri: device/led \n");
 }
 void otapp_coapSendDeviceNamePut()
 {
-    printf("CoAP sent multicast device name \n");
     otapp_coap_clientSendPutChar(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_PARING_SERVICES), otapp_deviceNameFullGet(), otapp_coap_responseHandler);
+    printf("CoAP sent multicast device name \n");
 }
 
 void otapp_coapSendGetUri_Well_known(const otIp6Address *ipAddr, otCoapResponseHandler responseHandler, void *aContext)
 {
    otapp_coap_clientSendGet(ipAddr, otapp_coap_getUriNameFromDefault(OTAPP_URI_WELL_KNOWN_CORE), responseHandler, aContext, NULL);
+   printf("CoAP sent WELL KNOWN URI \n");
 }
 
 void otapp_coapSendPutUri_subscribed_uris(const otIp6Address *ipAddr, const uint8_t *data, uint16_t dataSize)
 {
-    otapp_coap_clientSendPutByte(ipAddr, otapp_coap_getUriNameFromDefault(OTAPP_URI_SUBSCRIBED_URIS), data, dataSize, otapp_coap_responseHandler);
+    otapp_coap_clientSendPutByte(ipAddr, otapp_coap_getUriNameFromDefault(OTAPP_URI_SUBSCRIBED_URIS), data, dataSize, otapp_coap_responseHandler, NULL);
+    printf("CoAP sent update subscribers \n");
 }
 
 void otapp_coapSendGetSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *outToken)
 {
     otapp_coap_clientSendGet(ipAddr, aUriPath, otapp_coap_responseHandler, NULL, outToken);
+    printf("CoAP sent SubscribeRequest \n");
 }
 
 int8_t otapp_coap_initCoapResource(otapp_coap_uri_t *uriTable, uint8_t tableSize)
