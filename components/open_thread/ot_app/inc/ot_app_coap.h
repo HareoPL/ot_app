@@ -87,4 +87,6 @@ void otapp_coap_clientSendGetByte(const otIp6Address *peer_addr, const char *aUr
 
 const char *otapp_coap_getUriNameFromDefault(otapp_coap_uriIndex_t uriIndex);
 
+int8_t otapp_coapReadPayload(otMessage *aMessage, uint8_t *bufferOut, uint16_t bufferSize, uint16_t *readBytesOut);
+
 #endif  /* OT_APP_COAP_H_ */

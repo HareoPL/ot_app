@@ -337,6 +337,37 @@ void otapp_coapSendGetSubscribeRequest(const otIp6Address *ipAddr, const char *a
     printf("CoAP sent SubscribeRequest \n");
 }
 
+int8_t otapp_coapReadPayload(otMessage *aMessage, uint8_t *bufferOut, uint16_t bufferSize, uint16_t *readBytesOut)
+{
+    uint16_t len = 0;
+    uint16_t readBytes = 0;
+
+    if(aMessage == NULL || bufferOut == NULL)
+    {
+        return OTAPP_COAP_ERROR;
+    }
+
+    memset(bufferOut, 0, bufferSize);
+
+    len = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+    if(len >= bufferSize)
+    {
+        printf("ERROR: coapReadPayload too small buf \n ");
+        return OTAPP_COAP_ERROR;
+    }
+
+    if(len == 0)
+    {
+        return OTAPP_COAP_ERROR;
+    }
+    readBytes = otMessageRead(aMessage, otMessageGetOffset(aMessage), bufferOut, len);
+    *readBytesOut = readBytes;
+
+    return OTAPP_COAP_OK;
+}
+    return OTAPP_COAP_OK;
+}
+
 int8_t otapp_coap_initCoapResource(otapp_coap_uri_t *uriTable, uint8_t tableSize)
 {   
     if(uriTable == NULL || tableSize == 0)
