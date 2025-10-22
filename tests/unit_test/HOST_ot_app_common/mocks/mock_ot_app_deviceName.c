@@ -21,6 +21,8 @@
  */
 #include "mock_ot_app_deviceName.h"
 
+// DEFINE_FFF_GLOBALS;  
+
 int8_t mock_oadevName_changeState = OTAPP_DEVICENAME_IS;
 
 int8_t mock_oadevName_otapp_deviceNameIsMatching(char *deviceFullName)
@@ -34,3 +36,6 @@ void mock_oadevName_state(int8_t returnState)
 {
     mock_oadevName_changeState = returnState;
 }
+
+DEFINE_FAKE_VALUE_FUNC0(const char *, otapp_deviceNameFullGet);
+DEFINE_FAKE_VALUE_FUNC2(int16_t, otapp_deviceNameGetDevId, const char *, uint8_t);

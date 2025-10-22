@@ -23,17 +23,30 @@
 #define MOCK_OT_APP_DEVICENAME_H_
 
 #include "stdint.h"
+#include "fff.h"
 
 #define otapp_deviceNameIsMatching mock_oadevName_otapp_deviceNameIsMatching
 
-
 #define OTAPP_DEVICENAME_IS                 (1)
 #define OTAPP_DEVICENAME_IS_NOT             (2)
+#define OTAPP_DEVICENAME_OK                 (-1)
 
 #define OTAPP_DEVICENAME_ERROR              (-2)
+#define OTAPP_DEVICENAME_TOO_LONG           (-3)
+#define OTAPP_DEVICENAME_TOO_SHORT          (-4)
+#define OTAPP_DEVICENAME_BUFFER_TOO_SMALL   (-5)
+#define OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN   (-6)
+
+#ifndef OTAPP_DEVICENAME_FULL_SIZE
+    #define OTAPP_DEVICENAME_FULL_SIZE  32 // OT_DNS_MAX_LABEL_SIZE host name: "device1_1_588c81fffe301ea4"
+#endif
 
 
 int8_t mock_oadevName_otapp_deviceNameIsMatching(char *deviceFullName);
 void mock_oadevName_state(int8_t returnState);
+
+DECLARE_FAKE_VALUE_FUNC0(const char *, otapp_deviceNameFullGet);
+DECLARE_FAKE_VALUE_FUNC2(int16_t, otapp_deviceNameGetDevId, const char *, uint8_t);
+
 
 #endif  /* MOCK_OT_APP_DEVICENAME_H_ */
