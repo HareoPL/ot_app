@@ -46,7 +46,7 @@
 #define OTAPP_PAIR_DEVICE_NAME_TO_LONG      (-7)
 #define OTAPP_PAIR_DEVICE_NO_SPACE          (-8)
 
-#define OTAPP_PAIR_DEVICES_MAX    OTAPP_PAIRED_DEVICES_MAX // max number of devices to save them from DNS query
+#define OTAPP_PAIR_DEVICES_MAX    OTAPP_PAIRED_DEVICES_MAX // max number of devices to save them from DNS query or URI
 
 #define OTAPP_PAIR_URI_MAX                          OTAPP_PAIRED_URI_MAX // 5
 #define OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE         (OTAPP_URI_MAX_NAME_LENGHT + sizeof(otapp_deviceType_t) + sizeof(uint8_t))
@@ -147,6 +147,15 @@ int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char 
  *                              or OTAPP_PAIR_ERROR (-1)
  */
 int8_t otapp_pair_DeviceIndexGet(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull);
+
+/**
+ * @brief todo
+ * 
+ * @param pairDeviceList 
+ * @param deviceNameFull 
+ * @return otapp_pair_Device_t* 
+ */
+otapp_pair_Device_t *otapp_pair_DeviceGet(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull);
 
 /**
  * @brief get deviceNameFull from device list
@@ -258,6 +267,14 @@ int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUrisList, const otapp_pair_res
  * @return otapp_pair_resUrisBuffer_t* 
  */
 otapp_pair_resUrisBuffer_t *otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, int8_t *result, uint16_t *outBufSize);
+
+/**
+ * @brief todo
+ * 
+ * @param pairDeviceList 
+ * @return int8_t 
+ */
+int8_t otapp_pair_subSendUpdateIP(otapp_pair_DeviceList_t *pairDeviceList);
 
 #ifdef UNIT_TEST
 

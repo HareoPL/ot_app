@@ -21,9 +21,9 @@
  */
 
  #include "ot_app_pair.h"
- #include "ot_app_deviceName.h"
- #include "ot_app_drv.h"
 
+ #include "ot_app_drv.h"
+ 
  #ifdef UNIT_TEST
     #include "mock_freertos_queue.h"
     #include "mock_freertos_task.h"
@@ -31,6 +31,7 @@
     #include "mock_ip6.h"
     #include "mock_ot_message.h"
  #else
+    #include "ot_app_deviceName.h"
     #include "freertos/FreeRTOS.h"
     #include "freertos/task.h"
     #include "freertos/queue.h"    
@@ -257,6 +258,18 @@ int8_t otapp_pair_DeviceIndexGet(otapp_pair_DeviceList_t *pairDeviceList, const 
     }
 
     return deviceIndex;
+}
+
+otapp_pair_Device_t *otapp_pair_DeviceGet(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull)
+{
+    if(pairDeviceList == NULL || deviceNameFull == NULL)
+    {
+        return NULL;
+    }
+    int8_t deviceIndex;
+    deviceIndex = otapp_pair_DeviceIndexGet(pairDeviceList, deviceNameFull);
+
+    return &pairDeviceList->list[deviceIndex];
 }
 
 int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, otIp6Address *ipAddr)
@@ -572,35 +585,104 @@ otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(const uint8_t *inBuffe
     return resUrisParseData;
 }
 
-int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUrisList, const otapp_pair_resUrisParseData_t *uriData, const oacu_token_t *token)
+PRIVATE int8_t otapp_pair_uriTokenIsValid(const oacu_token_t *token)
+{
+    uint8_t count = 0;
+
+    for (uint8_t i = 0; i < OAC_URI_OBS_TOKEN_LENGTH; i++)
+    {
+        if(token[i] == 0)
+        {
+            count++;
+        }
+    }
+
+    if(count == OAC_URI_OBS_TOKEN_LENGTH)
+    {
+        return OTAPP_PAIR_IS_NOT;
+    }
+
+    return OTAPP_PAIR_IS;
+}
+
+int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUriListIndex, const otapp_pair_resUrisParseData_t *uriData, const oacu_token_t *token)
 {
     uint8_t uriLen = 0;
-
-    if(deviceUrisList == NULL || uriData == NULL)
+    
+    if(deviceUriListIndex == NULL || uriData == NULL)
     {
         return OTAPP_PAIR_ERROR;
-    }
-       
-    uriLen = strlen(uriData->uri);
-    if(uriLen > OTAPP_URI_MAX_NAME_LENGHT)
-    {
-        return OTAPP_PAIR_ERROR;
-    }
-
-    if(token != NULL)
-    {       
-        memcpy(deviceUrisList->token, token, OAC_URI_OBS_TOKEN_LENGTH);
     }
     
-    memset(deviceUrisList->uri, 0, OTAPP_URI_MAX_NAME_LENGHT);
-    strcpy(deviceUrisList->uri, uriData->uri);
-    deviceUrisList->devTypeUriFn = uriData->devTypeUriFn;
+    uriLen = strlen(uriData->uri);
+    if(uriLen > OTAPP_URI_MAX_NAME_LENGHT || uriLen == 0)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    if(uriData->devTypeUriFn == 0)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    if(token != NULL) // token is only when before addUri() uri is subscribed
+    {   
+        if(otapp_pair_uriTokenIsValid(token) == OTAPP_PAIR_IS) // check token is not empty
+        {
+            memcpy(deviceUriListIndex->token, token, OAC_URI_OBS_TOKEN_LENGTH);
+        }else
+        {
+            return OTAPP_PAIR_ERROR;
+        }
+    }    
+    memset(deviceUriListIndex->uri, 0, OTAPP_URI_MAX_NAME_LENGHT);
+    deviceUriListIndex->devTypeUriFn = uriData->devTypeUriFn;
+    strcpy(deviceUriListIndex->uri, uriData->uri);
      
     return OTAPP_PAIR_OK;
 
 }
 
-// Uri_Well_known
+// return OTAPP_PAIR_ERROR or count of updated devices
+int8_t otapp_pair_subSendUpdateIP(otapp_pair_DeviceList_t *pairDeviceList)
+{
+    int8_t result = 0;
+    int8_t countUpdatedDev = 0 ;
+
+    otIp6Address *ipAddr = NULL;
+    oacu_token_t *token = NULL;
+    char *uri = NULL;
+
+    if(pairDeviceList == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    for (uint8_t i = 0; i < OTAPP_PAIR_DEVICES_MAX; i++) // check saved devices in the deviceList
+    {
+        result = otapp_pair_spaceIsTaken(pairDeviceList, i);
+        if(result)
+        {
+            for (uint8_t j = 0; j < OTAPP_PAIR_URI_MAX; j++) // check uri token is saved
+            {
+                if(otapp_pair_uriTokenIsValid(pairDeviceList->list[i].urisList[j].token) == OTAPP_PAIR_IS)
+                {
+                    ipAddr = &pairDeviceList->list[i].ipAddr;
+                    uri     = pairDeviceList->list[i].urisList[j].uri;
+                    token   = pairDeviceList->list[i].urisList[j].token;
+
+                    oac_uri_obs_sendSubscribeRequestUpdate(ipAddr, uri, token);
+                    countUpdatedDev++;
+                }            
+            }
+            
+        }
+        
+    }
+
+    return countUpdatedDev;
+}
+
 void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
 {
     if(pairedDevice == NULL) return;
