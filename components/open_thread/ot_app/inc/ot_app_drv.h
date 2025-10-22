@@ -55,16 +55,19 @@ typedef struct ot_app_drv_obs_t{
         struct{
             oac_uri_observer_t *(*getHandle)(void);
             int8_t (*notify)(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);        
-            int8_t (*subscribe)(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData);
-            int8_t (*unsubscribe)(oac_uri_observer_t *subListHandle, const oacu_token_t *token);
+            int8_t (*subscribe)(oac_uri_observer_t *subListHandle, otMessage *aMessage, const otMessageInfo *aMessageInfo, oacu_uriIndex_t uriId, char* deviceNameFull);
+            int8_t (*unsubscribe)(oac_uri_observer_t *subListHandle, char* deviceNameFull, const oacu_token_t *token);
             int8_t (*XdeleteAll)(oac_uri_observer_t *subListHandle);
             
         }server;
 }ot_app_drv_obs_t;
 
 typedef struct ot_app_drv_coap_t{
-       void (*sendBytePut)(const otIp6Address *peer_addr, const char *aUriPath, const uint8_t *payloadMsg, const uint16_t payloadMsgSize, otCoapResponseHandler responseHandler,  void *aContext);
-       void (*sendByteGet)(const otIp6Address *peer_addr, const char *aUriPath, otCoapResponseHandler responseHandler, void *aContext);
+        void (*sendBytePut)(const otIp6Address *peer_addr, const char *aUriPath, const uint8_t *payloadMsg, const uint16_t payloadMsgSize, otCoapResponseHandler responseHandler,  void *aContext);
+        void (*sendByteGet)(const otIp6Address *peer_addr, const char *aUriPath, otCoapResponseHandler responseHandler, void *aContext);
+        void (*sendResponse)(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const uint8_t *responceContent, uint16_t responceLength);
+        int8_t (*readPayload)(otMessage *aMessage, uint8_t *bufferOut, uint16_t bufferSize, uint16_t *readBytesOut);
+        int8_t (*processUriRequest)(otMessage *aMessage, const otMessageInfo *aMessageInfo, oacu_uriIndex_t uriId, uint8_t *bufOut, uint16_t bufSize);
 }ot_app_drv_coap_t;
 
 typedef struct ot_app_devDrvAPI_t{

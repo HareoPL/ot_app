@@ -36,19 +36,22 @@ static ot_app_devDrv_t ot_app_devDrv = {
 
     .api.obs.client = {
         .getDataPacket = oac_uri_obs_getdataPacketHandle,
-        .parseMessage = oac_uri_obs_parseMessage,
+        .parseMessage = oac_uri_obs_parseMessageFromNotify,
         .sendSubscribeRequest = oac_uri_obs_sendSubscribeRequest,
     },
     .api.obs.server = {   
         .getHandle = oac_uri_obs_getSubListHandle,
         .notify = oac_uri_obs_notify,
-        .subscribe = oac_uri_obs_subscribe,
+        .subscribe = oac_uri_obs_subscribeFromUri,
         .unsubscribe = oac_uri_obs_unsubscribe,
         .XdeleteAll = oac_uri_obs_deleteAll,
     },
     .api.coap = {
         .sendBytePut = otapp_coap_clientSendPutByte,
         .sendByteGet = otapp_coap_clientSendGetByte,
+        .sendResponse = otapp_coap_sendResponse,
+        .readPayload = otapp_coapReadPayload,
+        .processUriRequest = otapp_coap_processUriRequest,
     },
 };
 
