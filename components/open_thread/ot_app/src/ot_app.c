@@ -156,11 +156,19 @@ void otapp_setDataset_tlv(void)
 
 static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context) 
 {
+    int8_t result = 0;
+
     if (flags & OT_CHANGED_THREAD_RLOC_ADDED) 
     {
         otapp_coapSendDeviceNamePut();
         otapp_srpClientUpdateHostAddress(otapp_getOpenThreadInstancePtr());
-
+        
+        result = otapp_pair_subSendUpdateIP(otapp_pair_getHandle());
+        if(result != OTAPP_PAIR_ERROR)
+        {
+            printf(">>>>>>> Num of updated sub: %d \n", result);
+        }
+        
         printf(">>>>>>> device address has been updated: ");
         otapp_ip6AddressPrint(otapp_Ip6Address);
     }
