@@ -66,6 +66,17 @@ TEST_GROUP_RUNNER(ot_app_pair_UriIndex)
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueArgsSize3_WhenCallinguriParseMessage_ThenReturnOK);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueArgsSizeMax_WhenCallinguriParseMessage_ThenReturnOK);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenOverflowSize_WhenCallinguriParseMessage_ThenReturnError);
+
+   //otapp_pair_uriAdd
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullDeviceUrisList_WhenCallingUriAdd_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNulluriData_WhenCallingUriAdd_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrue_WhenCallingUriAdd_ThenReturnError_OK);
+
+   // otapp_pair_subSendUpdateIP
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNull_WhenCallingSubUpdateIP_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueArgEmptyDeviceList_WhenCallingSubUpdateIP_ThenReturn_0);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueArgFillDeviceList_WhenCallingSubUpdateIP_ThenReturn_1);
+
 }
 
 TEST_GROUP_RUNNER(ot_app_pair_rtos)

@@ -81,6 +81,14 @@ static int8_t ut_oap_deviceAddFullFill(void)
     return otapp_pair_DeviceAdd(otapp_pair_getHandle(), deviceNameFull_9, &ipAddr);
 }
 
+otapp_pair_resUrisParseData_t ut_oap_uriData_1 = {
+    .devTypeUriFn = 2,
+    .obs = 1,
+    .uri = "light/on_off",
+};
+oacu_token_t ut_oap_token_1[4] = {0xA1, 0xB2, 0xC3, 0xD4};
+
+
 TEST_GROUP(ot_app_pair_UriIndex);
 
 TEST_SETUP(ot_app_pair_UriIndex)
@@ -292,4 +300,69 @@ TEST(ot_app_pair_UriIndex, GivenOverflowSize_WhenCallinguriParseMessage_ThenRetu
     parseData = otapp_pair_uriParseMessage((uint8_t*)bufferFilled, uriSize, &result, &parsedDataSize);
     TEST_ASSERT_EQUAL(NULL, parseData);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+//otapp_pair_uriAdd
+TEST(ot_app_pair_UriIndex, GivenNullDeviceUrisList_WhenCallingUriAdd_ThenReturnError)
+{
+    int8_t result;
+    otapp_pair_resUrisParseData_t *uriData;
+   
+    result = otapp_pair_uriAdd(NULL, &ut_oap_uriData_1, ut_oap_token_1);
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair_UriIndex, GivenNulluriData_WhenCallingUriAdd_ThenReturnError)
+{
+    int8_t result, devId;
+    otapp_pair_DeviceList_t *deviceListHandle;
+    otapp_pair_Device_t *newDevice;
+
+    deviceListHandle = otapp_pair_getHandle();
+    newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_7);
+
+    result = otapp_pair_uriAdd(&newDevice->urisList[0], NULL, ut_oap_token_1);
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair_UriIndex, GivenTrue_WhenCallingUriAdd_ThenReturnError_OK)
+{
+    int8_t result, devId;
+    otapp_pair_DeviceList_t *deviceListHandle;
+    otapp_pair_Device_t *newDevice;
+
+    deviceListHandle = otapp_pair_getHandle();
+    newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_7);
+
+    result = otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_token_1);
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_OK, result);
+}
+
+// otapp_pair_subSendUpdateIP
+TEST(ot_app_pair_UriIndex, GivenNull_WhenCallingSubUpdateIP_ThenReturnError)
+{
+    int8_t result;
+    
+    result = otapp_pair_subSendUpdateIP(NULL);
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair_UriIndex, GivenTrueArgEmptyDeviceList_WhenCallingSubUpdateIP_ThenReturn_0)
+{
+    int8_t result;
+    
+    result = otapp_pair_subSendUpdateIP(otapp_pair_getHandle());
+    TEST_ASSERT_EQUAL(0, result);
+}
+
+TEST(ot_app_pair_UriIndex, GivenTrueArgFillDeviceList_WhenCallingSubUpdateIP_ThenReturn_1)
+{
+    int8_t result;
+    otapp_pair_Device_t *newDevice;
+
+    newDevice = otapp_pair_DeviceGet(otapp_pair_getHandle(), deviceNameFull_7);
+    otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_token_1);
+    
+    result = otapp_pair_subSendUpdateIP(otapp_pair_getHandle());
+    TEST_ASSERT_EQUAL(1, result);
 }
