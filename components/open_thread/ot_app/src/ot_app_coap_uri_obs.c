@@ -25,9 +25,11 @@
 
 static oac_uri_observer_t oac_obsSubList[OAC_URI_OBS_SUBSCRIBERS_MAX_NUM];
 static oac_uri_dataPacket_t oac_dataPacket;
-static uint8_t oac_txBuffer[OAC_URI_OBS_TOKEN_LENGTH + OAC_URI_OBS_BUFFER_SIZE];
+static uint8_t oac_txRxBuffer[OAC_URI_OBS_TX_BUFFER_SIZE];
 
-PRIVATE int8_t oac_uri_obs_spaceIsFree(oac_uri_observer_t *subListHandle)
+///////////////////////
+// fn for devName
+PRIVATE int8_t oac_uri_obs_spaceDevNameIsFree(oac_uri_observer_t *subListHandle)
 {    
     if(subListHandle == NULL)
     {
@@ -36,7 +38,7 @@ PRIVATE int8_t oac_uri_obs_spaceIsFree(oac_uri_observer_t *subListHandle)
 
     for (uint8_t i = 0; i < OAC_URI_OBS_SUBSCRIBERS_MAX_NUM; i++)
     {
-        if(subListHandle[i].takenPosition == 0)
+        if(subListHandle[i].takenPosition_dev == 0)
         {
             return i; 
         }
@@ -45,37 +47,231 @@ PRIVATE int8_t oac_uri_obs_spaceIsFree(oac_uri_observer_t *subListHandle)
     return OAC_URI_OBS_LIST_FULL; 
 }
 
-PRIVATE int8_t oac_uri_obs_spaceTake(oac_uri_observer_t *subListHandle, uint8_t subListIndex)
-{
-    if(subListHandle == NULL || subListIndex >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
+PRIVATE int8_t oac_uri_obs_spaceDevNameIsTaken(oac_uri_observer_t *subListHandle, int8_t tabDevId)
+{ 
+    if(subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
     {
         return OAC_URI_OBS_ERROR;
     }
 
-    subListHandle[subListIndex].takenPosition = 1;
+    return (subListHandle[tabDevId].takenPosition_dev);
+}
+
+PRIVATE int8_t oac_uri_obs_spaceDevNameTake(oac_uri_observer_t *subListHandle, int8_t tabDevId)
+{
+    if(subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    if(oac_uri_obs_spaceDevNameIsTaken(subListHandle, tabDevId))
+    {
+        return OAC_URI_OBS_ERROR;
+    }else
+    {
+        subListHandle[tabDevId].takenPosition_dev = 1;
+    }
+
     return OAC_URI_OBS_OK;
 }
 
-PRIVATE int8_t oac_uri_obs_spaceIsTaken(oac_uri_observer_t *subListHandle, uint8_t subListIndex)
-{ 
-    if(subListHandle == NULL || subListIndex >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
+///////////////////////
+// fn for uri
+PRIVATE int8_t oac_uri_obs_spaceUriIsFree(oac_uri_observer_t *subListHandle, int8_t tabDevId)
+{    
+    if(subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
     {
         return OAC_URI_OBS_ERROR;
     }
 
-    return (subListHandle[subListIndex].takenPosition);
+    for (uint8_t i = 0; i < OAC_URI_OBS_PAIRED_URI_MAX; i++)
+    {
+        if(subListHandle[tabDevId].uri[i].takenPosition_uri == 0)
+        {
+            return i; 
+        }
+    }
+
+    return OAC_URI_OBS_LIST_FULL; 
 }
 
-PRIVATE int8_t oac_uri_obs_tokenIsSame(oac_uri_observer_t *subListHandle, uint8_t subListIndex, const oacu_token_t *tokenToCheck)
+PRIVATE int8_t oac_uri_obs_spaceUriIsTaken(oac_uri_observer_t *subListHandle, int8_t tabDevId, int8_t tabUriId)
+{ 
+    if(subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM || tabUriId >= OAC_URI_OBS_PAIRED_URI_MAX)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    return (subListHandle[tabDevId].uri[tabUriId].takenPosition_uri);
+}
+
+PRIVATE int8_t oac_uri_obs_spaceUriTake(oac_uri_observer_t *subListHandle, int8_t tabDevId, int8_t tabUriId)
 {
-    if(tokenToCheck == NULL || subListHandle == NULL)
+    if(subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM || tabUriId >= OAC_URI_OBS_PAIRED_URI_MAX)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    if(oac_uri_obs_spaceUriIsTaken(subListHandle, tabDevId, tabUriId))
+    {
+        return OAC_URI_OBS_ERROR;
+    }else
+    {
+        subListHandle[tabDevId].uri[tabUriId].takenPosition_uri = 1;
+    }
+
+    return OAC_URI_OBS_OK;
+}
+
+PRIVATE int8_t oac_uri_obs_uriIsExist(oac_uri_observer_t *subListHandle, int8_t tabDevId, oacu_uriIndex_t uriIndex)
+{
+    if(subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    for (uint8_t i = 0; i < OAC_URI_OBS_PAIRED_URI_MAX; i++)
+    {
+        if(subListHandle[tabDevId].uri[i].uriIndex == uriIndex)
+        {
+            return i;
+        }
+    }
+       
+    return OAC_URI_OBS_IS_NOT;
+}
+
+///////////////////////
+// fn for save
+PRIVATE int8_t oac_uri_obs_saveDeviceNameFull(oac_uri_observer_t *subListHandle, int8_t tabDevId, const char* deviceNameFull)
+{
+    uint8_t devNameFull_len = 0;
+
+    if(subListHandle == NULL || deviceNameFull == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    devNameFull_len = strlen(deviceNameFull);
+    if(devNameFull_len >= OTAPP_DEVICENAME_FULL_SIZE) return OAC_URI_OBS_ERROR;
+    
+    strncpy(subListHandle[tabDevId].deviceNameFull, deviceNameFull, devNameFull_len);
+
+    return OAC_URI_OBS_OK;
+}
+
+PRIVATE int8_t oac_uri_obs_saveIpAddr(oac_uri_observer_t *subListHandle, int8_t tabDevId, const otIp6Address *ipAddr)
+{    
+    if(subListHandle == NULL || ipAddr == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    memcpy(&subListHandle[tabDevId].ipAddr, ipAddr, OT_IP6_ADDRESS_SIZE);
+
+    return OAC_URI_OBS_OK;
+}
+
+PRIVATE int8_t oac_uri_obs_saveUriIndex(oac_uri_observer_t *subListHandle, int8_t tabDevId, int8_t tabUriId, oacu_uriIndex_t uriIndex)
+{
+    if(subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM || tabUriId >= OAC_URI_OBS_PAIRED_URI_MAX)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    subListHandle[tabDevId].uri[tabUriId].uriIndex = uriIndex;
+
+    return OAC_URI_OBS_OK;
+}
+
+PRIVATE int8_t oac_uri_obs_saveToken(oac_uri_observer_t *subListHandle, int8_t tabDevId, int8_t tabUriId, const oacu_token_t *token)
+{
+    if(subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM || tabUriId >= OAC_URI_OBS_PAIRED_URI_MAX || token == NULL)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    memcpy(subListHandle[tabDevId].uri[tabUriId].token, token, OAC_URI_OBS_TOKEN_LENGTH);        
+
+    return OAC_URI_OBS_OK;
+}
+
+PRIVATE int8_t oac_uri_obs_addNewDevice(oac_uri_observer_t *subListHandle, const char* deviceNameFull, const otIp6Address *ipAddr)
+{
+    int8_t tabDevId_ = 0;
+    int8_t result_ = 0;
+
+    if(subListHandle == NULL || deviceNameFull == NULL || ipAddr == NULL)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    tabDevId_ = oac_uri_obs_spaceDevNameIsFree(subListHandle);
+    if(tabDevId_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+
+    if(tabDevId_ == OAC_URI_OBS_LIST_FULL)
+    {
+        return OAC_URI_OBS_LIST_FULL;
+    }
+    else
+    {
+        result_ = oac_uri_obs_saveDeviceNameFull(subListHandle, tabDevId_, deviceNameFull);
+        if(result_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+
+        result_ = oac_uri_obs_saveIpAddr(subListHandle, tabDevId_, ipAddr);
+        if(result_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+
+        oac_uri_obs_spaceDevNameTake(subListHandle, tabDevId_);
+    }
+
+    return tabDevId_;
+}
+
+///////////////////////
+// fn for add
+PRIVATE int8_t oac_uri_obs_addNewUri(oac_uri_observer_t *subListHandle, int8_t tabDevId, const oacu_token_t *token, oacu_uriIndex_t uriIndex)
+{
+    int8_t tabUriId_ = 0;
+    int8_t result_ = 0;
+
+    if(subListHandle == NULL || token == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    tabUriId_ = oac_uri_obs_spaceUriIsFree(subListHandle, tabDevId);
+    if(tabUriId_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+
+    if(tabUriId_ == OAC_URI_OBS_LIST_FULL)
+    {
+        return OAC_URI_OBS_LIST_FULL;
+
+    }else // tabUriId_ = uri table index
+    {
+        result_ = oac_uri_obs_saveUriIndex(subListHandle, tabDevId, tabUriId_, uriIndex);
+        if(result_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+
+        result_ = oac_uri_obs_saveToken(subListHandle, tabDevId, tabUriId_, token);
+        if(result_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+
+        oac_uri_obs_spaceUriTake(subListHandle, tabDevId, tabUriId_);        
+    }
+
+    return tabUriId_;
+}
+
+///////////////////////
+// fn for token
+PRIVATE int8_t oac_uri_obs_tokenIsSame(oac_uri_observer_t *subListHandle, int8_t tabDevId, int8_t tabUriId, const oacu_token_t *tokenToCheck)
+{
+    if(tokenToCheck == NULL || subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM || tabUriId >= OAC_URI_OBS_PAIRED_URI_MAX)
     {
         return OAC_URI_OBS_ERROR;
     }
 
     for (uint8_t i = 0; i < OAC_URI_OBS_TOKEN_LENGTH; i++)
     {
-       if(subListHandle[subListIndex].serverData.token[i] != tokenToCheck[i])
+       if(subListHandle[tabDevId].uri[tabUriId].token[i] != tokenToCheck[i])
        {
             return OAC_URI_OBS_IS_NOT;
        }
@@ -84,18 +280,18 @@ PRIVATE int8_t oac_uri_obs_tokenIsSame(oac_uri_observer_t *subListHandle, uint8_
     return OAC_URI_OBS_IS;
 }
 
-PRIVATE int8_t oac_uri_obs_tokenIsExist(oac_uri_observer_t *subListHandle, const oacu_token_t *token)
+PRIVATE int8_t oac_uri_obs_tokenIsExist(oac_uri_observer_t *subListHandle, int8_t tabDevId, const oacu_token_t *token)
 {
-    if(token == NULL || subListHandle == NULL)
+    if(token == NULL || subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
     {
         return OAC_URI_OBS_ERROR;
     }
 
     for (int8_t i = 0; i < OAC_URI_OBS_SUBSCRIBERS_MAX_NUM; i++)
     {
-        if(oac_uri_obs_spaceIsTaken(subListHandle, i))
+        if(oac_uri_obs_spaceUriIsTaken(subListHandle, tabDevId, i))
         {
-            if(oac_uri_obs_tokenIsSame(subListHandle, i, token) == OAC_URI_OBS_IS)
+            if(oac_uri_obs_tokenIsSame(subListHandle,tabDevId ,i, token) == OAC_URI_OBS_IS)
             {
                 return i;
             }
@@ -115,36 +311,105 @@ oac_uri_dataPacket_t *oac_uri_obs_getdataPacketHandle()
     return &oac_dataPacket;
 }
 
-PRIVATE int8_t oac_uri_obs_checkTableIsInit(uint8_t *tabPtr, uint16_t tabSize)
+PRIVATE int8_t oac_uri_obs_checkTableIsInit(const uint8_t *tabPtr, uint16_t tabSize)
 {
+    uint16_t count = 0;
+
+    if(tabPtr == NULL)
+    {
+        return OAC_URI_OBS_IS_NOT;
+    }
+
     for (uint16_t i = 0; i < tabSize; i++) 
     {
-        if (tabPtr[i] != 0) 
+        if (tabPtr[i] == 0) 
         {
-            return OAC_URI_OBS_IS;
+            count++;           
         }
     }
+
+    if(count == tabSize)
+    {
+        return OAC_URI_OBS_IS_NOT;
+    }
+
+    return OAC_URI_OBS_IS;
+}
+
+PRIVATE int8_t oac_uri_obs_ipAddrIsSame(oac_uri_observer_t *subListHandle, int8_t tabDevId, const otIp6Address *ipAddr)
+{
+    if(ipAddr == NULL || subListHandle == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    for (uint8_t i = 0; i < OT_IP6_ADDRESS_SIZE; i++)
+    {
+       if(subListHandle[tabDevId].ipAddr.mFields.m8[i] != ipAddr->mFields.m8[i])
+       {
+            return OAC_URI_OBS_IS_NOT;
+       }
+    }
+    return OAC_URI_OBS_IS;
+}
+
+PRIVATE int8_t oac_uri_obs_devNameFullIsSame(oac_uri_observer_t *subListHandle, int8_t tabDevId, const char *deviceNameFull)
+{
+    if(subListHandle == NULL || deviceNameFull == NULL || tabDevId >= OAC_URI_OBS_SUBSCRIBERS_MAX_NUM)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    if(strlen(deviceNameFull) >= OAC_URI_OBS_DEVICENAME_FULL_SIZE) return OAC_URI_OBS_ERROR;
+
+    if(strcmp(subListHandle[tabDevId].deviceNameFull, deviceNameFull) == 0)
+    {
+        return OAC_URI_OBS_IS;
+    }    
+
     return OAC_URI_OBS_IS_NOT;
 }
 
-PRIVATE int8_t oac_uri_obs_subscribeIsValidData(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData)
+PRIVATE int8_t oac_uri_obs_devNameFullIsExist(oac_uri_observer_t *subListHandle, const char *deviceNameFull)
 {
-    if(subListHandle == NULL || subscribeData == NULL)
+    if(subListHandle == NULL || deviceNameFull == NULL)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    if(strlen(deviceNameFull) >= OAC_URI_OBS_DEVICENAME_FULL_SIZE) return OAC_URI_OBS_ERROR;
+    
+    for (uint8_t i = 0; i < OAC_URI_OBS_SUBSCRIBERS_MAX_NUM; i++)
+    {
+        if(oac_uri_obs_spaceDevNameIsTaken(subListHandle, i))
+        {
+            if(oac_uri_obs_devNameFullIsSame(subListHandle, i, deviceNameFull) == OAC_URI_OBS_IS)
+            {
+                return i;
+            }
+        } 
+    }
+    
+    return OAC_URI_OBS_IS_NOT;
+}
+PRIVATE int8_t oac_uri_obs_subscribeIsValidData(oac_uri_observer_t *subListHandle, const oacu_token_t *token, oacu_uriIndex_t uriIndex, const otIp6Address *ipAddr, const char* deviceNameFull)
+{
+    if(subListHandle == NULL || token == NULL || deviceNameFull == NULL)
     {
         return OAC_URI_OBS_ERROR; 
     }
     
-    if(subscribeData->serverData.uriIndex_client == 0 || subscribeData->serverData.uriIndex_server == 0 )
+    if(uriIndex == 0 )
     {
         return OAC_URI_OBS_ERROR;
     }
 
-    if(oac_uri_obs_checkTableIsInit(subscribeData->serverData.ipAddr.mFields.m8, sizeof(subscribeData->serverData.ipAddr)) == OAC_URI_OBS_IS_NOT)
+    if(oac_uri_obs_checkTableIsInit(ipAddr->mFields.m8, OT_IP6_ADDRESS_SIZE) == OAC_URI_OBS_IS_NOT)
     {
         return OAC_URI_OBS_ERROR;
     }
 
-    if(oac_uri_obs_checkTableIsInit(subscribeData->serverData.token, sizeof(subscribeData->serverData.token)) == OAC_URI_OBS_IS_NOT)
+    if(oac_uri_obs_checkTableIsInit(token, OAC_URI_OBS_TOKEN_LENGTH) == OAC_URI_OBS_IS_NOT)
     {
         return OAC_URI_OBS_ERROR;
     }
@@ -152,104 +417,260 @@ PRIVATE int8_t oac_uri_obs_subscribeIsValidData(oac_uri_observer_t *subListHandl
     return OAC_URI_OBS_IS;
 }
 
-int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData)
+// updateState 
+int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, const oacu_token_t *token, oacu_uriIndex_t uriIndex, const otIp6Address *ipAddr, const char* deviceNameFull)
 {
-    oacu_result_t result_;
-    if(oac_uri_obs_subscribeIsValidData(subListHandle, subscribeData) != OAC_URI_OBS_IS)
+    oacu_result_t result_ = 0;
+    int8_t updateState = 0;
+    int8_t tabDevId_ = 0;
+    int8_t tabUriId_ = 0;
+
+    if(oac_uri_obs_subscribeIsValidData(subListHandle, token, uriIndex, ipAddr, deviceNameFull) != OAC_URI_OBS_IS)
     {
         return OAC_URI_OBS_ERROR;
     }
     
-    if(oac_uri_obs_tokenIsExist(subListHandle, subscribeData->serverData.token) == OAC_URI_OBS_IS_NOT)
+    // check if devNameFull is exist
+    tabDevId_ = oac_uri_obs_devNameFullIsExist(subListHandle, deviceNameFull);
+    if(tabDevId_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+    
+    if(tabDevId_ != OAC_URI_OBS_IS_NOT) // deviceNameFull is already existed, tabDevId_ = dev table index
     {
-        result_ = oac_uri_obs_spaceIsFree(subListHandle);
-        if(result_ != OAC_URI_OBS_LIST_FULL || result_ != OAC_URI_OBS_ERROR)
+        // check if ipAddres is same. If not let's update it
+        result_ = oac_uri_obs_ipAddrIsSame(subListHandle, tabDevId_, ipAddr);
+        if(result_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+
+        if(result_ == OAC_URI_OBS_IS_NOT)
         {
-            oac_uri_obs_spaceTake(subListHandle, result_);
-            memcpy(&subListHandle[result_].serverData, &subscribeData->serverData, sizeof(subscribeData->serverData));  
-            return OAC_URI_OBS_OK;
+            oac_uri_obs_saveIpAddr(subListHandle, tabDevId_, ipAddr); 
+
+            updateState |= OAC_URI_OBS_UPDATE_IP_ADDR_Msk;           
+        }
+
+        // check if uriIndex is exist
+        tabUriId_ = oac_uri_obs_uriIsExist(subListHandle, tabDevId_, uriIndex);
+        if(tabUriId_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+
+        if(tabUriId_ == OAC_URI_OBS_IS_NOT) 
+        {            
+           // added new uriIndex and token
+           result_ = oac_uri_obs_addNewUri(subListHandle, tabDevId_, token, uriIndex); 
+
+           updateState |= OAC_URI_OBS_ADD_NEW_URI_Msk;
+
+        }else // uriIndex is already existed. let's check if it needs to be updated. tabUriId_ = uri table index
+        {
+            // check if token is same
+            result_ = oac_uri_obs_tokenIsSame(subListHandle, tabDevId_, tabUriId_, token);
+            if (result_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+
+            if (result_ == OAC_URI_OBS_IS_NOT)
+            {
+                oac_uri_obs_saveToken(subListHandle, tabDevId_, tabUriId_, token); 
+
+                updateState |= OAC_URI_OBS_UPDATE_URI_TOKEN_Msk;
+            }
+        }
+
+        if(updateState == 0)
+        {
+            return OAC_URI_OBS_NO_NEED_UPDATE;
         }else
         {
+            return updateState;
+        }
+
+    }else
+    {
+        // add deviceNameFull and ipAddr
+        tabDevId_ = oac_uri_obs_addNewDevice(subListHandle, deviceNameFull, ipAddr);
+        if(tabDevId_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+
+        if(tabDevId_ == OAC_URI_OBS_LIST_FULL) 
+        {
             return OAC_URI_OBS_LIST_FULL;
+        }else
+        {
+            // add uriIndex, token
+            tabUriId_ = oac_uri_obs_addNewUri(subListHandle, tabDevId_, token, uriIndex);
+            if(tabUriId_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+            if(tabUriId_ == OAC_URI_OBS_LIST_FULL) return OAC_URI_OBS_LIST_FULL;            
         }
     }
 
-    return OAC_URI_OBS_TOKEN_EXIST; 
+    return OAC_URI_OBS_ADDED_NEW_DEVICE;
 }
 
-int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, const oacu_token_t *token)
+int8_t oac_uri_obs_subscribeFromUri(oac_uri_observer_t *subListHandle, otMessage *aMessage, const otMessageInfo *aMessageInfo, oacu_uriIndex_t uriId, char* deviceNameFull)
 {
-    oacu_result_t result_;
+    int8_t result = 0;
+    uint64_t obsValue = 0;
+    otError error; 
+    otCoapOptionIterator iterator;    
+    const otCoapOption *coapOption;
 
-    if(subListHandle == NULL || token == NULL)
+    if(subListHandle == NULL || aMessage == NULL || aMessageInfo == NULL ||deviceNameFull == NULL)
+    {
+        return OAC_URI_OBS_ERROR;
+    }
+
+    otCoapOptionIteratorInit(&iterator, aMessage);
+    coapOption = otCoapOptionIteratorGetFirstOptionMatching(&iterator, OT_COAP_OPTION_OBSERVE);
+    
+    if(coapOption == NULL) 
+    {
+        return OAC_URI_OBS_NOT_SUB_REQUEST;
+    }else
+    {
+        if(strlen(deviceNameFull) >= OTAPP_DEVICENAME_FULL_SIZE)
+        {
+            return OAC_URI_OBS_ERROR;
+        }
+        
+        error = otCoapOptionIteratorGetOptionValue(&iterator, &obsValue);
+
+        printf("error: %d\n", error);
+        if(obsValue != 1)
+        {
+
+            result = oac_uri_obs_subscribe(subListHandle, otCoapMessageGetToken(aMessage), uriId, &aMessageInfo->mPeerAddr, deviceNameFull);
+        }else
+        {
+            // unSub. todo
+        }
+    }
+
+    return result;
+}
+
+
+int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, char* deviceNameFull, const oacu_token_t *token)
+{
+    int8_t tabDevId_ = 0;
+    int8_t tabUriId_ = 0;
+    uint8_t takenUris = 0;
+
+    if(subListHandle == NULL || deviceNameFull == NULL || token == NULL)
     {
         return OAC_URI_OBS_ERROR;
     }
     
-    result_ = oac_uri_obs_tokenIsExist(subListHandle, token);
-
-    if(result_ == OAC_URI_OBS_ERROR)
-    {
-        return OAC_URI_OBS_ERROR;
-    }
+    // chech if deviceNameFull is exist
+    tabDevId_ = oac_uri_obs_devNameFullIsExist(subListHandle, deviceNameFull);
+    if(tabDevId_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
     
-    if(result_ != OAC_URI_OBS_IS_NOT)
+    if(tabDevId_ == OAC_URI_OBS_IS_NOT) 
     {
-        subListHandle[result_].takenPosition = 0;
-        memset(&subListHandle[result_].serverData, 0, sizeof(subListHandle[result_].serverData));
-        return OAC_URI_OBS_OK;     
+        return OAC_URI_OBS_ERROR;        
+    }else // deviceNameFull is already existed, tabDevId_ = dev table index
+    {
+        // check if uri token is exist
+        tabUriId_ = oac_uri_obs_tokenIsExist(subListHandle, tabDevId_, token);
+        if(tabUriId_ == OAC_URI_OBS_ERROR) return OAC_URI_OBS_ERROR;
+        
+        if(tabUriId_ != OAC_URI_OBS_IS_NOT)
+        {
+            memset(subListHandle[tabDevId_].uri[tabUriId_].token, 0, OAC_URI_OBS_TOKEN_LENGTH);
+            subListHandle[tabDevId_].uri[tabUriId_].uriIndex = 0;
+            subListHandle[tabDevId_].uri[tabUriId_].takenPosition_uri = 0;
+
+            // check if there are not others saved uris - if not delete device from the subscribe list
+            for (uint8_t i = 0; i < OAC_URI_OBS_PAIRED_URI_MAX; i++)
+            {
+                if(oac_uri_obs_spaceUriIsTaken(subListHandle, tabDevId_, i))
+                {
+                    takenUris++;
+                }
+            }
+
+            if(takenUris == 0)
+            {
+                // delete device
+                memset(subListHandle[tabDevId_].deviceNameFull, 0, OAC_URI_OBS_DEVICENAME_FULL_SIZE);
+                memset(&subListHandle[tabDevId_].ipAddr, 0, OT_IP6_ADDRESS_SIZE);
+                subListHandle[tabDevId_].takenPosition_dev = 0;
+            }
+            
+            return OAC_URI_OBS_OK;     
+        }
     }
 
     return OAC_URI_OBS_TOKEN_NOT_EXIST;
 }
 
-int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize)
+int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t uriIndex, const uint8_t *dataToNotify, uint16_t dataSize)
 {
-    if(subListHandle == NULL || dataToNotify == NULL || serverUri == 0)
+    uint16_t numOfnotifications = 0;
+    if(subListHandle == NULL || dataToNotify == NULL || uriIndex == 0)
     {
         return OAC_URI_OBS_ERROR;
     }
 
-    if(dataSize >= OAC_URI_OBS_BUFFER_SIZE)
+    if(dataSize > OAC_URI_OBS_BUFFER_SIZE)
     {
         return OAC_URI_OBS_ERROR;
     }
 
-    for (uint8_t i = 0; i < OAC_URI_OBS_SUBSCRIBERS_MAX_NUM; i++)
+    for(uint8_t i = 0; i < OAC_URI_OBS_SUBSCRIBERS_MAX_NUM; i++)
     {
-        if(oac_uri_obs_spaceIsTaken(subListHandle, i))
-        {
-            if(subListHandle[i].serverData.uriIndex_server == serverUri)
+       if(oac_uri_obs_spaceDevNameIsTaken(subListHandle, i))
+       {
+            for(uint8_t j = 0; j < OAC_URI_OBS_PAIRED_URI_MAX; j++)
             {
-                memset(oac_txBuffer, 0, sizeof(oac_txBuffer)),
-                memcpy(oac_txBuffer, subListHandle[i].serverData.token, OAC_URI_OBS_TOKEN_LENGTH);
-                memcpy(oac_txBuffer + OAC_URI_OBS_TOKEN_LENGTH, dataToNotify, dataSize);
+                if(oac_uri_obs_spaceUriIsTaken(subListHandle, i, j))
+                {
+                    if(subListHandle[i].uri[j].uriIndex == uriIndex)
+                    {
+                        // clear tx buffer
+                        memset(oac_txRxBuffer, 0, sizeof(oac_txRxBuffer)); 
 
-                otapp_coapSendPutUri_subscribed_uris(&subListHandle[i].serverData.ipAddr, oac_txBuffer, sizeof(oac_txBuffer));
+                        // copy token to tx buffer
+                        memcpy(oac_txRxBuffer, subListHandle[i].uri[j].token, OAC_URI_OBS_TOKEN_LENGTH);
+                        
+                        // increase tx buffer ptr about token lenght
+                        // copy dataToNotify to tx buffer 
+                        memcpy(oac_txRxBuffer + OAC_URI_OBS_TOKEN_LENGTH, dataToNotify, dataSize);
 
+                        // send data to subscriber
+                        otapp_coapSendPutUri_subscribed_uris(&subListHandle[i].ipAddr, oac_txRxBuffer, sizeof(oac_txRxBuffer));
+                        numOfnotifications++;
+                    }
+                }
             }
-        }
+            
+       }
     }
-    
-    return OAC_URI_OBS_OK;
+        
+    return numOfnotifications;
 }
 
-int8_t oac_uri_obs_sendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *outToken)
-{
-    otapp_coapSendGetSubscribeRequest(ipAddr, aUriPath, outToken);
-    return OAC_URI_OBS_OK;
-}
-
-int8_t oac_uri_obs_parseMessage(const uint8_t *inBuffer, oac_uri_dataPacket_t *out)
+int8_t oac_uri_obs_parseMessageFromNotify(const uint8_t *inBuffer, oac_uri_dataPacket_t *out)
 {
     if(inBuffer == NULL || out == NULL)
     {
         return OAC_URI_OBS_ERROR; 
     }
 
-    memset(out, 0, sizeof(oac_uri_dataPacket_t));
-    memcpy(out, inBuffer, sizeof(oac_uri_dataPacket_t));
+    const uint8_t *bufPtr = inBuffer;
+    
+    memset(out, 0, sizeof(oac_uri_dataPacket_t)); // clear out buffer
 
+    memcpy(out->token, bufPtr, OAC_URI_OBS_TOKEN_LENGTH); // OAC_URI_OBS_TOKEN_LENGTH
+    
+    bufPtr += OAC_URI_OBS_TOKEN_LENGTH;
+    memcpy(out->buffer, bufPtr, OAC_URI_OBS_BUFFER_SIZE); // OAC_URI_OBS_BUFFER_SIZE
+
+    return OAC_URI_OBS_OK;
+}
+
+int8_t oac_uri_obs_sendSubscribeRequestUpdate(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *tokenIn)
+{
+    otapp_coapSendSubscribeRequestUpdate(ipAddr, aUriPath, tokenIn);
+    return OAC_URI_OBS_OK;
+}
+int8_t oac_uri_obs_sendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *tokenOut)
+{
+    otapp_coapSendSubscribeRequest(ipAddr, aUriPath, tokenOut);
     return OAC_URI_OBS_OK;
 }
 
@@ -269,22 +690,39 @@ int8_t oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle)
 }
 
 
+
 #ifdef UNIT_TEST
     
     oac_uri_observer_t test_obs={
-        .takenPosition = 1,
-        .serverData.ipAddr.mFields.m8 = {
+        .deviceNameFull = "device1_1_588c81fffe301ea4",
+        .takenPosition_dev = 1,
+        .ipAddr.mFields.m8 = {
                         0x20, 0x01, 0x0d, 0xb8, 0x85, 0xa3, 0x00, 0x00,
                         0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34},
-        .serverData.token = {
-                        0xFA, 0x04, 0xB6, 0xD1},
-        .serverData.uriIndex_client = 1,
-        .serverData.uriIndex_server = 2,
+        .uri[0].takenPosition_uri = 1,
+        .uri[0].token = {0xFA, 0x04, 0xB6, 0xD1},
+        .uri[0].uriIndex = 1,
+
+        .uri[1].takenPosition_uri = 1,
+        .uri[1].token = {0xF1, 0x04, 0xB6, 0xD1},
+        .uri[1].uriIndex = 2,
+
+        .uri[2].takenPosition_uri = 1,
+        .uri[2].token = {0xF2, 0x04, 0xB6, 0xD1},
+        .uri[2].uriIndex = 3,
+
+        .uri[3].takenPosition_uri = 1,
+        .uri[3].token = {0xF3, 0x04, 0xB6, 0xD1},
+        .uri[3].uriIndex = 4,
+
+        .uri[4].takenPosition_uri = 1,
+        .uri[4].token = {0xF4, 0x04, 0xB6, 0xD1},
+        .uri[4].uriIndex = 5,
     };
 
     int8_t test_obs_fillListExampleData(oac_uri_observer_t *subListHandle)
     {
-        for (uint8_t i = 0; i < OAC_URI_OBS_SUBSCRIBERS_MAX_NUM; i++)
+        for (uint16_t i = 0; i < OAC_URI_OBS_SUBSCRIBERS_MAX_NUM; i++)
         {
            memcpy(&subListHandle[i], &test_obs, sizeof(test_obs));
         }
@@ -292,117 +730,3 @@ int8_t oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle)
         return OAC_URI_OBS_OK;
     }
 #endif
-
-
-/////////////////////////
-
-//  void regobserv()
-//  {
-//     // otCoapMessageGenerateToken();
-//     uint8_t otCoapMessageGetTokenLength(const otMessage *aMessage); 
-// const uint8_t *otCoapMessageGetToken(const otMessage *aMessage);
-    
-//  }
-
-//  #include <openthread/coap.h>
-//  // register observer 
-// static void CoapRequestHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-// {
-//     otError error;
-//     otMessage *response;
-
-//     response = otCoapNewMessage((otInstance *)aContext, NULL);
-//     if (response == NULL)
-//     {
-//         return;
-//     }
-
-//     error = otCoapMessageInitResponse(response, aMessage, OT_COAP_TYPE_ACKNOWLEDGMENT, OT_COAP_CODE_CONTENT);
-//     if (error != OT_ERROR_NONE)
-//     {
-//         otMessageFree(response);
-//         return;
-//     }
-
-//     // Generujemy token zgodny z tokenem w zapytaniu klienta (zazwyczaj kopiujemy token z zapytania)
-//     error = otCoapCopyMessageToken(response, aMessage);
-
-
-//     // Dodanie opcji Observe do odpowiedzi - numer sekwencji powiadomień
-//     otCoapMessageAppendObserveOption(response, 0);
-
-//     error = otCoapSendResponse((otInstance *)aContext, response, aMessageInfo);
-//     if (error != OT_ERROR_NONE)
-//     {
-//         otMessageFree(response);
-//     }
-// }
-// 
-
-
-// #include <openthread/coap.h>
-
-// static void HandleCoapResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError)
-// {
-//     if (aError == OT_ERROR_NONE && aMessage != NULL)
-//     {
-//         // Obsługa odpowiedzi serwera - np. potwierdzenie rejestracji observe
-//     }
-//     else
-//     {
-//         // Obsługa błędu
-//     }
-// }
-
-// void SendCoapObserveRequest(otInstance *aInstance, const otIp6Address *aServerAddress)
-// {
-//     otError error;
-//     otMessage *message;
-//     otMessageInfo messageInfo;
-//     uint8_t tokenLength = 4; // długość tokena (np. 4 bajty)
-
-//     // Tworzymy nową wiadomość CoAP typu Confirmable (CON)
-//     message = otCoapNewMessage(aInstance, NULL);
-//     if (message == NULL)
-//     {
-//         return;
-//     }
-
-//     // Inicjujemy zapytanie z metodą GET
-//     otCoapMessageInit(message, OT_COAP_TYPE_CONFIRMABLE, OT_COAP_CODE_GET);
-    
-//     // Ustawiamy URI zasobu do obserwacji, np. "my/observe/resource"
-//     error = otCoapMessageAppendUriPathOption(message, "my");
-//     error = otCoapMessageAppendUriPathOption(message, "observe");
-//     error = otCoapMessageAppendUriPathOption(message, "resource");
-//     if (error != OT_ERROR_NONE)
-//     {
-//         otMessageFree(message);
-//         return;
-//     }
-
-//     // Generujemy token dla obserwacji (unikalny)
-//    otCoapMessageGenerateToken(message, tokenLength);
-    
-
-//     // Dodajemy opcję Observe z wartością 0, co oznacza rejestrację obserwatora
-//     error = otCoapMessageAppendObserveOption(message, 0);
-//     if (error != OT_ERROR_NONE)
-//     {
-//         otMessageFree(message);
-//         return;
-//     }
-
-//     // Przygotowujemy adres wysyłki (IPv6 + port CoAP - domyślnie 5683)
-//     memset(&messageInfo, 0, sizeof(messageInfo));
-//     messageInfo.mPeerPort = OT_DEFAULT_COAP_PORT;
-//     memcpy(&messageInfo.mPeerAddr, aServerAddress, sizeof(otIp6Address));
-
-//     // Wysyłamy żądanie do serwera CoAP
-//     error = otCoapSendRequest(aInstance, message, &messageInfo, HandleCoapResponse, NULL);
-//     if (error != OT_ERROR_NONE)
-//     {
-//         otMessageFree(message);
-//         return;
-//     }
-// }

@@ -26,13 +26,25 @@
 
 #ifdef UNIT_TEST
     #include "mock_ot_app_coap.h"
+    #include "mock_ot_app_deviceName.h"
+    #include "mock_ot_app.h"
 #else
     #include "ot_app_coap.h"
+    #include "ot_app_deviceName.h"
 #endif
 
 #define OAC_URI_OBS_TOKEN_LENGTH            4
 #define OAC_URI_OBS_SUBSCRIBERS_MAX_NUM     20
+#define OAC_URI_OBS_DEVICENAME_FULL_SIZE    OTAPP_DNS_SRV_LABEL_SIZE // 32 host name: "device1_1_588c81fffe301ea4"
+#define OAC_URI_OBS_PAIRED_URI_MAX          OTAPP_PAIRED_URI_MAX 
+
 #define OAC_URI_OBS_BUFFER_SIZE             256
+#define OAC_URI_OBS_TX_BUFFER_SIZE         (OAC_URI_OBS_TOKEN_LENGTH + OAC_URI_OBS_BUFFER_SIZE)
+
+#define OAC_URI_OBS_UPDATE_IP_ADDR_Msk         (0x1UL << 0U) // 1
+#define OAC_URI_OBS_UPDATE_URI_TOKEN_Msk       (0x1UL << 1U) // 2
+#define OAC_URI_OBS_ADD_NEW_URI_Msk            (0x1UL << 2U) // 4
+
 
 typedef int8_t oacu_result_t;
 typedef uint8_t oacu_uriIndex_t;
@@ -46,6 +58,11 @@ typedef enum{
     OAC_URI_OBS_TOKEN_EXIST     = (-5),
     OAC_URI_OBS_TOKEN_NOT_EXIST = (-6),
     OAC_URI_OBS_LIST_FULL       = (-7),
+    OAC_URI_OBS_IP_UPDATED      = (-8),
+    OAC_URI_OBS_IP_NO_NEED_UPDATE = (-9),
+    OAC_URI_OBS_NOT_SUB_REQUEST = (-10),
+    OAC_URI_OBS_ADDED_NEW_DEVICE = (-11),
+    OAC_URI_OBS_NO_NEED_UPDATE = (-12),
 
 }oac_obsError_t;
 
@@ -54,20 +71,17 @@ typedef struct {
     uint8_t buffer[OAC_URI_OBS_BUFFER_SIZE];
 } oac_uri_dataPacket_t;
 
+typedef struct oac_uri_obs_t{
+    oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
+    oacu_uriIndex_t uriIndex; 
+    uint8_t takenPosition_uri;
+}oac_uri_obs_t;
+
 typedef struct oac_uri_observer_t{
-    union {
-        struct {
-            oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
-            oacu_uriIndex_t uriIndex_client; 
-        }clientData; // use it when you are going to send subscribe request
-        struct {
-            oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
-            oacu_uriIndex_t uriIndex_client; // uri index from client
-            oacu_uriIndex_t uriIndex_server; // uri index from server 
-            otIp6Address ipAddr; 
-        }serverData; // use it when you are going to register subscriber
-    };
-    uint8_t takenPosition;
+    char deviceNameFull[OAC_URI_OBS_DEVICENAME_FULL_SIZE];
+    otIp6Address ipAddr;
+    oac_uri_obs_t uri[OAC_URI_OBS_PAIRED_URI_MAX];
+    uint8_t takenPosition_dev;
 } oac_uri_observer_t;
 
 /**
@@ -85,13 +99,26 @@ oac_uri_observer_t *oac_uri_obs_getSubListHandle(void);
 oac_uri_dataPacket_t *oac_uri_obs_getdataPacketHandle(void);
 
 /**
- * @brief todo
+ * @brief 
  * 
  * @param subListHandle 
- * @param subscribeData 
+ * @param token 
+ * @param uriIndex 
+ * @param ipAddr 
  * @return int8_t 
  */
-int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData);
+int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, const oacu_token_t *token, oacu_uriIndex_t uriIndex, const otIp6Address *ipAddr, const char* deviceNameFull);
+
+/**
+ * @brief 
+ * 
+ * @param subListHandle 
+ * @param aMessage 
+ * @param aMessageInfo 
+ * @param uriId 
+ * @return int8_t 
+ */
+int8_t oac_uri_obs_subscribeFromUri(oac_uri_observer_t *subListHandle, otMessage *aMessage, const otMessageInfo *aMessageInfo, oacu_uriIndex_t uriId, char* deviceNameFull);
 
 /**
  * @brief todo
@@ -100,7 +127,7 @@ int8_t oac_uri_obs_subscribe(oac_uri_observer_t *subListHandle, oac_uri_observer
  * @param token 
  * @return int8_t 
  */
-int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, const oacu_token_t *token);
+int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, char* deviceNameFull, const oacu_token_t *token);
 
 /**
  * @brief todo
@@ -111,7 +138,7 @@ int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, const oacu_tok
  * @param dataSize 
  * @return int8_t 
  */
-int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);
+int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t uriIndex, const uint8_t *dataToNotify, uint16_t dataSize);
 
 /**
  * @brief 
@@ -120,7 +147,7 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t ser
  * @param out 
  * @return uint8_t 
  */
-int8_t oac_uri_obs_parseMessage(const uint8_t *inBuffer, oac_uri_dataPacket_t *out);
+int8_t oac_uri_obs_parseMessageFromNotify(const uint8_t *inBuffer, oac_uri_dataPacket_t *out);
 
 /**
  * @brief 
@@ -138,34 +165,55 @@ int8_t oac_uri_obs_deleteAll(oac_uri_observer_t *subListHandle);
  * @param outToken 
  * @return int8_t 
  */
-int8_t oac_uri_obs_sendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *outToken);
+int8_t oac_uri_obs_sendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *tokenOut);
+
+/**
+ * @brief  todo
+ * 
+ * @param ipAddr 
+ * @param aUriPath 
+ * @param tokenIn 
+ * @return int8_t 
+ */
+int8_t oac_uri_obs_sendSubscribeRequestUpdate(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *tokenIn);
 
 #ifdef UNIT_TEST
 
-/**
- * @brief check free space in subscribe list
- * @return int8_t         [out] free index position of oac_obsSubList[]
- *                              or  OAC_URI_OBS_ERROR (-1)
- */
-PRIVATE int8_t oac_uri_obs_spaceIsFree(oac_uri_observer_t *subListHandle);
+///////////////////////
+// fn for devName
+PRIVATE int8_t oac_uri_obs_spaceDevNameIsFree(oac_uri_observer_t *subListHandle);
 
-/**
- * @brief todo
- * 
- * @param subListHandle 
- * @param subListIndex 
- * @return PRIVATE 
- */
-PRIVATE int8_t oac_uri_obs_spaceTake(oac_uri_observer_t *subListHandle, uint8_t subListIndex);
+PRIVATE int8_t oac_uri_obs_spaceDevNameTake(oac_uri_observer_t *subListHandle, int8_t tabDevId);
 
-/**
- * @brief todo
- * 
- * @param subListHandle 
- * @param subListIndex 
- * @return int8_t  // return 0 or 1 
- */
-PRIVATE int8_t oac_uri_obs_spaceIsTaken(oac_uri_observer_t *subListHandle, uint8_t subListIndex);
+PRIVATE int8_t oac_uri_obs_spaceDevNameIsTaken(oac_uri_observer_t *subListHandle, int8_t tabDevId);
+
+///////////////////////
+// fn for uri
+PRIVATE int8_t oac_uri_obs_spaceUriIsFree(oac_uri_observer_t *subListHandle, int8_t tabDevId);
+
+PRIVATE int8_t oac_uri_obs_spaceUriTake(oac_uri_observer_t *subListHandle, int8_t tabDevId, int8_t tabUriId);
+
+PRIVATE int8_t oac_uri_obs_spaceUriIsTaken(oac_uri_observer_t *subListHandle, int8_t tabDevId, int8_t tabUriId);
+
+PRIVATE int8_t oac_uri_obs_uriIsExist(oac_uri_observer_t *subListHandle, int8_t tabDevId, oacu_uriIndex_t uriIndex);
+
+PRIVATE int8_t oac_uri_obs_saveDeviceNameFull(oac_uri_observer_t *subListHandle, int8_t tabDevId, const char* deviceNameFull);
+
+PRIVATE int8_t oac_uri_obs_saveIpAddr(oac_uri_observer_t *subListHandle, int8_t tabDevId, const otIp6Address *ipAddr);
+
+PRIVATE int8_t oac_uri_obs_saveUriIndex(oac_uri_observer_t *subListHandle, int8_t tabDevId, int8_t tabUriId, oacu_uriIndex_t uriIndex);
+
+PRIVATE int8_t oac_uri_obs_saveToken(oac_uri_observer_t *subListHandle, int8_t tabDevId, int8_t tabUriId, const oacu_token_t *token);
+
+PRIVATE int8_t oac_uri_obs_addNewDevice(oac_uri_observer_t *subListHandle, const char* deviceNameFull, const otIp6Address *ipAddr);
+
+PRIVATE int8_t oac_uri_obs_addNewUri(oac_uri_observer_t *subListHandle, int8_t tabDevId, const oacu_token_t *token, oacu_uriIndex_t uriIndex);
+
+PRIVATE int8_t oac_uri_obs_ipAddrIsSame(oac_uri_observer_t *subListHandle, int8_t tabDevId, const otIp6Address *ipAddr);
+
+PRIVATE int8_t oac_uri_obs_devNameFullIsSame(oac_uri_observer_t *subListHandle, int8_t tabDevId, const char *deviceNameFull);
+
+PRIVATE int8_t oac_uri_obs_devNameFullIsExist(oac_uri_observer_t *subListHandle, const char *deviceNameFull);
 
 /**
  * @brief todo
@@ -175,7 +223,7 @@ PRIVATE int8_t oac_uri_obs_spaceIsTaken(oac_uri_observer_t *subListHandle, uint8
  * @param tokenToCheck 
  * @return PRIVATE 
  */
-PRIVATE int8_t oac_uri_obs_tokenIsSame(oac_uri_observer_t *subListHandle, uint8_t subListIndex, const oacu_token_t *tokenToCheck);
+PRIVATE int8_t oac_uri_obs_tokenIsSame(oac_uri_observer_t *subListHandle, int8_t tabDevId, int8_t tabUriId, const oacu_token_t *tokenToCheck);
 
 /**
  * @brief todo
@@ -184,7 +232,7 @@ PRIVATE int8_t oac_uri_obs_tokenIsSame(oac_uri_observer_t *subListHandle, uint8_
  * @param token 
  * @return PRIVATE 
  */
-PRIVATE int8_t oac_uri_obs_tokenIsExist(oac_uri_observer_t *subListHandle, const oacu_token_t *token);
+PRIVATE int8_t oac_uri_obs_tokenIsExist(oac_uri_observer_t *subListHandle, int8_t tabDevId, const oacu_token_t *token);
 
 int8_t test_obs_fillListExampleData(oac_uri_observer_t *subListHandle);
 #endif /* UNIT_TEST */
