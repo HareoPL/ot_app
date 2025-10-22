@@ -37,6 +37,10 @@
 #define OTAPP_COAP_URI_OK       (-1)
 #define OTAPP_COAP_URI_ERROR    (-2)
 
+#define OTAPP_COAP_OK       OTAPP_COAP_URI_OK
+#define OTAPP_COAP_ERROR    OTAPP_COAP_URI_ERROR
+#define OTAPP_COAP_OK_OBSERVER_REQUEST (-3)
+
 typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
 
 #ifndef UNIT_TEST
@@ -88,5 +92,7 @@ void otapp_coap_clientSendGetByte(const otIp6Address *peer_addr, const char *aUr
 const char *otapp_coap_getUriNameFromDefault(otapp_coap_uriIndex_t uriIndex);
 
 int8_t otapp_coapReadPayload(otMessage *aMessage, uint8_t *bufferOut, uint16_t bufferSize, uint16_t *readBytesOut);
+
+int8_t otapp_coap_processUriRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo, uint8_t uriId, uint8_t *bufOut, uint16_t bufSize);
 
 #endif  /* OT_APP_COAP_H_ */

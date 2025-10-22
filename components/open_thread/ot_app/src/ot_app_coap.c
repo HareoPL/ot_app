@@ -365,6 +365,51 @@ int8_t otapp_coapReadPayload(otMessage *aMessage, uint8_t *bufferOut, uint16_t b
 
     return OTAPP_COAP_OK;
 }
+
+int8_t otapp_coap_processUriRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo, oacu_uriIndex_t uriId, uint8_t *bufOut, uint16_t bufSize)
+{
+    int8_t result = 0;
+    uint16_t payloadReadBytes = 0;
+    oac_uri_observer_t *obsHandle;
+
+    if(aMessage == NULL || aMessageInfo == NULL || bufOut == NULL || bufSize == 0 || bufSize > OAC_URI_OBS_BUFFER_SIZE)
+    {
+        return OTAPP_COAP_ERROR;
+    } 
+
+    // handle subscribe request
+    obsHandle = oac_uri_obs_getSubListHandle();
+    if(obsHandle == NULL) return OTAPP_COAP_ERROR;
+    
+    // clear buffer and read payload to buffer
+    memset(bufOut, 0, bufSize);
+    result = otapp_coapReadPayload(aMessage, bufOut, bufSize, &payloadReadBytes);
+
+    if(result != OTAPP_COAP_ERROR)
+    {
+        result = oac_uri_obs_subscribeFromUri(obsHandle, aMessage, aMessageInfo, uriId, (char*)bufOut);
+        
+        if(result != OAC_URI_OBS_NOT_SUB_REQUEST) // check if request concerned observer 
+        {
+            // send response OK
+            otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_OK), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_OK)) );
+            return OTAPP_COAP_OK_OBSERVER_REQUEST;
+        }else
+        {
+            // send response OK
+            otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_OK), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_OK)) );            
+           
+            // notify subscribers about event
+            oac_uri_obs_notify(obsHandle, OTAPP_LIGHTING_ON_OFF, bufOut, bufSize); 
+        }
+    }else
+    {
+        // send response ERROR
+        otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_ERROR), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_ERROR)) );
+        return OTAPP_COAP_ERROR;
+    }
+   
+    
     return OTAPP_COAP_OK;
 }
 
