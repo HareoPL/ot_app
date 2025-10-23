@@ -404,19 +404,21 @@ int8_t otapp_coap_processUriRequest(otMessage *aMessage, const otMessageInfo *aM
     if(result != OTAPP_COAP_ERROR)
     {
         result = oac_uri_obs_subscribeFromUri(obsHandle, aMessage, aMessageInfo, uriId, (char*)bufOut);
-        
-        if(result != OAC_URI_OBS_NOT_SUB_REQUEST) // check if request concerned observer 
-        {
-            // send response OK
-            otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_OK), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_OK)) );
-            return OTAPP_COAP_OK_OBSERVER_REQUEST;
-        }else
-        {
+        if(result == OAC_URI_OBS_ERROR) return OTAPP_COAP_ERROR;
+
+        if(result == OAC_URI_OBS_NOT_SUB_REQUEST) 
+        {            
             // send response OK
             otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_OK), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_OK)) );            
            
             // notify subscribers about event
             oac_uri_obs_notify(obsHandle, OTAPP_LIGHTING_ON_OFF, bufOut, bufSize); 
+
+        }else // if request concerned observer. result > 0 
+        {
+            // send response OK
+            otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_OK), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_OK)) );
+            return result; // OTAPP_COAP_OK_OBSERVER_REQUEST;
         }
     }else
     {
