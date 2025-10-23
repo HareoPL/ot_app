@@ -281,8 +281,14 @@ int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char 
 
     int8_t tableIndex;
     uint16_t strLen = 0;
+    int8_t result = 0;
 
-    if(otapp_pair_DeviceIsExist(pairDeviceList, deviceNameFull) == OTAPP_PAIR_NO_EXIST)
+    result = otapp_pair_DeviceIsExist(pairDeviceList, deviceNameFull);
+    if(result == OTAPP_PAIR_ERROR) 
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+    else if(result == OTAPP_PAIR_NO_EXIST)
     {
        tableIndex = otapp_pair_DeviceIsFreeSpace(pairDeviceList);
        
@@ -304,7 +310,8 @@ int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char 
        {
             return OTAPP_PAIR_DEVICE_NO_SPACE;
        }
-    }else
+    }
+    else
     {
         tableIndex = otapp_pair_DeviceIndexGet(pairDeviceList, deviceNameFull); 
         if(otapp_pair_ipAddressUpdate(pairDeviceList, tableIndex, ipAddr) == OTAPP_PAIR_UPDATED)
@@ -757,8 +764,9 @@ void otapp_pair_task(void *params)
                         otapp_ip6AddressPrint(&otapp_pair_queueIteam.ipAddress);
                         break;
 
-                    case OTAPP_PAIR_NO_NEED_UPDATE:                    
-                        printf("is exist and no need update\n");
+                    case OTAPP_PAIR_NO_NEED_UPDATE:
+                        otapp_pair_subSendUpdateIP(otapp_pair_getHandle()); // todo check
+                        printf("no need IP update\n");
                         break;                   
                    
                     default:
