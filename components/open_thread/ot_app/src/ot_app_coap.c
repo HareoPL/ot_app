@@ -343,13 +343,13 @@ void otapp_coapSendPutUri_subscribed_uris(const otIp6Address *ipAddr, const uint
 
 void otapp_coapSendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *tokenOut)
 {
-    otapp_coap_client_send(ipAddr, aUriPath, OT_COAP_CODE_PUT, (char*)otapp_deviceNameFullGet(), 0, otapp_coap_responseHandler, NULL, tokenOut, 0);
+    otapp_coap_client_send(ipAddr, aUriPath, OT_COAP_CODE_PUT, (char*)otapp_deviceNameFullGet(), strlen(otapp_deviceNameFullGet()), otapp_coap_responseHandler, NULL, tokenOut, 0);
     printf("CoAP sent SubscribeRequest \n");
 }
 
 void otapp_coapSendSubscribeRequestUpdate(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *tokenIn)
 {
-    otapp_coap_client_send(ipAddr, aUriPath, OT_COAP_CODE_PUT, (char*)otapp_deviceNameFullGet(), 0, otapp_coap_responseHandler, NULL, tokenIn, 2);
+    otapp_coap_client_send(ipAddr, aUriPath, OT_COAP_CODE_PUT, (char*)otapp_deviceNameFullGet(), strlen(otapp_deviceNameFullGet()), otapp_coap_responseHandler, NULL, tokenIn, 2);
     printf("CoAP sent SubscribeRequest update \n");
 }
 
