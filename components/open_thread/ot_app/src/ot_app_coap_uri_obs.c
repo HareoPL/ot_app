@@ -505,7 +505,6 @@ int8_t oac_uri_obs_subscribeFromUri(oac_uri_observer_t *subListHandle, otMessage
 {
     int8_t result = 0;
     uint64_t obsValue = 0;
-    otError error; 
     otCoapOptionIterator iterator;    
     const otCoapOption *coapOption;
 
@@ -527,9 +526,8 @@ int8_t oac_uri_obs_subscribeFromUri(oac_uri_observer_t *subListHandle, otMessage
             return OAC_URI_OBS_ERROR;
         }
         
-        error = otCoapOptionIteratorGetOptionValue(&iterator, &obsValue);
+        otCoapOptionIteratorGetOptionValue(&iterator, &obsValue);
 
-        printf("error: %d\n", error);
         if(obsValue != 1)
         {
 
@@ -600,6 +598,9 @@ int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, char* deviceNa
 
 int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t uriIndex, const uint8_t *dataToNotify, uint16_t dataSize)
 {
+    // todo-future_1 
+    // the device that changed the uri setting will be excluded from notification of the change
+
     uint16_t numOfnotifications = 0;
     if(subListHandle == NULL || dataToNotify == NULL || uriIndex == 0)
     {
