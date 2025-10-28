@@ -306,7 +306,6 @@ TEST(ot_app_pair_UriIndex, GivenOverflowSize_WhenCallinguriParseMessage_ThenRetu
 TEST(ot_app_pair_UriIndex, GivenNullDeviceUrisList_WhenCallingUriAdd_ThenReturnError)
 {
     int8_t result;
-    otapp_pair_resUrisParseData_t *uriData;
    
     result = otapp_pair_uriAdd(NULL, &ut_oap_uriData_1, ut_oap_token_1);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
@@ -327,7 +326,7 @@ TEST(ot_app_pair_UriIndex, GivenNulluriData_WhenCallingUriAdd_ThenReturnError)
 
 TEST(ot_app_pair_UriIndex, GivenTrue_WhenCallingUriAdd_ThenReturnError_OK)
 {
-    int8_t result, devId;
+    int8_t result ;
     otapp_pair_DeviceList_t *deviceListHandle;
     otapp_pair_Device_t *newDevice;
 

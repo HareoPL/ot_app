@@ -1174,6 +1174,10 @@ TEST(ot_app_coap_uri_obs, GivenNullArgs_WhenParseMessage_ThenReturnError)
 {
     oacu_result_t result_;
     oac_uri_dataPacket_t *dataPacketIn;
+    uint8_t data_ = 255; 
+    uint8_t dataSize_ = 1; 
+
+    dataPacketIn = test_obs_createDataPacket(test_obs_token_4Byte, &data_, dataSize_);
 
     result_ = oac_uri_obs_parseMessageFromNotify(NULL, &test_obs_dataPacketOut);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);

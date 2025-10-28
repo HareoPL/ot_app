@@ -54,5 +54,11 @@ TEST_GROUP_RUNNER(ot_app_deviceName)
    RUN_TEST_CASE(ot_app_deviceName, GivenMatchingDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnOK);
    RUN_TEST_CASE(ot_app_deviceName, GivenNotMatchingDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnError);
 
+   // otapp_deviceNameFullToEUI()
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevNameArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnERROR);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooShortDevNameArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnERROR);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTrueArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnOK);
+
 }
 

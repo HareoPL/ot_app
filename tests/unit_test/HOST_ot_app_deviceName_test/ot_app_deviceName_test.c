@@ -1,6 +1,6 @@
 #include "unity_fixture.h"
 #include "ot_app_deviceName.h"
-
+#include "string.h"
 
 #define UT_DN_OK_DEVICE_TYPE_1                  OTAPP_CONTROL_PANEL
 #define UT_DN_OK_DEVICE_TYPE_2_SWITCH           OTAPP_SWITCH
@@ -17,6 +17,9 @@ static char *deviceName_to_long = {"name11_byte"};
 static char *deviceNameFull_to_long = {"device1_1_588c81fffe301ea4_too_long"};
 static char *deviceNameFull_not_same = {"device2_1_588c81fffe301ea4"};
 static char *deviceNameFull_device1_type0_fakeAddr = {"device1_0_0011223344556677"};
+static char *deviceNameFull_device1_type0_fakeAddr_too_long = {"device1_0_00112233445566779900"};
+static char *deviceNameFull_device1_type0_fakeAddr_too_short = {"device1_0_00112233445566"};
+static char *deviceNameFull_device1_type0_fakeAddr_eui = {"0011223344556677"};
 static char *deviceNameFull_device1_type1_fakeAddr = {"device1_1_0011223344556677"};
 
 static const char *ut_dn_domain = ".default.service.arpa.";
@@ -344,4 +347,48 @@ TEST(ot_app_deviceName, GivenNotMatchingDeviceNameFull_WhenIsCallingDeviceNameIs
     otapp_deviceNameSet(deviceName_device1, UT_DN_OK_DEVICE_TYPE_2_SWITCH);
     result = otapp_deviceNameIsMatching(_deviceNameFull);
     TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_IS_NOT, result);
+}
+
+// otapp_deviceNameFullToEUI()
+TEST(ot_app_deviceName, GivenNullArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnError)
+{
+    int8_t result;   
+    char *EuiPtrStr = NULL;
+
+    result = otapp_deviceNameFullToEUI(NULL, 5, &EuiPtrStr);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+    
+    result = otapp_deviceNameFullToEUI(deviceNameFull_device1_type0_fakeAddr, 0, &EuiPtrStr);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}
+
+TEST(ot_app_deviceName, GivenTooLongDevNameArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnERROR)
+{
+    int8_t result;   
+    char *EuiPtrStr = NULL;
+
+    result = otapp_deviceNameFullToEUI(deviceNameFull_device1_type0_fakeAddr_too_long, strlen(deviceNameFull_device1_type0_fakeAddr_too_long), &EuiPtrStr);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+    
+}
+
+TEST(ot_app_deviceName, GivenTooShortDevNameArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnERROR)
+{
+    int8_t result;   
+    char *EuiPtrStr = NULL;
+
+    result = otapp_deviceNameFullToEUI(deviceNameFull_device1_type0_fakeAddr_too_short, strlen(deviceNameFull_device1_type0_fakeAddr_too_short), &EuiPtrStr);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+    
+}
+
+TEST(ot_app_deviceName, GivenTrueArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnOK)
+{
+    int8_t result;   
+    char *EuiPtrStr = NULL;
+
+    result = otapp_deviceNameFullToEUI(deviceNameFull_device1_type0_fakeAddr, strlen(deviceNameFull_device1_type0_fakeAddr), &EuiPtrStr);
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_OK, result);
+    TEST_ASSERT_EQUAL_STRING(deviceNameFull_device1_type0_fakeAddr_eui, EuiPtrStr);
+    
 }
