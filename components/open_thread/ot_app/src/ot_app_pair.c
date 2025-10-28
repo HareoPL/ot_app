@@ -692,6 +692,9 @@ int8_t otapp_pair_subSendUpdateIP(otapp_pair_DeviceList_t *pairDeviceList)
 
 void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
 {
+    UNUSED(aMessageInfo);
+    UNUSED(aResult);
+
     if(pairedDevice == NULL) return;
 
     static uint8_t urisBuffer[OTAPP_PAIR_URI_RESOURCE_BUFFER_MAX_SIZE];

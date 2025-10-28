@@ -68,52 +68,67 @@ typedef struct ot_app_drv_devName_t{
 }ot_app_drv_devName_t;
 
 typedef struct ot_app_drv_obs_t{
-        /**
-         * @brief get observer instance 
-         * @return oac_uri_observer_t pointer
-         */
-        struct{
-            oac_uri_dataPacket_t *(*getDataPacket)(void);
-            int8_t (*parseMessage)(const uint8_t *inBuffer, oac_uri_dataPacket_t *out);
-            int8_t (*sendSubscribeRequest)(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *outToken);
+    /**
+     * @brief get observer instance 
+     * @return oac_uri_observer_t pointer
+     */
+    struct{
+        oac_uri_dataPacket_t *(*getDataPacket)(void);
+        int8_t (*parseMessage)(const uint8_t *inBuffer, oac_uri_dataPacket_t *out);
+        int8_t (*sendSubscribeRequest)(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *outToken);
 
-        }client;
+    }client;
+    
+    struct{
+        oac_uri_observer_t *(*getHandle)(void);
+        int8_t (*notify)(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);        
+        int8_t (*subscribe)(oac_uri_observer_t *subListHandle, otMessage *aMessage, const otMessageInfo *aMessageInfo, oacu_uriIndex_t uriId, char* deviceNameFull);
+        int8_t (*unsubscribe)(oac_uri_observer_t *subListHandle, char* deviceNameFull, const oacu_token_t *token);
+        int8_t (*XdeleteAll)(oac_uri_observer_t *subListHandle);
         
-        struct{
-            oac_uri_observer_t *(*getHandle)(void);
-            int8_t (*notify)(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);        
-            int8_t (*subscribe)(oac_uri_observer_t *subListHandle, otMessage *aMessage, const otMessageInfo *aMessageInfo, oacu_uriIndex_t uriId, char* deviceNameFull);
-            int8_t (*unsubscribe)(oac_uri_observer_t *subListHandle, char* deviceNameFull, const oacu_token_t *token);
-            int8_t (*XdeleteAll)(oac_uri_observer_t *subListHandle);
-            
-        }server;
+    }server;
 }ot_app_drv_obs_t;
 
 typedef struct ot_app_drv_coap_t{
-        void (*sendBytePut)(const otIp6Address *peer_addr, const char *aUriPath, const uint8_t *payloadMsg, const uint16_t payloadMsgSize, otCoapResponseHandler responseHandler,  void *aContext);
-        void (*sendByteGet)(const otIp6Address *peer_addr, const char *aUriPath, otCoapResponseHandler responseHandler, void *aContext);
-        void (*sendResponse)(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const uint8_t *responceContent, uint16_t responceLength);
-        int8_t (*readPayload)(otMessage *aMessage, uint8_t *bufferOut, uint16_t bufferSize, uint16_t *readBytesOut);
-        int8_t (*processUriRequest)(otMessage *aMessage, const otMessageInfo *aMessageInfo, oacu_uriIndex_t uriId, uint8_t *bufOut, uint16_t bufSize);
+    void (*sendBytePut)(const otIp6Address *peer_addr, const char *aUriPath, const uint8_t *payloadMsg, const uint16_t payloadMsgSize, otCoapResponseHandler responseHandler,  void *aContext);
+    void (*sendByteGet)(const otIp6Address *peer_addr, const char *aUriPath, otCoapResponseHandler responseHandler, void *aContext);
+    void (*sendResponse)(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const uint8_t *responceContent, uint16_t responceLength);
+    int8_t (*readPayload)(otMessage *aMessage, uint8_t *bufferOut, uint16_t bufferSize, uint16_t *readBytesOut);
+    int8_t (*processUriRequest)(otMessage *aMessage, const otMessageInfo *aMessageInfo, oacu_uriIndex_t uriId, uint8_t *bufOut, uint16_t bufSize);
 }ot_app_drv_coap_t;
 
 typedef struct ot_app_devDrvAPI_t{
     ot_app_drv_devName_t devName;
     ot_app_drv_nvs_t    nvs;
+    ot_app_drv_obs_t    obs;    // uri observer functions
+    ot_app_drv_coap_t   coap;   // coap functions  
 }ot_app_devDrvAPI_t;
 
+typedef uint8_t ot_app_size_t;
+typedef otapp_pair_rule_t *(*pairRuleGet_callback_t)(void);
+typedef otapp_coap_uri_t *(*uriGet_callback_t)(void);
+typedef void (*subscribedUris_callback_t)(oac_uri_dataPacket_t *dataPacket);
+typedef void (*mainTask_callback_t)(void);
+
 typedef struct ot_app_devDrv_t{
-        subscribedUris_callback_t     obs_subscribedUri_clb; // it will be called from subscribed_uris uri
-        otapp_pair_observerCallback_t obs_pairedDevice_clb;  // it will be called when new device has been properly paired
+    subscribedUris_callback_t     obs_subscribedUri_clb; // it will be called from subscribed_uris uri
 
-        pairRuleGet_callback_t      pairRuleGetList_clb;
-        uriGet_callback_t           uriGetList_clb;
+    /**
+     * @brief it will be called when new device has been properly paired. All data are saved in otapp_pair_DeviceList_t.
+     * @param [out] newDevice ptr to data struct otapp_pair_Device_t
+     */
+    otapp_pair_observerCallback_t obs_pairedDevice_clb;  
 
-        const char *deviceName;
-        const otapp_deviceType_t *deviceType;
+    pairRuleGet_callback_t      pairRuleGetList_clb;
+    uriGet_callback_t           uriGetList_clb;
 
+    const char *deviceName;
+    const otapp_deviceType_t *deviceType;
+
+    ot_app_size_t               uriGetListSize;
     mainTask_callback_t     task;
     
+    ot_app_devDrvAPI_t api;
 }ot_app_devDrv_t;
 
 
