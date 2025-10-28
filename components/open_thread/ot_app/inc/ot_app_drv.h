@@ -36,6 +36,32 @@
     // #include "mock_ot_app_coap_uri_obs.`h"       
 #endif
 
+/**
+ * @brief NVS Non-Volatile Storage functions
+ */
+typedef struct ot_app_drv_nvs_t{
+    /**
+     * @brief save data into NVS partition
+     * 
+     * @param inData        [in] ptr to data
+     * @param keyId         [in] it is id for saved data. It will be necessary for update or read data
+     * @return int8_t       OT_APP_NVS_ERROR or OT_APP_NVS_OK
+     */
+    int8_t (*saveString)(const char *inData, const uint8_t keyId);
+
+    /**
+     * @brief read data from NVS partition
+     * 
+     * @param outData        [out] ptr to data
+     * @param outDataSize    [out] ptr to the size of the data that was read
+     * @param keyId          [in] it is id for saved data. It will be necessary for update or read data
+     * @return int8_t        OT_APP_NVS_ERROR or OT_APP_NVS_OK
+     */
+    int8_t (*readString)(char *outBuff, uint8_t outBuffSize, const uint8_t keyId);
+
+    int8_t (*init)(void);
+
+}ot_app_drv_nvs_t;
 
 typedef struct ot_app_drv_devName_t{
     int8_t (*devNameFullToEUI)(const char *deviceNameFull, uint8_t stringLength, char **outEuiChrPtr);    
@@ -73,6 +99,7 @@ typedef struct ot_app_drv_coap_t{
 
 typedef struct ot_app_devDrvAPI_t{
     ot_app_drv_devName_t devName;
+    ot_app_drv_nvs_t    nvs;
 }ot_app_devDrvAPI_t;
 
 typedef struct ot_app_devDrv_t{

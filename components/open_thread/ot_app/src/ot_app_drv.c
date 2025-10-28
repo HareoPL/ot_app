@@ -21,6 +21,7 @@
  */
 
 #include "ot_app_drv.h"
+#include "ot_app_nvs.h"
 
 static ot_app_devDrv_t ot_app_devDrv = {
     .obs_subscribedUri_clb = NULL,      
@@ -36,6 +37,12 @@ static ot_app_devDrv_t ot_app_devDrv = {
 
     .api.devName = {
         .devNameFullToEUI = otapp_deviceNameFullToEUI,
+    },
+
+    .api.nvs = {
+        .init = ot_app_nvs_init,
+        .readString = ot_app_nvs_readString,
+        .saveString = ot_app_nvs_saveString,
     },
 
     .api.obs.client = {

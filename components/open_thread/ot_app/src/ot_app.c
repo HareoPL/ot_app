@@ -198,6 +198,10 @@ int8_t otapp_init() //app init
     otapp_devDrv = ot_app_drv_getInstance();
 
     openThreadInstance = esp_openthread_get_instance();
+    
+    if(otapp_devDrv->api.nvs.init == NULL) return OTAPP_ERROR;
+    otapp_devDrv->api.nvs.init(); 
+        
     otapp_cli_init();    
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
     otapp_mutexBuf = xSemaphoreCreateMutex();
