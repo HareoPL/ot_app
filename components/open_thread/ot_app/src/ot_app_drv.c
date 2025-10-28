@@ -34,6 +34,10 @@ static ot_app_devDrv_t ot_app_devDrv = {
 
     .uriGetListSize = 0,
 
+    .api.devName = {
+        .devNameFullToEUI = otapp_deviceNameFullToEUI,
+    },
+
     .api.obs.client = {
         .getDataPacket = oac_uri_obs_getdataPacketHandle,
         .parseMessage = oac_uri_obs_parseMessageFromNotify,

@@ -150,6 +150,27 @@ int16_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t stringLengt
     return devId;
 }
 
+
+int8_t otapp_deviceNameFullToEUI(const char *deviceNameFull, uint8_t stringLength, char **outEuiChrPtr)
+{
+    uint8_t euiLen = 0;
+
+    if(deviceNameFull == NULL || stringLength >= OTAPP_DEVICENAME_FULL_SIZE || stringLength ==0)
+    {
+        return OTAPP_DEVICENAME_ERROR;
+    }
+
+   *outEuiChrPtr = strrchr(deviceNameFull, '_');
+   if(*outEuiChrPtr == NULL) return OTAPP_DEVICENAME_ERROR;
+
+   (*outEuiChrPtr)++;
+
+   euiLen = strlen(*outEuiChrPtr);
+   if(euiLen != 16) return OTAPP_DEVICENAME_ERROR;
+
+   return OTAPP_DEVICENAME_OK;
+}
+
 int8_t otapp_deviceNameFullAddDomain(char *deviceFullName, uint16_t bufLength)
 {
     if(deviceFullName == NULL)

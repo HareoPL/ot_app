@@ -36,10 +36,11 @@
     // #include "mock_ot_app_coap_uri_obs.`h"       
 #endif
 
-typedef uint8_t ot_app_size_t;
-typedef otapp_pair_rule_t *(*pairRuleGet_callback_t)(void);
-typedef otapp_coap_uri_t *(*uriGet_callback_t)(void);
-typedef void (*subscribedUris_callback_t)(oac_uri_dataPacket_t *dataPacket);
+
+typedef struct ot_app_drv_devName_t{
+    int8_t (*devNameFullToEUI)(const char *deviceNameFull, uint8_t stringLength, char **outEuiChrPtr);    
+}ot_app_drv_devName_t;
+
 typedef struct ot_app_drv_obs_t{
         /**
          * @brief get observer instance 
@@ -71,8 +72,7 @@ typedef struct ot_app_drv_coap_t{
 }ot_app_drv_coap_t;
 
 typedef struct ot_app_devDrvAPI_t{
-       ot_app_drv_obs_t         obs;    // uri observer functions
-       ot_app_drv_coap_t        coap;   // coap functions  
+    ot_app_drv_devName_t devName;
 }ot_app_devDrvAPI_t;
 
 typedef struct ot_app_devDrv_t{
