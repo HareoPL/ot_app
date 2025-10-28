@@ -83,8 +83,9 @@ void app_main(void)
     
     while (1) 
     {
-        WS2812BFX_Callback();	                // FX effects calllback
-        OneButtonTask(&btn_coapSendGetTest);
+        WS2812BFX_Callback();	                // FX effects calllback        
+
+        ot_app_drv_task();
 
         // UTILS_RTOS_CHECK_FREE_STACK();
         vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog

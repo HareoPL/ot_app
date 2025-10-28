@@ -33,6 +33,8 @@ static ot_app_devDrv_t ot_app_devDrv = {
     .deviceName = NULL,
     .deviceType = NULL,             
 
+    .task = NULL,
+
     .uriGetListSize = 0,
 
     .api.devName = {
@@ -65,6 +67,13 @@ static ot_app_devDrv_t ot_app_devDrv = {
         .processUriRequest = otapp_coap_processUriRequest,
     },
 };
+
+
+void ot_app_drv_task(void)
+{
+    if(ot_app_devDrv.task != NULL) 
+    ot_app_devDrv.task();
+}
 
 ot_app_devDrv_t *ot_app_drv_getInstance()
 {

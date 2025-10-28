@@ -112,12 +112,12 @@ typedef struct ot_app_devDrv_t{
         const char *deviceName;
         const otapp_deviceType_t *deviceType;
 
-        ot_app_size_t               uriGetListSize;
-
-        ot_app_devDrvAPI_t api;
+    mainTask_callback_t     task;
+    
 }ot_app_devDrv_t;
 
 
 ot_app_devDrv_t *ot_app_drv_getInstance(void);
+void ot_app_drv_task(void);
 
 #endif  /* OT_APP_DRV_H_ */
