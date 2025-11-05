@@ -148,4 +148,6 @@ void otapp_deviceNameDelete(void);
  */
 int8_t otapp_deviceNameFullToEUI(const char *deviceNameFull, uint8_t stringLength, char **outEuiChrPtr);
 
+int8_t otapp_deviceNameEuiIsSame(const char *deviceNameFull, const char *eui);
+
 #endif  /* OT_APP_DEVICENAME_H_ */

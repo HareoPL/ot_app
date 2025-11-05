@@ -23,6 +23,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define OTAPP_DEVICENAME_EUI_CHAR_MAX_SIZE    (3 * OT_EXT_ADDRESS_SIZE)
+#define OTAPP_DEVICENAME_EUI_CHAR_MIN_SIZE    (OT_EXT_ADDRESS_SIZE)
 
 static char otapp_deviceName[OTAPP_DNS_SRV_LABEL_SIZE]; // = "device1_1_588c81fffe301ea4"
 static const char *otapp_deviceName_domain = ".default.service.arpa.";
@@ -163,12 +165,37 @@ int8_t otapp_deviceNameFullToEUI(const char *deviceNameFull, uint8_t stringLengt
    *outEuiChrPtr = strrchr(deviceNameFull, '_');
    if(*outEuiChrPtr == NULL) return OTAPP_DEVICENAME_ERROR;
 
+   // strrchar return first found matched element from the end of string
+   // so we have to increase address of ptr, so that it points to the biginning of the string what we are looking for
    (*outEuiChrPtr)++;
 
    euiLen = strlen(*outEuiChrPtr);
-   if(euiLen != 16) return OTAPP_DEVICENAME_ERROR;
+   if(euiLen >= OTAPP_DEVICENAME_EUI_CHAR_MAX_SIZE || euiLen < OTAPP_DEVICENAME_EUI_CHAR_MIN_SIZE)
+   {
+        *outEuiChrPtr = NULL;
+        return OTAPP_DEVICENAME_ERROR;
+   }
 
    return OTAPP_DEVICENAME_OK;
+}
+
+int8_t otapp_deviceNameEuiIsSame(const char *deviceNameFull, const char *eui)
+{
+    char *devEui;
+    int8_t result;
+
+    if(deviceNameFull == NULL || eui == NULL) return OTAPP_DEVICENAME_ERROR;
+
+    result = otapp_deviceNameFullToEUI(deviceNameFull, strlen(deviceNameFull), &devEui);
+    if(result == OTAPP_DEVICENAME_ERROR) return OTAPP_DEVICENAME_ERROR;
+    
+    result = strcmp(devEui, eui);
+    if (result == 0) 
+    {
+        return OTAPP_DEVICENAME_IS;
+    }
+
+    return OTAPP_DEVICENAME_IS_NOT;
 }
 
 int8_t otapp_deviceNameFullAddDomain(char *deviceFullName, uint16_t bufLength)
