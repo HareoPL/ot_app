@@ -199,8 +199,6 @@ int8_t otapp_init() //app init
 
     openThreadInstance = esp_openthread_get_instance();
     
-    if(otapp_devDrv->api.nvs.init == NULL) return OTAPP_ERROR;
-    otapp_devDrv->api.nvs.init(); 
         
     otapp_cli_init();    
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
