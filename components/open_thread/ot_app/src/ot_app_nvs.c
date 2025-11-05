@@ -63,16 +63,26 @@ int8_t ot_app_nvs_init(void)
 
 int8_t ot_app_nvs_saveString(const char *inData, const uint8_t keyId)
 {
+    uint8_t strLen = 0;
     if(inData == NULL || nvsHandle == 0) return OT_APP_NVS_ERROR;
 
     char keyName[OT_APP_NVS_BUF_SIZE];
-
-    err = nvs_set_str(nvsHandle, ot_app_nvs_keyMake(keyName, keyId), inData);
-    if (err != ESP_OK) 
+    ot_app_nvs_keyMake(keyName, keyId);
+    
+    strLen = strlen(inData);
+    if(strLen == 0)
     {
-        return OT_APP_NVS_ERROR;
+        nvs_set_u8(nvsHandle, keyName, 0);
     }
-
+    else
+    {
+         err = nvs_set_str(nvsHandle, keyName, inData);
+        if (err != ESP_OK) 
+        {
+            return OT_APP_NVS_ERROR;
+        }
+    }
+   
     err = nvs_commit(nvsHandle);
     if (err != ESP_OK) 
     {
