@@ -37,8 +37,15 @@ static ot_app_devDrv_t ot_app_devDrv = {
 
     .uriGetListSize = 0,
 
+    .api.pair = {
+        .getHandle = otapp_pair_getHandle,
+        .uriStateSet = otapp_pair_uriStateSet,
+        .uriGetIdList = otapp_pair_uriGetIdList,
+    },
+
     .api.devName = {
         .devNameFullToEUI = otapp_deviceNameFullToEUI,
+        .devNameEuiIsSame = otapp_deviceNameEuiIsSame,
     },
 
     .api.nvs = {

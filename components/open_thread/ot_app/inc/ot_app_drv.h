@@ -63,8 +63,16 @@ typedef struct ot_app_drv_nvs_t{
 
 }ot_app_drv_nvs_t;
 
+typedef struct ot_app_drv_pair_t{
+    otapp_pair_DeviceList_t *(*getHandle)(void);
+    int8_t (*uriStateSet)(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token, const uint32_t *uriState);
+    int8_t (*uriGetIdList)(otapp_pair_Device_t *deviceHandle, otapp_deviceType_t uriDevType);
+
+}ot_app_drv_pair_t;
+
 typedef struct ot_app_drv_devName_t{
     int8_t (*devNameFullToEUI)(const char *deviceNameFull, uint8_t stringLength, char **outEuiChrPtr);    
+    int8_t (*devNameEuiIsSame)(const char *deviceNameFull, const char *eui);
 }ot_app_drv_devName_t;
 
 typedef struct ot_app_drv_obs_t{
@@ -98,6 +106,7 @@ typedef struct ot_app_drv_coap_t{
 }ot_app_drv_coap_t;
 
 typedef struct ot_app_devDrvAPI_t{
+    ot_app_drv_pair_t   pair;
     ot_app_drv_devName_t devName;
     ot_app_drv_nvs_t    nvs;
     ot_app_drv_obs_t    obs;    // uri observer functions
