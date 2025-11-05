@@ -45,6 +45,24 @@ TEST_GROUP_RUNNER(ot_app_pair)
    RUN_TEST_CASE(ot_app_pair, GivenNewIpAddress_WhenCallingIpAddressUpdate_ThenReturn1);
    RUN_TEST_CASE(ot_app_pair, GivenNewIpAddress_WhenCallingIpAddressUpdateAndIpAddressIsSame_ThenReturn1);
 
+   // otapp_pair_tokenIsSame
+   RUN_TEST_CASE(ot_app_pair, GivenNullHandleArg_WhenCallingTokenIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenNullTokenToCheckArg_WhenCallingTokenIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenOverFlowTabDevIdArg_WhenCallingTokenIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenOverFlowTabUriIdArg_WhenCallingTokenIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenSameTokenToCheck_WhenCallingTokenIsSame_ThenReturnIs);
+   RUN_TEST_CASE(ot_app_pair, GivenDifferentTokenToCheck_WhenCallingTokenIsSame_ThenReturnIsNot);
+   
+   // otapp_pair_tokenGetUriIteams
+   RUN_TEST_CASE(ot_app_pair, GivenNullArgs_WhenCallingTokenGetUriIteams_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenTrueArgs_WhenCallingTokenGetUriIteams_ThenReturn_ptrToData);
+   RUN_TEST_CASE(ot_app_pair, GivenTrueArgsButOtherToken_WhenCallingTokenGetUriIteams_ThenReturn_NULL);
+   RUN_TEST_CASE(ot_app_pair, GivenTrueArgsAnd2DiffrentTokenOnLIst_WhenCallingTokenGetUriIteams_ThenReturn_ptrToData);
+
+   // otapp_pair_uriStateSet
+   RUN_TEST_CASE(ot_app_pair, GivenNullArgs_WhenCallingUriStateSet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenTrueArgs_WhenCallingUriStateSet_ThenReturnOK);
+
 }
 
 TEST_GROUP_RUNNER(ot_app_pair_UriIndex)

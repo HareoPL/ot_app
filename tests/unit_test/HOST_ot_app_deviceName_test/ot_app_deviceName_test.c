@@ -17,8 +17,8 @@ static char *deviceName_to_long = {"name11_byte"};
 static char *deviceNameFull_to_long = {"device1_1_588c81fffe301ea4_too_long"};
 static char *deviceNameFull_not_same = {"device2_1_588c81fffe301ea4"};
 static char *deviceNameFull_device1_type0_fakeAddr = {"device1_0_0011223344556677"};
-static char *deviceNameFull_device1_type0_fakeAddr_too_long = {"device1_0_00112233445566779900"};
-static char *deviceNameFull_device1_type0_fakeAddr_too_short = {"device1_0_00112233445566"};
+static char *deviceNameFull_device1_type0_fakeAddr_too_long = {"device1_0_001122334455667799000000"};
+static char *deviceNameFull_device1_type0_fakeAddr_too_short = {"device1_0_0011223"};
 static char *deviceNameFull_device1_type0_fakeAddr_eui = {"0011223344556677"};
 static char *deviceNameFull_device1_type1_fakeAddr = {"device1_1_0011223344556677"};
 
