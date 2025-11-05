@@ -441,26 +441,14 @@ PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_devi
     }
 
     for(int i = 0; OTAPP_PAIR_RULES_ALLOWED_SIZE; i++) 
-    {
+    {   
+        if(rules->allowed[i] == OTAPP_PAIR_END_OF_RULES)  break;
+        
         if(rules->allowed[i] == OTAPP_PAIR_NO_RULES || rules->allowed[i] == incommingDeviceID) 
         {
             return OTAPP_PAIR_IS;
         }
     }
-
-    // for(uint8_t i = 0; i < rulesSize; i++) 
-    // {
-    //     if(rules[i].main == mainDeviceID) 
-    //     {
-    //         for(int j = 0; OTAPP_PAIR_RULES_ALLOWED_SIZE; j++) 
-    //         {
-    //             if(rules[i].allowed[j] == OTAPP_PAIR_NO_RULES || rules[i].allowed[j] == incommingDeviceID) 
-    //             {
-    //                 return OTAPP_PAIR_IS;
-    //             }
-    //         }
-    //     }
-    // }
     return OTAPP_PAIR_IS_NOT;
 }
 
@@ -790,7 +778,7 @@ void otapp_pair_task(void *params)
                     }
                 }else
                 {
-                    printf("= current device \n ");
+                    printf("= current device, or NOT allowed \n ");
                 }
             }
 

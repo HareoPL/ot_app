@@ -66,6 +66,7 @@
 
 #define OTAPP_PAIR_NO_RULES     (OTAPP_END_OF_DEVICE_TYPE + 1) 
 #define OTAPP_PAIR_NO_ALLOWED   OTAPP_NO_DEVICE_TYPE 
+#define OTAPP_PAIR_END_OF_RULES   OTAPP_END_OF_DEVICE_TYPE 
 
 #define OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE 10
 
@@ -79,6 +80,7 @@ typedef uint8_t otapp_pair_resUrisBuffer_t[OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE];
 
 typedef struct {
     char uri[OTAPP_URI_MAX_NAME_LENGHT];
+    uint32_t uriState;
     otapp_deviceType_t devTypeUriFn;    // It tell you what functions this uri has
     oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];   
 }otapp_pair_uris_t;
@@ -268,6 +270,8 @@ int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUrisList, const otapp_pair_res
  */
 otapp_pair_resUrisBuffer_t *otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, int8_t *result, uint16_t *outBufSize);
 
+int8_t otapp_pair_uriStateSet(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token, const uint32_t *uriState);
+
 /**
  * @brief todo
  * 
@@ -275,6 +279,10 @@ otapp_pair_resUrisBuffer_t *otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri,
  * @return int8_t 
  */
 int8_t otapp_pair_subSendUpdateIP(otapp_pair_DeviceList_t *pairDeviceList);
+
+otapp_pair_uris_t *otapp_pair_tokenGetUriIteams(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token);
+
+int8_t otapp_pair_uriGetIdList(otapp_pair_Device_t *deviceHandle, otapp_deviceType_t uriDevType);
 
 #ifdef UNIT_TEST
 
@@ -368,6 +376,8 @@ PRIVATE int8_t otapp_pair_observerPairedDeviceNotify(otapp_pair_Device_t *newDev
  * @return int8_t 
  */
 PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_deviceType_t incommingDeviceID);
+
+PRIVATE int8_t otapp_pair_tokenIsSame(otapp_pair_DeviceList_t *pairDeviceList, int8_t devListId, int8_t uriListId, const oacu_token_t *tokenToCheck);
 
 
 #endif  /* UNIT_TEST */
