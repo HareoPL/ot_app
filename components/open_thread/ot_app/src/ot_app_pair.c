@@ -638,6 +638,79 @@ int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUriListIndex, const otapp_pair
 
 }
 
+int8_t otapp_pair_uriGetIdList(otapp_pair_Device_t *deviceHandle, otapp_deviceType_t uriDevType)
+{
+    if(deviceHandle == NULL) return OTAPP_PAIR_ERROR;
+
+    for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
+    {
+       if(deviceHandle->urisList[i].devTypeUriFn == uriDevType)
+       {
+            return i;
+       }
+    }
+    
+    return OTAPP_PAIR_NO_EXIST;
+}
+
+PRIVATE int8_t otapp_pair_tokenIsSame(otapp_pair_DeviceList_t *pairDeviceList, int8_t devListId, int8_t uriListId, const oacu_token_t *tokenToCheck)
+{
+    if(tokenToCheck == NULL || pairDeviceList == NULL || devListId >= OTAPP_PAIR_DEVICES_MAX || uriListId >= OTAPP_PAIR_URI_MAX)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    for (uint8_t i = 0; i < OAC_URI_OBS_TOKEN_LENGTH; i++)
+    {
+       if(pairDeviceList->list[devListId].urisList[uriListId].token[i] != tokenToCheck[i])
+       {
+            return OTAPP_PAIR_IS_NOT;
+       }
+    }
+        
+    return OTAPP_PAIR_IS;
+}
+
+// return uriLIstId or error
+otapp_pair_uris_t *otapp_pair_tokenGetUriIteams(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token)
+{
+    if(pairDeviceList == NULL || token == NULL) return NULL; 
+
+    if(otapp_pair_uriTokenIsValid(token) == OTAPP_PAIR_IS)          // check if token is not empty
+    {
+        for (uint8_t i = 0; i < OTAPP_PAIR_DEVICES_MAX; i++)        // check if device list is taken
+        {
+            if(otapp_pair_spaceIsTaken(pairDeviceList, i))
+            {
+                for (uint8_t j = 0; j < OTAPP_PAIR_URI_MAX; j++)    // check if token form uriLIst is same
+                {
+                   if(otapp_pair_tokenIsSame(pairDeviceList, i, j, token) == OTAPP_PAIR_IS)
+                   {
+                       return &pairDeviceList->list[i].urisList[j]; // return uriList ptr
+                   }
+                }
+                
+            }
+        }
+    }
+
+    return NULL;
+}
+
+int8_t otapp_pair_uriStateSet(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token, const uint32_t *uriState)
+{   
+    otapp_pair_uris_t *uriIteams;
+
+    if(pairDeviceList == NULL || token == NULL || uriState == NULL) return OTAPP_PAIR_ERROR; 
+    
+    uriIteams = otapp_pair_tokenGetUriIteams(pairDeviceList, token);
+    if(uriIteams == NULL) return OTAPP_PAIR_ERROR;
+
+    uriIteams->uriState = *uriState;
+
+    return OTAPP_PAIR_OK;
+}
+
 // return OTAPP_PAIR_ERROR or count of updated devices
 int8_t otapp_pair_subSendUpdateIP(otapp_pair_DeviceList_t *pairDeviceList)
 {
@@ -691,7 +764,7 @@ void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMess
     uint16_t msgLen = 0;
     uint16_t readBytes = 0;
     otapp_pair_resUrisParseData_t *parsedData = NULL;
-    uint16_t parsedDataSize = 0;
+    uint16_t parsedDataSize = 0; // number of uri structures to add to the list
 
     otapp_pair_Device_t *device = (otapp_pair_Device_t*)pairedDevice;
 
