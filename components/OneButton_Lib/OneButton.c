@@ -71,7 +71,7 @@ void ButtonOneclick(OneButton_t *Btn)
 
 	if(NULL != Btn->OneClick)
 	{
-		Btn->OneClick();
+		Btn->OneClick(Btn->GpioPin);
 	}
 }
 
@@ -82,7 +82,7 @@ void ButtonDoubleClick(OneButton_t *Btn)
 
 	if(NULL != Btn->DoubleClick)
 	{
-		Btn->DoubleClick();
+		Btn->DoubleClick(Btn->GpioPin);
 	}
 }
 
@@ -97,7 +97,7 @@ void ButtonLongPress(OneButton_t *Btn)
 
 			if (NULL != Btn->LongPressStart)
 			{
-				Btn->LongPressStart();
+				Btn->LongPressStart(Btn->GpioPin);
 			}
 		}
 	}
@@ -107,7 +107,7 @@ void ButtonLongPress(OneButton_t *Btn)
 
 		if (NULL != Btn->LongPressStop)
 		{
-			Btn->LongPressStop();
+			Btn->LongPressStop(Btn->GpioPin);
 		}
 
 	}

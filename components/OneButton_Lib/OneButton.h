@@ -25,10 +25,15 @@
 #define OB_BUTTON_NOT_PRESSED 	1
 
 //if you need other callback, modify here only. Keep the name.
-typedef void(*CallBackFunOneClick_t)(void);
-typedef void(*CallBackFunDoubleClick_t)(void);
-typedef void(*CallBackFunLongPressStart_t)(void);
-typedef void(*CallBackFunLongPressStop_t)(void);
+// typedef void(*CallBackFunOneClick_t)(void);
+// typedef void(*CallBackFunDoubleClick_t)(void);
+// typedef void(*CallBackFunLongPressStart_t)(void);
+// typedef void(*CallBackFunLongPressStop_t)(void);
+
+typedef void(*CallBackFunOneClick_t)(uint16_t btnNum);
+typedef void(*CallBackFunDoubleClick_t)(uint16_t btnNum);
+typedef void(*CallBackFunLongPressStart_t)(uint16_t btnNum);
+typedef void(*CallBackFunLongPressStop_t)(uint16_t btnNum);
 
 
 typedef enum
