@@ -412,7 +412,7 @@ int8_t otapp_coap_processUriRequest(otMessage *aMessage, const otMessageInfo *aM
             otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_OK), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_OK)) );            
            
             // notify subscribers about event
-            oac_uri_obs_notify(obsHandle, OTAPP_LIGHTING_ON_OFF, bufOut, bufSize); 
+            oac_uri_obs_notify(obsHandle, uriId, bufOut, bufSize); 
 
         }else // if request concerned observer. result > 0 
         {
