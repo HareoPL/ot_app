@@ -120,12 +120,27 @@ void ot_app_nvs_test()
     ot_app_nvs_saveString(STRING_TO_WRITE_1, 1);
     ot_app_nvs_saveString(STRING_TO_WRITE_2, 2);
 
+    printf("check if saved:\n");
     ot_app_nvs_readString(buff, 128, 0);    
-    printf("!!&& NVS TEST read: %s \n", buff );
+    printf("   && NVS TEST read: %s \n", buff );
      ot_app_nvs_readString(buff, 128, 1);    
-    printf("!!&& NVS TEST nfs read: %s \n", buff );
+    printf("   && NVS TEST nfs read: %s \n", buff );
      ot_app_nvs_readString(buff, 128, 2);    
-    printf("!!&& NVS TEST nfs read: %s \n", buff );
+    printf("   && NVS TEST nfs read: %s \n", buff );
+    
+    printf("\nClear... \n");
+    ot_app_nvs_saveString("\0", 0);
+    ot_app_nvs_saveString("\0", 1);
+    ot_app_nvs_saveString("\0", 2);
+    buff[0] = '\0';
+
+    printf("check if cleared: \n");
+    ot_app_nvs_readString(buff, 128, 0);    
+    printf("   && NVS TEST read: %s \n", buff );
+     ot_app_nvs_readString(buff, 128, 1);    
+    printf("   && NVS TEST nfs read: %s \n", buff );
+     ot_app_nvs_readString(buff, 128, 2);    
+    printf("   && NVS TEST nfs read: %s \n", buff );
 
 
 }
