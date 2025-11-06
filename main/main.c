@@ -28,46 +28,29 @@
 #include "wifi.h"
 #include "web_app.h"
 #include "ot_app.h"
-#include "OneButton.h"
+#include "ot_app_drv.h"
 
-#include "ad_temp.h"
+#include "ad_button.h"
 
 static const char *TAG = "main";
 
-#define BUTTON_GPIO GPIO_NUM_4
-OneButton_t btn_coapSendGetTest;
-
-// only for test coap get and put sent
-void otapp_gpioInit()
-{ 
-    
-    gpio_reset_pin(BUTTON_GPIO); // reset to default state
-    gpio_set_direction(BUTTON_GPIO, GPIO_MODE_INPUT); //set gpio as input
-
-    // set pull-up
-    gpio_pullup_en(BUTTON_GPIO);
-
-    OneButtonInit(&btn_coapSendGetTest, GPIO_NUM_4);
-    OneButtonCallbackOneClick(&btn_coapSendGetTest, otapp_coapSendtoTestGet);
-    OneButtonCallbackDoubleClick(&btn_coapSendGetTest, otapp_coapSendtoTestPut);
-    // OneButtonCallbackLongPressStart(&BlueKey,ToggleLed); // the function will repeat itself until you release the button
-    // OneButtonCallbackLongPressStop(&BlueKey,TurnOffLed);
-
-}
-
 void app_main(void)
 {
-    ESP_UNUSED(TAG);
+//////////////////////////////////////////////////
+// add device init here
 
-    otapp_gpioInit(); // only for test coap get sent
-    ad_tempInit();
+    ad_button_Init();
+
+//////////////////////////////////////////////////
+// DO NOT EDIT BELOW //
+
     otapp_init();
     
     // wifi_initSTA();
     // wifi_initAP();
     // web_app_startWebServer();
     
-  
+    ESP_UNUSED(TAG);
     xTim_Init();                                // init freeRTOS soft timers
     // xTim_printTaskListEnable();                 // enable freeRTOS task list
 
