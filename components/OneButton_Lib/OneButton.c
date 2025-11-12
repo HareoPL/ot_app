@@ -190,8 +190,12 @@ void OneButtonCallbackLongPressStop(OneButton_t *Btn, CallBackFunLongPressStop_t
 }
 
 // initialized function
-// void OneButtonInit(OneButton_t *Btn, GPIO_TypeDef *GpioPort, uint16_t GpioPin)
-void OneButtonInit(OneButton_t *Btn, uint16_t GpioPin)
+#ifdef OB_STM32_PLATFORM
+	void OneButtonInit(OneButton_t *Btn, GPIO_TypeDef *GpioPort, uint16_t GpioPin)
+#endif
+#ifdef OB_ESP32_PLATFORM
+	void OneButtonInit(OneButton_t *Btn, uint16_t GpioPin)
+#endif
 {
 	Btn->State = IDLE;
 	Btn->CoundClick = 0;
@@ -205,8 +209,10 @@ void OneButtonInit(OneButton_t *Btn, uint16_t GpioPin)
 	Btn->TimerDoubleClick = 350;
 	Btn->TimerLongPressStart = 700;
 	Btn->TimerLongPressTick = 500;
-
-	// Btn->GpioPort = GpioPort;
+#ifdef OB_STM32_PLATFORM
+	 Btn->GpioPort = GpioPort;
+#endif
+	
 	Btn->GpioPin = GpioPin;
 }
 

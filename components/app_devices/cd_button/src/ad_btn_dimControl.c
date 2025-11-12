@@ -26,14 +26,6 @@
 #define OT_BTN_DIR_DOWN 0
 
 
-#define OT_BTN_MAX_BRIGHTNESS       255 // max value of brightness
-#define OT_BTN_MIN_BRIGHTNESS       3   // below this value, light will be turned off
-
-// mapping brightness thresholds
-#define OT_BTN_LEVELS_COUNT 5
-static const uint8_t threshTab[OT_BTN_LEVELS_COUNT] = {30, 80, 160, 220, OT_BTN_MAX_BRIGHTNESS};
-static const uint8_t stepsTab[OT_BTN_LEVELS_COUNT]  = { 1,  4,   6,   8, 16};
-
 //////////////////////
 // do not edit below
 typedef struct {
