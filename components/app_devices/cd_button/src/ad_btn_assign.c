@@ -308,10 +308,20 @@ static int8_t ad_btn_assignSetTrue(uint8_t btnListId)
 {
     if(btnListId >= AD_BUTTON_NUM_OF_BUTTONS) return AD_BUTTON_ERROR;
 
+    // check if on btnList is any active assign marked
+    for (uint8_t i = 0; i < AD_BUTTON_NUM_OF_BUTTONS; i++)
+    {
+        if(btnList[i].btn.isMarkedAssign) // if there is ... mark = 0
+        {
+            btnList[i].btn.isMarkedAssign = 0;
+        }
+    }
+
+    // marked assign button
     btnList[btnListId].btn.isMarkedAssign = 1;
     SoftTim_start(&ad_btn_assignTime, OT_AD_BTN_ASSIGN_TIME_MS);
 
-    printf("assignTimer started \n");
+    printf("assignTimer started. btn: %d \n", btnListId);
 
     return AD_BUTTON_OK;
 }
@@ -383,7 +393,7 @@ int8_t ad_btn_assignDevice(otapp_pair_Device_t *newDevice)
         if(result == AD_BUTTON_ERROR) return AD_BUTTON_ERROR;
 
         SoftTim_stop(&ad_btn_assignTime);
-        printf("Assigned new device | Stop timer \n");
+        printf("Assigned new device to btn: %d| Stop timer \n", btnListId);
         // assign new devica has been finished succesfull. 
         // todo-future let's togle light coap send togle 
     }
