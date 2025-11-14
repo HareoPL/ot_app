@@ -153,6 +153,7 @@ TEST_GROUP_RUNNER(ot_app_coap_uri_obs)
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTrueArgs_WhenEmptySubscribeListCallingNotify_ThenReturnOk);
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenTrueArgs_WhenSubscribeListIsFullCallingNotify_ThenReturnOk);
    RUN_TEST_CASE(ot_app_coap_uri_obs, CheckNotify_GivenTrueArgs_WhenCallingNotify_ThenReturnOk);
+   RUN_TEST_CASE(ot_app_coap_uri_obs, CheckNotify_GivenTwoSubscribersOneWillExclude_WhenCallingNotify_ThenReturnOk);
 
    // parseMessage()
    RUN_TEST_CASE(ot_app_coap_uri_obs, GivenNullArgs_WhenParseMessage_ThenReturnError);

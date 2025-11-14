@@ -596,10 +596,8 @@ int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, char* deviceNa
     return OAC_URI_OBS_TOKEN_NOT_EXIST;
 }
 
-int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t uriIndex, const uint8_t *dataToNotify, uint16_t dataSize)
+int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, const otIp6Address *excludedIpAddr, oacu_uriIndex_t uriIndex, const uint8_t *dataToNotify, uint16_t dataSize)
 {
-    // todo-future_1 
-    // the device that changed the uri setting will be excluded from notification of the change
 
     uint16_t numOfnotifications = 0;
     if(subListHandle == NULL || dataToNotify == NULL || uriIndex == 0)
@@ -622,19 +620,24 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t uri
                 {
                     if(subListHandle[i].uri[j].uriIndex == uriIndex)
                     {
-                        // clear tx buffer
-                        memset(oac_txRxBuffer, 0, sizeof(oac_txRxBuffer)); 
+                        // checking whether the current IP ADDR index is not same as te exclude one
+                        if(oac_uri_obs_ipAddrIsSame(subListHandle, i, excludedIpAddr) == OAC_URI_OBS_IS_NOT)
+                        {
+                            // clear tx buffer
+                            memset(oac_txRxBuffer, 0, sizeof(oac_txRxBuffer)); 
 
-                        // copy token to tx buffer
-                        memcpy(oac_txRxBuffer, subListHandle[i].uri[j].token, OAC_URI_OBS_TOKEN_LENGTH);
+                            // copy token to tx buffer
+                            memcpy(oac_txRxBuffer, subListHandle[i].uri[j].token, OAC_URI_OBS_TOKEN_LENGTH);
+                            
+                            // increase tx buffer ptr about token lenght
+                            // copy dataToNotify to tx buffer 
+                            memcpy(oac_txRxBuffer + OAC_URI_OBS_TOKEN_LENGTH, dataToNotify, dataSize);
+
+                            // send data to subscriber
+                            otapp_coapSendPutUri_subscribed_uris(&subListHandle[i].ipAddr, oac_txRxBuffer, sizeof(oac_txRxBuffer));
+                            numOfnotifications++;
+                        }
                         
-                        // increase tx buffer ptr about token lenght
-                        // copy dataToNotify to tx buffer 
-                        memcpy(oac_txRxBuffer + OAC_URI_OBS_TOKEN_LENGTH, dataToNotify, dataSize);
-
-                        // send data to subscriber
-                        otapp_coapSendPutUri_subscribed_uris(&subListHandle[i].ipAddr, oac_txRxBuffer, sizeof(oac_txRxBuffer));
-                        numOfnotifications++;
                     }
                 }
             }

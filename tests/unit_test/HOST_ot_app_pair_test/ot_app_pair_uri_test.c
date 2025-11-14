@@ -313,7 +313,7 @@ TEST(ot_app_pair_UriIndex, GivenNullDeviceUrisList_WhenCallingUriAdd_ThenReturnE
 
 TEST(ot_app_pair_UriIndex, GivenNulluriData_WhenCallingUriAdd_ThenReturnError)
 {
-    int8_t result, devId;
+    int8_t result ;
     otapp_pair_DeviceList_t *deviceListHandle;
     otapp_pair_Device_t *newDevice;
 
