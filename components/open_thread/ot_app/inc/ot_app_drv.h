@@ -18,6 +18,22 @@
  * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
+ * 
+ * @defgroup driver_ot_app main API for OpenThread hardware application
+ * @ingroup drivers
+ * @{
+ * 
+ * @section description Description
+ *  .........
+ *  *
+ * 
+ * @note To successfully assign a new device, it must be in the same device name group 
+ *       (API: drv->deviceName) and be on the list of allowed devices 
+ *       (API: drv->pairRuleGetList_clb, otapp_pair_rule_t).
+ * 
+ * 
+ * 
+ * 
  */
 #ifndef OT_APP_DRV_H_
 #define OT_APP_DRV_H_
@@ -131,7 +147,7 @@ typedef struct ot_app_devDrv_t{
     pairRuleGet_callback_t      pairRuleGetList_clb;
     uriGet_callback_t           uriGetList_clb;
 
-    const char *deviceName;
+    char *deviceName;
     const otapp_deviceType_t *deviceType;
 
     ot_app_size_t               uriGetListSize;
@@ -140,7 +156,9 @@ typedef struct ot_app_devDrv_t{
     ot_app_devDrvAPI_t api;
 }ot_app_devDrv_t;
 
-
+/*
+* @}
+*/
 ot_app_devDrv_t *ot_app_drv_getInstance(void);
 void ot_app_drv_task(void);
 
