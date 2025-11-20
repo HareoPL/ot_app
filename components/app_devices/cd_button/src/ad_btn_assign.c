@@ -25,11 +25,12 @@
 
 #include "softTimers.h"
 #include "OneButton.h"
+#include "ws2812b_fx.h"
 
 #include "string.h"
 
 
-#define OT_BTN_MAX_RGB_SWITCH_COLOR 10
+#define OT_BTN_MAX_RGB_SWITCH_COLOR 20
 #define OT_AD_BTN_ASSIGN_TIME_MS    40000 
 
 #define OT_BTN_EUI_CHAR_MAX_SIZE    (3 * OT_EXT_ADDRESS_SIZE)       // numbers from range of 0 to 255. OT_EXT_ADDRESS_SIZE is uint8_t. When we need save num as a char, uint8_t a = 255, in char it will be 3 byte(2 - 1chr, 5 - 2chr, 5 - 3chr)
@@ -39,6 +40,30 @@
 #define OT_BTN_GPIO_QTY     AD_BUTTON_NUM_OF_BUTTONS
 
 static const char ot_btn_charEmptyBuffer = '\0';
+
+// static const uint32_t rgbColorTab[OT_BTN_MAX_RGB_SWITCH_COLOR] = {RED, GREEN, BLUE, WHITE, YELLOW, CYAN, MAGENTA, PURPLE, ORANGE, PINK};
+static const uint32_t rgbColorTab[OT_BTN_MAX_RGB_SWITCH_COLOR] = {
+    0xFFFFFF,  // pure white (255,255,255)
+    0xFFFEF0,  // white with slight yellow (255,254,240)
+    0xFFFDE0,  // white with yellow (255,253,224)
+    0xFFFCD0,  // warmer white (255,252,208)
+    0xFFFBC0,  // warm white (255,251,192)
+    0xFFFAB0,  // transition to yellow (255,250,176)
+    0xFFF9A0,  // yellowish (255,249,160)
+    0xFFF890,  // more yellow (255,248,144)
+    0xFFF780,  // warm yellow (255,247,128)
+    0xFFE870,  // yellow with orange (255,232,112)
+    0xFFD960,  // orange-yellow (255,217,96)
+    0xFFCA50,  // transition (255,202,80)
+    0xFFBB40,  // orange (255,187,64)
+    0xFFAC38,  // darker orange (255,172,56)
+    0xFF9D30,  // intense orange (255,157,48)
+    0xFF8E28,  // even warmer (255,142,40)
+    0xFF7F20,  // warm orange (255,127,32)
+    0xFF7018,  // more red-orange (255,112,24)
+    0xFF6110,  // very warm (255,97,16)
+    0xFF6400   // warm orange (255,100,0)
+};
 
 typedef struct {
     gpio_num_t       gpioNum;
@@ -393,7 +418,7 @@ int8_t ad_btn_assignDevice(otapp_pair_Device_t *newDevice)
         if(result == AD_BUTTON_ERROR) return AD_BUTTON_ERROR;
 
         SoftTim_stop(&ad_btn_assignTime);
-        printf("Assigned new device to btn: %d| Stop timer \n", btnListId);
+        printf("Assigned new device to btn: %d| Stop timer \n", result);
         // assign new devica has been finished succesfull. 
         // todo-future let's togle light coap send togle 
     }
@@ -422,7 +447,7 @@ static uint32_t ad_btn_uriStateGet(uint8_t btnListId, otapp_deviceType_t uriDevT
     return btnList[btnListId].dev->urisList[uriListId].uriState;
 }
 
-static int8_t ad_btn_uriStateSet(uint8_t btnListId, otapp_deviceType_t uriDevType, uint32_t *uriState)
+static int8_t ad_btn_uriStateSet(uint8_t btnListId, otapp_deviceType_t uriDevType, const uint32_t *uriState)
 {
     uint8_t uriListId = 0;
     if(btnListId >= AD_BUTTON_NUM_OF_BUTTONS || uriState == NULL) return AD_BUTTON_ERROR;
@@ -444,16 +469,16 @@ static uint32_t ad_btn_uriStateSetNewTogle(uint8_t btnListId, otapp_deviceType_t
     return uriState_;
 }
 
-static uint32_t ad_btn_uriStateSetNewValue(uint8_t btnListId, otapp_deviceType_t uriDevType, uint16_t maxValue, uint8_t stepValue)
+static uint32_t ad_btn_uriStateSetNewValue(uint8_t btnListId, otapp_deviceType_t uriDevType)
 {   
-    uint32_t uriState_ = 0;   
+    static uint8_t index = 0;   
     
-    uriState_ = ad_btn_uriStateGet(btnListId, uriDevType);    
-    uriState_ = (uriState_ + stepValue) % maxValue;
+    // uriState_ = ad_btn_uriStateGet(btnListId, uriDevType);    
+    index = (index + 1 ) % OT_BTN_MAX_RGB_SWITCH_COLOR;
 
-    ad_btn_uriStateSet(btnListId, uriDevType, &uriState_);
+    ad_btn_uriStateSet(btnListId, uriDevType, &rgbColorTab[index]);
 
-    return uriState_;
+    return rgbColorTab[index];
 }
 
 static uint32_t ad_btn_uriStateSetNewDimm(uint8_t btnListId, otapp_deviceType_t uriDevType)
@@ -471,7 +496,7 @@ static uint32_t ad_btn_uriStateSetNewDimm(uint8_t btnListId, otapp_deviceType_t 
 
 static uint32_t ad_btn_uriStateSetNewRgb(uint8_t btnListId, otapp_deviceType_t uriDevType)
 {   
-    return ad_btn_uriStateSetNewValue(btnListId, uriDevType, OT_BTN_MAX_RGB_SWITCH_COLOR, 1);
+    return ad_btn_uriStateSetNewValue(btnListId, uriDevType);
 }
 
 static void ad_btn_coapSend(uint8_t btnListId, uint32_t *newState, otapp_deviceType_t uriDevType)
