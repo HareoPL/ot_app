@@ -1,0 +1,294 @@
+/**
+ * @page architecture_and_design_patterns Architecture and Design Patterns
+ *
+ * @section arch_intro Introduction
+ *
+ * This document provides a detailed analysis of the `ot_app` framework software architecture,
+ * with particular emphasis on the implementation of design patterns and Real-Time Operating System (RTOS)
+ * engineering techniques. The description focuses on specific mechanisms applied in the source code
+ * to ensure modularity, scalability, and thread safety.
+ *
+ * @section patterns 1. Design Patterns
+ *
+ * @subsection pat_singleton 1.1. Singleton
+ *
+ * **Implementation:**
+ * The Singleton pattern is utilized to centralize the management of key system resources,
+ * such as the OpenThread stack instance and the main device driver. The implementation relies
+ * on static pointers within modules, which are accessible exclusively via dedicated accessors (getters).
+ * This guarantees the existence of exactly one controller instance throughout the application lifecycle
+ * and protects against global state inconsistency.
+ *
+ * **Code Example:**
+ * The `ot_app.c` module encapsulates the `openThreadInstance` pointer, exposing it to the rest
+ * of the system via the `otapp_getOpenThreadInstancePtr()` function.
+ *
+ * ```c
+ * // File: ot_app.c
+ *
+ * static otInstance *openThreadInstance;
+ * // Private instance
+ *
+ * // Global Access Point
+ * otInstance *otapp_getOpenThreadInstancePtr()
+ * {
+ *      return openThreadInstance;
+ * }
+ * ```
+ *
+ * An analogous mechanism is applied for the driver in `ot_app_drv.c`:
+ *
+ * ```c
+ * // File: ot_app_drv.c
+ *
+ * static ot_app_devDrv_t ot_app_devDrv = { ... };
+ * // Static initialization
+ *
+ * ot_app_devDrv_t *ot_app_drv_getInstance()
+ * {
+ *      return &ot_app_devDrv;
+ * }
+ * ```
+ *
+ * @subsection pat_observer 1.2. Observer
+ *
+ * **Implementation:**
+ * The Observer mechanism realizes loose coupling between the networking layer and business logic.
+ * It is applied in two critical areas:
+ * 1. **Pairing Event Propagation:** Notifying registered callbacks about changes in network topology (e.g., adding a new device).
+ * 2. **CoAP Observe Handling (RFC 7641):** The CoAP server implementation maintains a list of subscribers for a given resource.
+ * Upon a resource state change, the `ot_app_coap_uri_obs.c` module iterates through the list of active observers,
+ * generating asynchronous notifications without the need for client-side polling.
+ *
+ * **Code Example (CoAP Notify):**
+ *
+ * ```c
+ * // File: ot_app_coap_uri_obs.c
+ *
+ * int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, const otIp6Address *excludedIpAddr, oacu_uriIndex_t uriIndex, const uint8_t *dataToNotify, uint16_t dataSize)
+ * {
+ *      // ...
+ *      for(uint8_t i = 0; i < OAC_URI_OBS_SUBSCRIBERS_MAX_NUM; i++)
+ *      {
+ *          if(oac_uri_obs_spaceDevNameIsTaken(subListHandle, i))
+ *          {
+ *              // ... check if specific URI is subscribed ...
+ *              // send data to subscriber
+ *              otapp_coapSendPutUri_subscribed_uris(&subListHandle[i].ipAddr, oac_txRxBuffer, sizeof(oac_txRxBuffer));
+ *              numOfnotifications++;
+ *          }
+ *      }
+ *      return numOfnotifications;
+ * }
+ * ```
+ *
+ * @subsection pat_strategy 1.3. Strategy / Interface
+ *
+ * **Implementation:**
+ * The `ot_app_devDrv_t` structure implements the Strategy pattern through the use of function pointers.
+ * It acts as a Hardware Abstraction Layer (HAL) and logic abstraction layer, allowing the injection
+ * of specific behavioral implementations (e.g., pairing rules, URI mapping) into the generic framework engine.
+ * This ensures the core application engine remains immutable, while new functionality is delivered
+ * via driver structure configuration during initialization.
+ *
+ * **Code Example:**
+ *
+ * ```c
+ * // File: ot_app_drv.c
+ *
+ * static ot_app_devDrv_t ot_app_devDrv = {
+ *      .obs_subscribedUri_clb = NULL,
+ *      .obs_pairedDevice_clb = NULL,
+ *
+ *      .pairRuleGetList_clb = NULL, // Injected pairing rule strategy
+ *      .uriGetList_clb = NULL,      // Injected URI list
+ *
+ *      // ...
+ *      .api.coap = {
+ *          .sendBytePut = otapp_coap_clientSendPutByte,
+ *          // ...
+ *      },
+ * };
+ * ```
+ *
+ * @subsection pat_facade 1.4. Facade
+ *
+ * **Implementation:**
+ * The `ot_app_nvs.c` module serves as a Facade for the system's NVS (Non-Volatile Storage) library.
+ * It abstracts the complexity of partition initialization, handle management, and low-level error handling,
+ * exposing a simplified, atomic interface to higher layers for reading and writing configuration data.
+ *
+ * **Code Example:**
+ *
+ * ```c
+ * // File: ot_app_nvs.c
+ *
+ * // Simple facade hiding nvs_open, nvs_set_str, nvs_commit
+ * int8_t ot_app_nvs_saveString(const char *inData, const uint8_t keyId)
+ * {
+ *      // ... key handling ...
+ *      err = nvs_set_str(nvsHandle, keyName, inData);
+ *      // ... error handling ...
+ *      err = nvs_commit(nvsHandle);
+ *      // ...
+ * }
+ * ```
+ *
+ * @subsection pat_command 1.5. Command / Dispatcher
+ *
+ * **Implementation:**
+ * CoAP network request handling is implemented based on a Dispatch Table. The static associative array
+ * `otapp_coap_uriDefault` maps resource paths (URIs) directly to handler function pointers.
+ * This mechanism eliminates extensive conditional logic, ensuring deterministic lookup time
+ * for the appropriate procedure upon an incoming request.
+ *
+ * **Code Example:**
+ *
+ * ```c
+ * // File: ot_app_coap.c
+ *
+ * static otapp_coap_uri_t otapp_coap_uriDefault[] ={
+ *      {OTAPP_URI_WELL_KNOWN_CORE, {".well-known/core", ad_temp_uri_well_knownCoreHandle, NULL, NULL},},
+ *      {OTAPP_URI_PARING_SERVICES, {"paring_services", otapp_coap_uri_paringServicesHandle, NULL, NULL}},
+ *      // ...
+ * };
+ * ```
+ *
+ * @section techniques 2. Programming and System Techniques
+ *
+ * @subsection tech_prod_cons 2.1. Producer-Consumer Model (RTOS Queue)
+ *
+ * **Implementation:**
+ * To separate the time-critical network context from blocking operations (e.g., flash memory writes),
+ * an asynchronous Producer-Consumer model based on a FreeRTOS queue is employed.
+ * - **Producer:** OpenThread network callbacks place pairing requests into the `otapp_pair_queueHandle` queue.
+ * - **Consumer:** A dedicated thread (Task) `otapp_pair_task` processes requests in the background, ensuring the fluidity of the network stack.
+ *
+ * **Code Example:**
+ *
+ * **Producer (adding to queue):**
+ *
+ * ```c
+ * // File: ot_app_pair.c
+ *
+ * int8_t otapp_pair_addToQueue(otapp_pair_queueItem_t *queueItem)
+ * {
+ *      // ...
+ *      if(xQueueSend(otapp_pair_queueHandle, (void *)queueItem, (TickType_t) 0) != pdTRUE)
+ *      {
+ *          return OTAPP_PAIR_ERROR;
+ *      }
+ *      return OTAPP_PAIR_OK;
+ * }
+ * ```
+ *
+ * **Consumer (processing in task loop):**
+ *
+ * ```c
+ * // File: ot_app_pair.c
+ *
+ * void otapp_pair_task(void *params)
+ * {
+ *      while (1)
+ *      {
+ *          if (xQueueReceive(otapp_pair_queueHandle, &otapp_pair_queueIteam, portMAX_DELAY) == pdTRUE)
+ *          {
+ *              // Queue item processing logic
+ *              if (otapp_pair_queueIteam.type == OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST)
+ *              {
+ *                  // ...
+ *              }
+ *          }
+ *      }
+ * }
+ * ```
+ *
+ * @subsection tech_table 2.2. Table-Driven Design
+ *
+ * **Implementation:**
+ * Control logic and static data mappings (e.g., error codes, message definitions) have been delegated
+ * to data structures (tables) rather than being embedded in procedural code. This approach increases
+ * readability, facilitates text localization, and simplifies system extension with new definitions
+ * without interfering with processing logic.
+ *
+ * **Code Example:**
+ * Mapping message identifiers to strings:
+ *
+ * ```c
+ * // File: ot_app_coap.c
+ *
+ * static const otapp_coap_message_t otapp_coap_messages[] = {
+ *      {OTAPP_MESSAGE_OK, "OK"},
+ *      {OTAPP_MESSAGE_ERROR, "ERROR"},
+ *      {OTAPP_MESSAGE_TEST, "Hello coap !!"},
+ * };
+ *
+ * const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID)
+ * {
+ *      for (uint16_t i = 0; i < OTAPP_COAP_MESSAGE_SIZE; i++)
+ *      {
+ *          if(otapp_coap_messages[i].msgID == msgID)
+ *          {
+ *              return otapp_coap_messages[i].message;
+ *          }
+ *      }
+ *      return NULL;
+ * }
+ * ```
+ *
+ * @subsection tech_mutex 2.3. Shared Resource Protection (Mutex)
+ *
+ * **Implementation:**
+ * In the multi-threaded RTOS environment, access to shared memory buffers (e.g., `otapp_charBuf`)
+ * is protected by Mutex semaphores. This prevents race conditions and data corruption
+ * during simultaneous access from different tasks or interrupts.
+ *
+ * **Code Example:**
+ *
+ * ```c
+ * // File: ot_app.c
+ *
+ * static char otapp_charBuf[OTAPP_CHAR_BUFFER_SIZE];
+ * static SemaphoreHandle_t otapp_mutexBuf;
+ *
+ * char *otapp_charBufGet_withMutex()
+ * {
+ *      // Wait for resource access (take mutex)
+ *      if(xSemaphoreTake(otapp_mutexBuf, portMAX_DELAY) == pdTRUE)
+ *      {
+ *          return otapp_charBuf;
+ *      }
+ *      return NULL;
+ * }
+ *
+ * void otapp_charBufRelease()
+ * {
+ *      // Release resource (give mutex)
+ *      xSemaphoreGive(otapp_mutexBuf);
+ * }
+ * ```
+ *
+ * @subsection tech_encap 2.4. Encapsulation (Information Hiding)
+ *
+ * **Implementation:**
+ * Code modularity in C is enforced through strict usage of the `static` keyword.
+ * Variables storing internal module state (e.g., the device list in `ot_app_pair.c`) are invisible
+ * to the rest of the system (file scope). Interaction with the module occurs exclusively through
+ * the public API defined in header files, fulfilling the principle of Information Hiding.
+ *
+ * **Code Example:**
+ * Private device list inaccessible directly from other compilation units:
+ *
+ * ```c
+ * // File: ot_app_pair.c
+ *
+ * // Variable visible only within this file (static)
+ * static otapp_pair_DeviceList_t otapp_pair_DeviceList;
+ *
+ * // Access function for other modules
+ * otapp_pair_DeviceList_t *otapp_pair_getHandle(void)
+ * {
+ *      return &otapp_pair_DeviceList;
+ * }
+ * ```
+ */

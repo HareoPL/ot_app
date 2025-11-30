@@ -139,15 +139,22 @@ int8_t otapp_deviceNameIsMatching(const char *deviceFullName);
 void otapp_deviceNameDelete(void);
 
 /**
- * @brief return EUI ptr frim deviceNameFull
+ * @brief decode EUI from deviceNameFull
  * 
  * @param deviceNameFull    [in] string ptr to device name full
  * @param stringLength      [in] string lenght
- * @param outEuiChrPtr      [out] ptr to EUI ptr from string. It looks for EUI string from deviceNameFull and return ptr to first element of EUI string 
- * @return int8_t 
+ * @param outEuiChrPtr      [out] ptr to EUI from string. It looks for EUI string from deviceNameFull and return ptr to first element of EUI string.
+ * @return int8_t           [out] OTAPP_DEVICENAME_OK or OTAPP_DEVICENAME_ERROR
  */
 int8_t otapp_deviceNameFullToEUI(const char *deviceNameFull, uint8_t stringLength, char **outEuiChrPtr);
 
+/**
+ * @brief compare EUI from deviceNameFull with given EUI 
+ * 
+ * @param deviceNameFull    [in] string ptr to device name full
+ * @param eui               [in] ptr to EUI
+ * @return int8_t           [out] OTAPP_DEVICENAME_IS OTAPP_DEVICENAME_IS_NOT OTAPP_DEVICENAME_ERROR
+ */
 int8_t otapp_deviceNameEuiIsSame(const char *deviceNameFull, const char *eui);
 
 #endif  /* OT_APP_DEVICENAME_H_ */

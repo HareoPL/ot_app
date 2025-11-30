@@ -1,0 +1,282 @@
+/**
+ * @page getting_started Getting Started Guide
+ *
+ * @section gs_intro Introduction
+ *
+ * This guide explains how to build and run the OpenThread Application Framework
+ * on ESP32‑C6 using ESP‑IDF v5.4.1 and Visual Studio Code (ESP‑IDF extension). 
+ * It covers three device roles:
+ * - Controller / Sensor / Switch node (JOINER + SRP client)
+ * - Control Panel node (COMMISSIONER + JOINER)
+ * - Border Router node (BORDER_ROUTER + COMMISSIONER + JOINER)
+ *
+ * Example application devices:
+ * - Button device (controller) – @ref device_button
+ * - RGB Light device (target) – @ref device_light
+ *
+ * @section gs_repo Clone Project and Install ESP‑IDF
+ *
+ * 1. Install ESP‑IDF v5.4.1:
+ *    - Follow the official get-started guide for the specific version:  
+ *      https://docs.espressif.com/projects/esp-idf/en/v5.4.1/ 
+ *    - Or clone directly from GitHub:
+ *      @code{.sh}
+ *      git clone -b v5.4.1 --recursive https://github.com/espressif/esp-idf.git esp-idf-v5.4.1
+ *      @endcode 
+ * 2. Clone this project repository:
+ *    @code{.sh}
+ *    git clone [github_repo_address]
+ *    @endcode
+ * 3. Open the project folder in Visual Studio Code.
+ * 4. In the ESP‑IDF extension, configure the ESP‑IDF tools and select the
+ *    installation path pointing to v5.4.1 (e.g. `esp-idf-v5.4.1`). 
+ *
+ * @section gs_prereq Prerequisites
+ *
+ * - ESP32‑C6 development boards:
+ *   - at least 1 × Border Router node (Espressif Thread Border Router)
+ *   - 1 × Control Panel node (it is not necessary)
+ *   - minimum 1 x switch device and 1 x light device 
+ * - ESP‑IDF v5.4.1 installed and working from the ESP‑IDF terminal in VS Code. 
+ * - Python and CMake available in PATH (handled automatically by the ESP‑IDF installer).
+ * - Basic knowledge of Thread / OpenThread concepts (Joiner, Commissioner, Border Router).
+ *
+ * @section gs_hw_setup Hardware Setup
+ *
+ * @subsection gs_hw_button Button Device (control device )
+ *
+ * Example GPIO connections for a 3‑button controller node (switch device):
+ * - BUTTON_1 → GPIO 3
+ * - BUTTON_2 → GPIO 9
+ * - BUTTON_3 → GPIO 15
+ *
+ * Recommended wiring:
+ * - Buttons connected between GPIO and GND.
+ * - Internal pull‑ups enabled in GPIO configuration (or external pull‑up resistors).
+ *
+ * @subsection gs_hw_light RGB Light Device (end point device)
+ *
+ * WS2812B RGB LED strip:
+ * - DIN (data in) → GPIO 8 (RMT output used by `ws2812b_drv_RMT`) 
+ * - VCC → 5 V (or 3.3 V if supported by LEDs)
+ * - GND → common ground with ESP32‑C6 board.
+ *
+ * @note Exact pins can be adjusted in the board‑specific HAL / ESP‑IDF configuration.
+ *
+ * @section gs_sw_layout Software Structure
+ *
+ * The application is organised into the following main modules:
+ *
+ * - `main.c` – FreeRTOS `app_main()` entry, initializing:
+ *   - selected device (button or light),
+ *   - OpenThread Application Framework (`otapp_init()`),
+ *   - timers (`xTim_Init()`),
+ *   - WS2812B interface and FX engine (`ws2812b_if_init()`, `WS2812BFX_*`). 
+ * - @ref ot_app_device_api – device driver API (`ot_app_drv.h`, `ot_app_drv.c`), providing:
+ *   - pairing API, URI management, device name support, NVS and CoAP helpers.
+ * - @ref device_button – controller device implementation:
+ *   - `ad_button.c/.h`, `ad_btn_assign.c/.h`, `ad_btn_uri.c/.h`, `ad_btn_dimControl.c/.h`. 
+ * - @ref device_light – RGB light device:
+ *   - `ad_light.c/.h`, `ad_light_uri.c/.h`, `ad_light_control.c/.h`. 
+ *
+ * @section gs_light_example Light Device Example (Application Node)
+ *
+ * Example `app_main()` for a pure light node, based on @ref main.c: 
+ *
+ * @code{.c}
+ *
+ * void app_main(void)
+ * {
+ * //////////////////////////////////////////////////
+ * // add device init here
+ * 
+ *     // ad_button_Init("device1"); // Initialize button device with the same group "device1"
+ *    ad_light_init("device1"); // Initialize light device with device name group "device1"
+ * 
+ * //////////////////////////////////////////////////
+ * // DO NOT EDIT BELOW //
+ * 
+ *    otapp_init(); // Initialize OpenThread Application Framework
+ *  
+ *  ........
+ * }
+ * @endcode
+ *
+ * Key steps:
+ * - Call `ad_light_init("device1")` to configure the light device and driver API. 
+ * - Call `otapp_init()` to initialize the OpenThread Application Framework. 
+ * - Initialize WS2812B driver and start the FX engine.
+ * - In the main loop, call `WS2812BFX_Callback()` and `ot_app_drv_task()`.
+ *
+ * Next build project using the instruction: @ref gs_role_controller
+ *
+ * @section gs_button_example Button Device Example (Controller Node)
+ *
+ * Example `app_main()` for a button controller node:
+ *
+ * @code{.c}
+ * void app_main(void)
+ * {
+ * //////////////////////////////////////////////////
+ * // add device init here
+ * 
+ *    ad_button_Init("device1"); // Initialize button device with the same group "device1"
+ *    // ad_light_init("device1"); // Initialize light device with device name group "device1"
+ * 
+ * //////////////////////////////////////////////////
+ * // DO NOT EDIT BELOW //
+ * 
+ *    otapp_init(); // Initialize OpenThread Application Framework
+ *  
+ *  ........
+ * }
+ * @endcode
+ *
+ * Key steps:
+ * - Call `ad_button_Init("device1")` with the same device name group as the light. 
+ * - Initialize the framework with `otapp_init()`.
+ * - In the main loop, call `ot_app_drv_task()` and `ad_button_task()`.
+ *
+ * Next build project using the instruction: @ref gs_role_controller
+ *
+ @section gs_build_roles Build Configurations (Device Roles)
+ *
+ * The project uses separate Kconfig fragments in `components/app_devices/kconfigs` path and helper commands
+ * executed from the ESP‑IDF terminal in Visual Studio Code.
+ *
+ * All commands below assume they are run from the project root directory
+ * in the *ESP‑IDF Terminal*.
+ *
+ * @subsection gs_role_controller Controller device (button) / End device (light)
+ *
+ * Configuration (JOINER + SRP client):
+ * - `CONFIG_DEVICE_TYPE_ID="CS"`
+ * - `CONFIG_OPENTHREAD_BORDER_ROUTER=n`
+ * - `CONFIG_OPENTHREAD_COMMISSIONER=n`
+ * - `CONFIG_OPENTHREAD_JOINER=y`
+ * - `CONFIG_OPENTHREAD_SRP_CLIENT=y`
+ * - `CONFIG_LWIP_IPV6_NUM_ADDRESSES=12`
+ *
+ * Apply configuration:
+ * - press in vscode press CTR + SHIFT + P
+ * - search "tasks: run task"
+ * - next "termina idf"
+ * - and than paste into the terminal:
+ *
+ * @code{.ps1}
+ * cp components/app_devices/kconfigs/kconfig.controllerORSensor sdkconfig
+ * Get-ChildItem -Filter "X_Config_*.txt" | Rename-Item -NewName "X_Config_CONTROLLER_SENSOR.txt"
+ * idf.py reconfigure
+ * @endcode
+ *
+ * Then build and flash:
+ * @code{.ps1}
+ * idf.py build
+ * idf.py -p COMx flash monitor
+ * @endcode
+ *  You can also use vsc tasks (CTR + SHIFT + P): "Tasks: Run tTasks" / "project *" (project build, project flash, project reBuild, project flash, project build & flash)
+ * @subsection gs_role_control_panel Control Panel
+ *
+ * Configuration (COMMISSIONER + JOINER):
+ * - `CONFIG_OPENTHREAD_BORDER_ROUTER=n`
+ * - `CONFIG_OPENTHREAD_COMMISSIONER=y`
+ * - `CONFIG_OPENTHREAD_JOINER=y`
+ * - `CONFIG_OPENTHREAD_SRP_CLIENT=y`
+ * - `CONFIG_LWIP_IPV6_NUM_ADDRESSES=12`
+ *
+ * Apply configuration:
+ * - press in vscode press CTR + SHIFT + P
+ * - search "tasks: run task"
+ * - next "termina idf"
+ * - and than paste into the terminal:
+ *
+ * Apply configuration:
+ * @code{.ps1}
+ * cp components/app_devices/kconfig.controlPanel sdkconfig
+ * Get-ChildItem -Filter "X_Config_*.txt" | Rename-Item -NewName "X_Config_CONTROL_PANEL.txt"
+ * idf.py reconfigure
+ * @endcode
+ *  You can also use vsc tasks (CTR + SHIFT + P): "Tasks: Run tTasks" / "project *" (project build, project flash, project reBuild, project flash, project build & flash)
+ * @subsection gs_role_border_router Border Router
+ *
+ * Configuration (BORDER_ROUTER + COMMISSIONER + JOINER):
+ * - `CONFIG_OPENTHREAD_BORDER_ROUTER=y`
+ * - `CONFIG_OPENTHREAD_COMMISSIONER=y`
+ * - `CONFIG_OPENTHREAD_JOINER=y`
+ * - `CONFIG_OPENTHREAD_SRP_CLIENT_MAX_SERVICES=5`
+ *
+ * Apply configuration:
+ * - press in vscode press CTR + SHIFT + P
+ * - search "tasks: run task"
+ * - next "termina idf"
+ * - and than paste into the terminal:
+ *
+ * Apply configuration:
+ * @code{.ps1}
+ * cp components/app_devices/kconfig.borderRouter sdkconfig
+ * Get-ChildItem -Filter "X_Config_*.txt" | Rename-Item -NewName "X_Config_BORDER_ROUTER.txt"
+ * idf.py reconfigure
+ * @endcode
+ *
+ * After selecting any role, you can always run:
+ * @code{.ps1}
+ * idf.py build
+ * idf.py -p COMx flash monitor
+ * @endcode
+ *  You can also use vsc tasks (CTR + SHIFT + P): "Tasks: Run tTasks" / "project *" (project build, project flash, project reBuild, project flash, project build & flash)
+ *
+ *
+ * @section gs_pairing Pairing and Operation
+ *
+ * 1. Flash and run the Border Router firmware on the border router node
+ *    using the configuration in @ref gs_role_border_router. (moved to a separate repository: [github]) todo
+ * 2. Flash and run the Control Panel firmware using the configuration
+ *    in @ref gs_role_control_panel. Use it to manage commissioning
+ *    and Thread network formation. (in progress) todo
+ * 3. Flash and run application nodes:
+ *    - Light node with `ad_light_init("device1")`.
+ *    - Button/controller node with `ad_button_Init("device1")`.
+ * 4. Ensure both application devices share the same device name group
+ *    string (e.g. `"device1"`), so they belong to the same logical group.
+ * 5. Use the pairing procedure described in @ref pairing_procedure
+ *    to assign buttons to discovered light devices (button → URI mapping).
+ * 6. After successful pairing:
+ *    - Button clicks are mapped to URIs defined in @ref device_btn_uri
+ *      and @ref device_butn_dim.
+ *    - The light device handles URIs defined in @ref device_light_uri
+ *      and updates the RGB LED via @ref ad_light_control and WS2812B driver. 
+ *
+ * @section gs_vscode VS Code / ESP‑IDF Integration
+ *
+ * Recommended workflow in Visual Studio Code:
+ * - Open the project folder.
+ * - Use the ESP‑IDF extension:
+ *   - Configure ESP‑IDF v5.4.1 toolchain and Python environment.
+ *   - Set the correct serial port (COMx) for your ESP32‑C6 board.
+ * - Use **ESP‑IDF: Open ESP‑IDF Terminal** to execute:
+ *   - Role selection commands (copy `devices/kconfig.*` + `idf.py reconfigure`).
+ *   - `idf.py build`, `idf.py flash`, `idf.py monitor`.
+ *
+ * Project includes helper configuration files for VS Code:
+ * - `.vscode/launch.json` – debug launch configuration. 
+ * - `.vscode/tasks.json` – ESP‑IDF build / flash / monitor tasks. 
+ * - `.vscode/c_cpp_properties.json` – IntelliSense include paths and defines. 
+ * - `.vscode/settings.json` – ESP‑IDF extension settings and project metadata. 
+ *
+ * @section gs_next_steps Next Steps
+ *
+ * - Explore API details in @ref api_reference.
+ * - Modify device implementations (@ref device_button, @ref device_light)
+ *   to add custom behaviors or sensors.
+ * - Study unit tests:
+ *   - `ot_app_pair_test.c`
+ *   - `ot_app_pair_uri_test.c`
+ *   - `ot_app_coap_uri_obs_test.c`
+ *   - `ot_app_deviceName_test.c`
+ *   - `ot_app_pair_rtos_test.c`
+ *   to understand and verify core framework components. 
+ *
+ * @see @ref quick_start for a condensed overview on the main page
+ * @see @ref ot_app_device_api for the device driver API
+ * @see @ref device_button and @ref device_light for implementation details
+ */

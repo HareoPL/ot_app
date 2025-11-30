@@ -45,9 +45,10 @@
         "new": "c",
         "text_encoding": "c",
         "netfwd": "c",
-        "span": "c"
+        "span": "c",
+        "system_error": "c"
     },
-    "idf.portWin": "COM4",
+    "idf.portWin": "COM7",
 
     // variables for tasks.json
     "idfTask": {

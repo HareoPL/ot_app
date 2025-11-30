@@ -40,13 +40,13 @@ void app_main(void)
 //////////////////////////////////////////////////
 // add device init here
 
-    // ad_button_Init("device1");
-    ad_light_init("device1");
+    // ad_button_Init("device1"); // Initialize button device with the same group "device1"
+    ad_light_init("device1"); // Initialize light device with device name group "device1"
 
 //////////////////////////////////////////////////
 // DO NOT EDIT BELOW //
 
-    otapp_init();
+    otapp_init(); // Initialize OpenThread Application Framework
     
     // wifi_initSTA();
     // wifi_initAP();

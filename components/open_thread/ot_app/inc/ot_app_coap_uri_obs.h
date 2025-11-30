@@ -92,9 +92,9 @@ typedef struct oac_uri_observer_t{
 oac_uri_observer_t *oac_uri_obs_getSubListHandle(void);
 
 /**
- * @brief todo
+ * @brief get ptr to oac_uri_dataPacket_t struct. it is like as a buffer. You can override it
  * 
- * @return oac_uri_dataPacket_t* 
+ * @return oac_uri_dataPacket_t* [out] ptr to oac_uri_dataPacket_t
  */
 oac_uri_dataPacket_t *oac_uri_obs_getdataPacketHandle(void);
 
@@ -141,7 +141,7 @@ int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, char* deviceNa
 int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, const otIp6Address *excludedIpAddr, oacu_uriIndex_t uriIndex, const uint8_t *dataToNotify, uint16_t dataSize);
 
 /**
- * @brief 
+ * @brief parse incomming message from notify
  * 
  * @param inBuffer 
  * @param out 
