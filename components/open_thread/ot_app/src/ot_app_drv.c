@@ -53,19 +53,7 @@ static ot_app_devDrv_t ot_app_devDrv = {
         .readString = ot_app_nvs_readString,
         .saveString = ot_app_nvs_saveString,
     },
-
-    .api.obs.client = {
-        .getDataPacket = oac_uri_obs_getdataPacketHandle,
-        .parseMessage = oac_uri_obs_parseMessageFromNotify,
-        .sendSubscribeRequest = oac_uri_obs_sendSubscribeRequest,
-    },
-    .api.obs.server = {   
-        .getHandle = oac_uri_obs_getSubListHandle,
-        .notify = oac_uri_obs_notify,
-        .subscribe = oac_uri_obs_subscribeFromUri,
-        .unsubscribe = oac_uri_obs_unsubscribe,
-        .XdeleteAll = oac_uri_obs_deleteAll,
-    },
+    
     .api.coap = {
         .sendBytePut = otapp_coap_clientSendPutByte,
         .sendByteGet = otapp_coap_clientSendGetByte,

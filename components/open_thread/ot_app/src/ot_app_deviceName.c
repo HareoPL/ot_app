@@ -152,7 +152,6 @@ int16_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t stringLengt
     return devId;
 }
 
-
 int8_t otapp_deviceNameFullToEUI(const char *deviceNameFull, uint8_t stringLength, char **outEuiChrPtr)
 {
     uint8_t euiLen = 0;

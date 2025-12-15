@@ -782,6 +782,9 @@ void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMess
             if(parsedData[i].obs)
             {                
                 oac_uri_obs_sendSubscribeRequest(&device->ipAddr, parsedData[i].uri, token);
+                // todo w odpowiedzi powinienem otrzymac aktualny stan uri ta odpowiedz powinana pojawic sie w 
+                // void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
+                // trzeba zmodyfikowac fn sendsubReq aby przyjmowala callbacka response (powyzszego).
                 otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], token);
             }else
             {
@@ -796,7 +799,7 @@ void otapp_pair_task(void *params)
 {
     UNUSED(params);
 
-    int8_t result;
+    int8_t result, devId;
     otapp_pair_DeviceList_t *deviceListHandle;
     otapp_pair_Device_t *newDevice;
     otIp6Address *ipAddr;
@@ -814,7 +817,11 @@ void otapp_pair_task(void *params)
                     deviceListHandle = otapp_pair_getHandle();
                     
                     result = otapp_pair_DeviceAdd(deviceListHandle, otapp_pair_queueIteam.deviceNameFull, &otapp_pair_queueIteam.ipAddress);
-                    
+                    /*
+                    sprawdzic czy po zresetowaniu urzadzenia typu light (ktory przyjmuje subskrybentow) button wysle ponownie subskrybcje.
+                    wydaje mi se ze nie poniewaz funkcja otapp_coapSendGetUri_Well_known jest wywolywana tylko dla nowych urzadzen 
+                    druga opcja to wysylanie pingow ? jesli nie odpowie x razy to usunac z listy pair ?
+                    */
                     switch (result)
                     {
                     case OTAPP_PAIR_ERROR:                    
@@ -824,12 +831,32 @@ void otapp_pair_task(void *params)
                         break;
 
                     case OTAPP_PAIR_UPDATED:                    
-                        printf("has been updated index: %d (ip Addr): ", result);
                         otapp_ip6AddressPrint(&otapp_pair_queueIteam.ipAddress);
+
+                        devId = otapp_pair_DeviceIndexGet(deviceListHandle, otapp_pair_queueIteam.deviceNameFull);
+                        newDevice = &deviceListHandle->list[devId]; 
+
+                        // tutaj powinno sie ponownie wyslac subskrybcje/odkrywanie zasowbow czyli to co po nizej 
+                        // ipAddr = otapp_pair_ipAddressGet(deviceListHandle, devId);
+                        // otapp_coapSendGetUri_Well_known(ipAddr, otapp_pair_responseHandlerUriWellKnown, (otapp_pair_Device_t*)newDevice); // .well-known/core
+
+                        otapp_pair_observerPairedDeviceNotify(newDevice);
+
+                        printf("has been updated index: %d (ip Addr): ", result);
                         break;
 
                     case OTAPP_PAIR_NO_NEED_UPDATE:
-                        otapp_pair_subSendUpdateIP(otapp_pair_getHandle()); // todo check
+                        otapp_pair_subSendUpdateIP(otapp_pair_getHandle());
+
+                        devId = otapp_pair_DeviceIndexGet(deviceListHandle, otapp_pair_queueIteam.deviceNameFull);
+                        newDevice = &deviceListHandle->list[devId]; 
+
+                        // tutaj powinno sie ponownie wyslac subskrybcje/odkrywanie zasowbow czyli to co po nizej 
+                        // ipAddr = otapp_pair_ipAddressGet(deviceListHandle, devId);
+                        // otapp_coapSendGetUri_Well_known(ipAddr, otapp_pair_responseHandlerUriWellKnown, (otapp_pair_Device_t*)newDevice); // .well-known/core
+
+                        otapp_pair_observerPairedDeviceNotify(newDevice);
+                        
                         printf("no need IP update\n");
                         break;                   
                    

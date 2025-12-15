@@ -116,8 +116,7 @@ int8_t otapp_pair_init(ot_app_devDrv_t *driver);
 
 /**
  * @brief observer Callback. 
- * @param errorState     [in] error state. OTAPP_PAIR_OK or OTAPP_PAIR_ERROR
- * @param deviceNameFull [in] char ptr to matching deviceNameFull
+ * @param   [out] newDevice ptr to data struct otapp_pair_Device_t
  */
 typedef void (*otapp_pair_observerCallback_t)(otapp_pair_Device_t *newDevice);
 
@@ -261,15 +260,16 @@ otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(const uint8_t *inBuffe
  */
 int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUrisList, const otapp_pair_resUrisParseData_t *uriData, const oacu_token_t *token);
 
-/**
- * @brief 
- * 
- * @param uri 
- * @param uriSize 
- * @return otapp_pair_resUrisBuffer_t* 
- */
 otapp_pair_resUrisBuffer_t *otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, int8_t *result, uint16_t *outBufSize);
 
+/**
+ * @brief set uri state on the pair device list. Max data per uri = uint32_t 
+ * 
+ * @param pairDeviceList    [in] ptr to Pair devices list. @see getHandle()
+ * @param token             [in] ptr to token of uri
+ * @param uriState          [in] ptr to uri state. Max uint32_t
+ * @return int8_t           [out] OTAPP_PAIR_OK or OTAPP_PAIR_ERROR
+ */ 
 int8_t otapp_pair_uriStateSet(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token, const uint32_t *uriState);
 
 /**
@@ -282,6 +282,13 @@ int8_t otapp_pair_subSendUpdateIP(otapp_pair_DeviceList_t *pairDeviceList);
 
 otapp_pair_uris_t *otapp_pair_tokenGetUriIteams(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token);
 
+/**
+ * @brief looking for ID of urisList in urisList
+ * 
+ * @param deviceHandle  [in] ptr to otapp_pair_Device_t
+ * @param uriDevType    [in] type of device, we will be looking for in the uriList
+ * @return int8_t       [out] index of urisList from otapp_pair_uris_t when uriDevType exist or OTAPP_PAIR_NO_EXIST
+ */
 int8_t otapp_pair_uriGetIdList(otapp_pair_Device_t *deviceHandle, otapp_deviceType_t uriDevType);
 
 #ifdef UNIT_TEST
