@@ -27,7 +27,9 @@
 #ifndef UNIT_TEST
     #include "ot_app.h"
 #else
-    #include "mock_ot_app.h"          
+    #include "mock_ot_app.h" 
+    #include "mock_ip6.h"    
+    #include "mock_mocks.h"     
 #endif
 
 #define OTAPP_DEVICENAME_IS                 (1)
@@ -36,11 +38,15 @@
 
 #define OTAPP_DEVICENAME_ERROR              (-2)
 #define OTAPP_DEVICENAME_TOO_LONG           (-3)
-#define OTAPP_DEVICENAME_BUFFER_TOO_SMALL   (-4)
+#define OTAPP_DEVICENAME_TOO_SHORT          (-4)
+#define OTAPP_DEVICENAME_BUFFER_TOO_SMALL   (-5)
+#define OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN   (-6)
 
 #define OTAPP_DEVICENAME_MAX_DEVICE_TYPE    OTAPP_END_OF_DEVICE_TYPE
 #define OTAPP_DEVICENAME_FULL_SIZE          OTAPP_DNS_SRV_LABEL_SIZE
 #define OTAPP_DEVICENAME_SIZE               (OTAPP_DEVICENAME_FULL_SIZE - 22)
+#define OTAPP_DEVICENAME_MIN_SIZE           (OTAPP_DEVICENAME_FULL_SIZE - OTAPP_DEVICENAME_SIZE + 1)
+#define OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE           (2 * OTAPP_DEVICENAME_FULL_SIZE)
 
 /**
  * @brief set device name + device type. Max length of device name: 10 bytes
@@ -76,7 +82,7 @@ int8_t otapp_deviceNameFullIsSame(const char *deviceNameFull);
  * @param deviceNameFull [in] char ptr to device name full which will be compared
  * @param stringLength   [in] lenght of the string.
  * @return int8_t        [out] OTAPP_DEVICENAME_IS, OTAPP_DEVICENAME_IS_NOT
- *                             or if error: OTAPP_DEVICENAME_ERROR, OTAPP_DEVICENAME_TOO_LONG 
+ *                             or if error: OTAPP_DEVICENAME_ERROR, OTAPP_DEVICENAME_TOO_LONG, OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN
  * @note this function compare "device1", NOT "device1_1_588c81fffe301ea4"
  */
 int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength);
@@ -89,15 +95,15 @@ int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength);
  * @return otapp_deviceType_t [out] number of device type from otapp_deviceType_t,
  *                                  or if error: OTAPP_DEVICENAME_ERROR, OTAPP_DEVICENAME_TOO_LONG
  */
-otapp_deviceType_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t stringLength);
+int16_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t stringLength);
 
 /**
  * @brief add domain name sting to deviceNameFull. 
  * 
  * @param labelName [in] char ptr to deviceNameFull buffer. The char buffer should be 64 bytes
  *                  [out] connected domain name to deviceNameFull in the same char buffer
- * @return          [out] OTAPP_DEVICENAME_OK
- *                        or if error: OTAPP_DEVICENAME_ERROR, OTAPP_DEVICENAME_TOO_LONG, OTAPP_DEVICENAME_BUFFER_TOO_SMALL
+ * @return          [out] devID (otapp_deviceType_t)
+ *                        or if error: OTAPP_DEVICENAME_ERROR, OTAPP_DEVICENAME_TOO_LONG, OTAPP_DEVICENAME_BUFFER_TOO_SMALL, OTAPP_DEVICENAME_TOO_SHORT
  * @attention char buffer should be 64 bytes (including deviceNameFull) 
  * @note after this, the char buffer should looks like "device1_1_588c81fffe301ea4.default.service.arpa."
  */
@@ -122,5 +128,10 @@ int8_t otapp_hostNameToDeviceNameFull(char *hostName);
  */
 int8_t otapp_deviceNameIsMatching(char *deviceFullName);
 
+/**
+ * @brief todo
+ * 
+ */
+void otapp_deviceNameDelete(void);
 
 #endif  /* OT_APP_DEVICENAME_H_ */

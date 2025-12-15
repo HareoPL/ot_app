@@ -21,18 +21,20 @@
  */
 #include "ot_app_deviceName.h"
 #include <string.h>
+#include <stdlib.h>
+
 
 static char otapp_deviceName[OTAPP_DNS_SRV_LABEL_SIZE]; // = "device1_1_588c81fffe301ea4"
 static const char *otapp_deviceName_domain = ".default.service.arpa.";
 
 int8_t otapp_deviceNameSet(const char *deviceName, otapp_deviceType_t deviceType)
 {
-    if(deviceName == NULL || deviceType >= OTAPP_DEVICENAME_MAX_DEVICE_TYPE)
+    if(deviceName == NULL || deviceType >= OTAPP_DEVICENAME_MAX_DEVICE_TYPE || deviceType == OTAPP_NO_DEVICE_TYPE)
     {
         return OTAPP_DEVICENAME_ERROR;
     }
 
-    if(strlen(deviceName) >= OTAPP_DEVICENAME_SIZE)
+    if(strlen(deviceName) > OTAPP_DEVICENAME_SIZE)
     {
         return OTAPP_DEVICENAME_TOO_LONG;
     }
@@ -49,7 +51,16 @@ int8_t otapp_deviceNameSet(const char *deviceName, otapp_deviceType_t deviceType
 
 const char *otapp_deviceNameFullGet()
 {
+    if(strlen(otapp_deviceName) == 0)
+    {
+        return NULL;
+    }
     return otapp_deviceName;
+}
+
+void otapp_deviceNameDelete()
+{
+    memset(otapp_deviceName, 0, OTAPP_DNS_SRV_LABEL_SIZE);
 }
 
 int8_t otapp_deviceNameFullIsSame(const char *deviceNameFull)
@@ -78,16 +89,27 @@ int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength)
         return OTAPP_DEVICENAME_ERROR;
     }
 
-    if(stringLength >= OTAPP_DEVICENAME_FULL_SIZE)
+    if(stringLength >= (OTAPP_DEVICENAME_FULL_SIZE - 1)) // minus '/0'
     {
         return OTAPP_DEVICENAME_TOO_LONG;
+    }
+
+    if(stringLength < OTAPP_DEVICENAME_MIN_SIZE) 
+    {
+        return OTAPP_DEVICENAME_TOO_SHORT;
     }
 
     char inDeviceName[OTAPP_DEVICENAME_FULL_SIZE];
     char curDeviceName[OTAPP_DEVICENAME_FULL_SIZE];
 
+    const char *curDeviceNamePtr = otapp_deviceNameFullGet();
+    if(NULL == curDeviceNamePtr)
+    {
+        return OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN;
+    }
+
     strncpy(inDeviceName, deviceNameFull, stringLength);
-    strncpy(curDeviceName, otapp_deviceNameFullGet(), stringLength);
+    strncpy(curDeviceName, curDeviceNamePtr, strlen(curDeviceNamePtr));
     
     strtok(inDeviceName, "_");
     strtok(curDeviceName, "_");
@@ -99,7 +121,7 @@ int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength)
     return OTAPP_DEVICENAME_IS_NOT;
 }
 
-otapp_deviceType_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t stringLength)
+int16_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t stringLength)
 {
     if(deviceNameFull == NULL )
     {
@@ -111,6 +133,7 @@ otapp_deviceType_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t 
         return OTAPP_DEVICENAME_TOO_LONG;
     }
 
+    uint8_t devId;
     char buf[OTAPP_DEVICENAME_FULL_SIZE];
     char *ptr;
     strncpy(buf, deviceNameFull, stringLength);
@@ -118,7 +141,13 @@ otapp_deviceType_t otapp_deviceNameGetDevId(const char *deviceNameFull, uint8_t 
     strtok(buf, "_");
     ptr = strtok(NULL, "_");
 
-    return atoi(ptr);
+    devId = atoi(ptr);
+    if(devId == OTAPP_NO_DEVICE_TYPE || devId >= OTAPP_END_OF_DEVICE_TYPE)
+    {
+        return OTAPP_DEVICENAME_ERROR;
+    }
+
+    return devId;
 }
 
 int8_t otapp_deviceNameFullAddDomain(char *deviceFullName, uint16_t bufLength)
@@ -128,14 +157,19 @@ int8_t otapp_deviceNameFullAddDomain(char *deviceFullName, uint16_t bufLength)
         return OTAPP_DEVICENAME_ERROR;
     }
 
+    if(bufLength < OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE)
+    {
+        return OTAPP_DEVICENAME_BUFFER_TOO_SMALL;
+    }
+
     if(strlen(deviceFullName) >= OTAPP_DEVICENAME_FULL_SIZE)
     {
         return OTAPP_DEVICENAME_TOO_LONG;
     }
 
-    if(bufLength < (2 * OTAPP_DEVICENAME_FULL_SIZE))
+    if(strlen(deviceFullName) < OTAPP_DEVICENAME_MIN_SIZE)
     {
-        return OTAPP_DEVICENAME_BUFFER_TOO_SMALL;
+        return OTAPP_DEVICENAME_TOO_SHORT;
     }
 
     strcat(deviceFullName, otapp_deviceName_domain);
@@ -151,17 +185,19 @@ int8_t otapp_hostNameToDeviceNameFull(char *hostName)
     }
 
     char *chrPtr;
-    chrPtr = strtok(hostName, ".");
 
+    chrPtr = strchr(hostName, '.');
     if(chrPtr == NULL)
     {
         return OTAPP_DEVICENAME_ERROR;
     }
 
+    chrPtr = strtok(hostName, "."); 
+
     return OTAPP_DEVICENAME_OK;
 }
 
-int8_t otapp_deviceNameIsMatching(char *deviceFullName)
+int8_t otapp_deviceNameIsMatching(const char *deviceFullName)
 {
      if(deviceFullName == NULL)
     {
@@ -170,15 +206,9 @@ int8_t otapp_deviceNameIsMatching(char *deviceFullName)
 
     if(otapp_deviceNameFullIsSame(deviceFullName) == OTAPP_DEVICENAME_IS_NOT) 
     {
-        const char *thisDeviceNameFull = otapp_deviceNameFullGet();
-        uint16_t thisSizeOfDevName = strlen(thisDeviceNameFull);
-
-        if(otapp_deviceNameIsSame(deviceFullName, strlen(deviceFullName)) == OTAPP_DEVICENAME_IS || otapp_deviceNameGetDevId(thisDeviceNameFull, thisSizeOfDevName) == OTAPP_CONTROL_PANEL) // if This device is configured as control pannel, it should known all devices. it is center control device
+        if(otapp_deviceNameIsSame(deviceFullName, strlen(deviceFullName)) == OTAPP_DEVICENAME_IS)
         {
-            // todo warunek parowania: jesli current device to switch a incomming device to light to parujemy. 
-            // najlepiej takie warunki zrobic w osobnej funkcji gdzie latwo bedzie mozna dodac liste warunkow. 
-           
-            return OTAPP_DEVICENAME_IS;
+           return OTAPP_DEVICENAME_IS;
         }
         else
         {

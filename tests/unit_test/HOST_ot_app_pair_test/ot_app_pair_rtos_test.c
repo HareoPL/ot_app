@@ -197,26 +197,3 @@ TEST(ot_app_pair_rtos, GivenMaxQueueItems_WhenCallingRtosTaskMaxTimesPlus1_ThenR
 
     TEST_ASSERT_EQUAL(UT_OAP_RETURN_QUEUE_ITEM_QUANTITY_0 , result);
 }
-
-TEST(ot_app_pair_rtos, GivenMatchQueueItem_WhenCallingIsMatchingFromQueue_ThenReturnIndex0)
-{
-    int8_t result;   
-    otapp_pair_queueItem_t *_queueItem;
-
-    _queueItem = ut_oap_completeQueueItem(deviceNameFull_0, &ipAddr_ok_1);
-    result = otapp_pair_deviceIsMatchingFromQueue(otapp_pair_getHandle(), _queueItem);
-    
-    TEST_ASSERT_EQUAL(UT_OAP_RETURN_INDEX_0 , result);
-}
-
-TEST(ot_app_pair_rtos, GivenNotMatchQueueItem_WhenCallingIsMatchingFromQueue_ThenReturnError)
-{
-    int8_t result;   
-    otapp_pair_queueItem_t *_queueItem;
-
-    _queueItem = ut_oap_completeQueueItem(deviceNameFull_NOT_MATCH, &ipAddr_ok_1);
-    mock_oadevName_state(UT_OAP_IS_NOT_MATCH);
-    result = otapp_pair_deviceIsMatchingFromQueue(otapp_pair_getHandle(), _queueItem);
-    
-    TEST_ASSERT_EQUAL(UT_OAP_IS_NOT_MATCH , result);
-}

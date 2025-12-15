@@ -11,19 +11,21 @@ set(INCLUDE_DIRS)
 
 list(APPEND INCLUDE_DIRS
 	# ADD your include dir here
-	# ../../../components/libs/open_thread/ot_app/inc/
 	../../../components/utils
+	../../../components/libs/open_thread/ot_app/inc
+	../HOST_ot_app_common/mocks/
 	# ../../../main
 )
 
 file(GLOB_RECURSE SRCS
-    # ../../../components/libs/open_thread/ot_app/src/*.c  
+	# ../HOST_ot_app_common/mocks/*.c
 )
 
 list(APPEND SRCS
 	# ADD your source file here ex. ../test.c	
 	../../../components/utils/hro_utils.c
-	# ../../../components/libs/open_thread/ot_app/src/ot_app_pair.c
+	../../../components/libs/open_thread/ot_app/src/ot_app_deviceName.c
+	../HOST_ot_app_common/mocks/mock_mocks.c
 	# ../../../main/main.c
 
 )
@@ -96,7 +98,6 @@ set(GLOBAL_DEFINES
 add_definitions(${GLOBAL_DEFINES})
 
 add_executable(${PROJECT_NAME} ${SRCS})
-target_link_libraries(${PROJECT_NAME} fff)
 
 target_include_directories(${PROJECT_NAME} PRIVATE
     ${INCLUDE_DIRS}
@@ -104,6 +105,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 )
 
 target_link_libraries(${PROJECT_NAME} unity)
+target_link_libraries(${PROJECT_NAME} fff)
 
 target_compile_options(${PROJECT_NAME} PRIVATE -fprofile-arcs -ftest-coverage)
 target_link_options(${PROJECT_NAME} PRIVATE -fprofile-arcs)

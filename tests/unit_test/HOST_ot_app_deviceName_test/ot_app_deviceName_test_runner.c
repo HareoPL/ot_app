@@ -1,0 +1,58 @@
+#include "unity_fixture.h"
+
+TEST_GROUP_RUNNER(ot_app_deviceName)
+{
+   RUN_TEST_CASE(ot_app_deviceName, GivenNULLdevName_WhenIsCallingDeviceNameSet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenCorrectDevName_WhenIsCallingDeviceNameSet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenIncorrectDeviceName_WhenIsCallingDeviceNameSet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenOutsideScopeDeviceName_WhenIsCallingDeviceNameSet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenCorrectDeviceName_WhenIsCallingDeviceNameSet_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevName_WhenIsCallingDeviceNameSet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenMaxLengthDevName_WhenIsCallingDeviceNameSet_ThenReturnError);
+
+   // deviceNameFullGet
+   RUN_TEST_CASE(ot_app_deviceName, GivenNoCallingDeviceNameSet_WhenIsCallingDeviceNameFullGet_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenCallingDeviceNameSet_WhenIsCallingDeviceNameFullGet_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullArgument_WhenIsCallingdeviceNameFullIsSame_ThenReturnError);
+
+   // deviceNameFullIsSame
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullArgument_WhenIsCallingdeviceNameFullIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevNameFull_WhenIsCallingdeviceNameFullIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenNotSameDevNameFull_WhenIsCallingdeviceNameFullIsSame_ThenReturnNOT);
+   RUN_TEST_CASE(ot_app_deviceName, GivenSameDevNameFull_WhenIsCallingdeviceNameFullIsSame_ThenReturnYES);
+
+   // otapp_deviceNameIsSame
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullArgument_WhenIsCallingDeviceNameIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenNotCallingDeviceNameSet_WhenIsCallingDeviceNameIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooShortDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenNotSameDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnNOT);
+   RUN_TEST_CASE(ot_app_deviceName, GivenSameDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnYES);
+
+   // otapp_deviceNameGetDevId
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenWrongTypeDevInDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenCorrectTypeDevInDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_deviceName, GivenOutsideScopeTypeDevInDevNameFull_WhenIsCallingDeviceNameGetDevId_ThenReturnError);
+
+   // otapp_deviceNameFullAddDomain
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullDevNameFull_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooSmallBuffer_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenProperBufferSizeWithoutDevName_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenProperBufferSizeWithDevName_WhenIsCallingDeviceNameFullAddDomain_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevNameFull_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooShortDevNameFull_WhenIsCallingDeviceNameFullAddDomain_ThenReturnError);
+
+   // otapp_hostNameToDeviceNameFull
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenWithoutDomainHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTrueHostName_WhenIsCallingHostNameToDeviceNameFull_ThenReturnOK_PTR_STR);
+
+   // otapp_deviceNameIsMatching
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenSameDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenMatchingDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_deviceName, GivenNotMatchingDeviceNameFull_WhenIsCallingDeviceNameIsMatching_ThenReturnError);
+
+}
+

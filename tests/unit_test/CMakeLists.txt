@@ -7,13 +7,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_definitions(UNIT_TEST)
 
 add_subdirectory(../external/unity unity)
+add_subdirectory(../external/fff fff)
 
 
 # add tests subdirectory:
 # add_subdirectory(HOST_template_test)
 add_subdirectory(HOST_ot_app_pair_test)
-# add_subdirectory(HW_template_test)
-# add_subdirectory(testX)
+add_subdirectory(HOST_ot_app_deviceName_test)
+
 
 message(STATUS "------------------------------------------------ Project targets list: ")
 foreach(list ${PROJECT_TARGETS_LIST})
