@@ -47,7 +47,6 @@ static ot_app_devDrv_t *otapp_devDrv;
 static otInstance *openThreadInstance;
 const static otIp6Address *otapp_Ip6Address;
 
-static otOperationalDatasetTlvs dataset;
 static otExtAddress otapp_factoryEUI_64;
 
 static char otapp_charBuf[OTAPP_CHAR_BUFFER_SIZE];
@@ -149,9 +148,7 @@ void otapp_cli_init(void)
 
 void otapp_setDataset_tlv(void)
 {
-    memcpy(&dataset.mTlvs, otapp_dataset_tlv, sizeof(otapp_dataset_tlv));
-    dataset.mLength = sizeof(otapp_dataset_tlv);
-    esp_openthread_auto_start(&dataset);
+    esp_openthread_auto_start(&otapp_dataset_tlv);
 }
 
 static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context) 
