@@ -23,6 +23,7 @@
 #include "ot_app_coap.h"
 #include "ot_app_deviceName.h"
 #include "ot_app_drv.h"
+#include "string.h"
 
  #ifdef UNIT_TEST
     #include "mock_ip6.h"
@@ -35,8 +36,12 @@
 
 #include "ot_app_coap_uri.h"
 
+uint8_t otapp_coap_token[OAC_URI_OBS_TOKEN_LENGTH];
+
 static otapp_coap_uri_t otapp_coap_uriDefault[] ={
+    {OTAPP_URI_WELL_KNOWN_CORE, {".well-known/core", ad_temp_uri_well_knownCoreHandle, NULL, NULL},},
     {OTAPP_URI_PARING_SERVICES, {"paring_services", otapp_coap_uri_paringServicesHandle, NULL, NULL}},
+    {OTAPP_URI_SUBSCRIBED_URIS, {"subscribed_uris", otapp_coap_uri_subscribedHandle, NULL, NULL}},
     {OTAPP_URI_TEST,            {"test", otapp_coap_uri_testHandle, NULL, NULL}},                  // for test
     {OTAPP_URI_TEST_LED,        {"test/led", otapp_coap_uri_ledControlHandle, NULL, NULL}},      // for test
 };
@@ -78,7 +83,7 @@ const char *otapp_coap_getUriName(const otapp_coap_uri_t *uriTable, uint8_t tabl
 
     for (uint8_t i = 0; i < tableSize; i++)
     {
-        if(uriTable[i].uriId == uriIndex)
+        if(uriTable[i].devType == uriIndex) // if(uriTable[i].uriId == uriIndex) trzeba przemyslec czy funkcja get uri name jest przydatna ??? todo
         {            
             return uriTable[i].resource.mUriPath;
         }
@@ -101,13 +106,6 @@ void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMes
     }
 }
 
-// void otapp_coap_requestHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
-// {
-//     if (aMessage)
-//     {
-//         // Obsłuż odpowiedź (przeczytaj payload, kod odpowiedzi itd.)
-//     }
-// }
 
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo)
 {
@@ -130,7 +128,7 @@ void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo)
     }
 }
 
-void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const char *responceContent)
+void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const uint8_t *responceContent, uint16_t responceLength)
 {
     otError error = OT_ERROR_NONE;
     otMessage *responseMessage = NULL;
@@ -158,7 +156,7 @@ void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMe
         if (error != OT_ERROR_NONE) { goto exit; }
 
         if (NULL == responceContent) { goto exit; }
-        error = otMessageAppend(responseMessage, (const uint8_t *)responceContent, (uint16_t)strlen(responceContent));
+        error = otMessageAppend(responseMessage, (const uint8_t *)responceContent, responceLength);
         if (error != OT_ERROR_NONE) { goto exit; }
  
     }
@@ -206,7 +204,14 @@ exit:
     }
 }
 
-void otapp_coap_client_send(const otIp6Address *peer_addr, const char *aUriPath, otCoapCode code, const char *payloadMsg)
+void otapp_coap_client_send(const otIp6Address *peer_addr, 
+                            const char *aUriPath, 
+                            otCoapCode code, 
+                            const void *payloadMsg, 
+                            const uint16_t payloadMsgSize,
+                            otCoapResponseHandler responseHandler, 
+                            void *aContext, 
+                            uint8_t *outToken)
 {
     otError error;
     otMessage *message = NULL;
@@ -243,12 +248,20 @@ void otapp_coap_client_send(const otIp6Address *peer_addr, const char *aUriPath,
         error = otCoapMessageSetPayloadMarker(message);
         if (error != OT_ERROR_NONE) { goto exit; }
 
-        error = otMessageAppend(message, (const uint8_t *)payloadMsg, strlen(payloadMsg));
+        error = otMessageAppend(message, payloadMsg, payloadMsgSize);
         if (error != OT_ERROR_NONE) { goto exit; }
     }
 
+    if(outToken != NULL)
+    {
+        otCoapMessageGenerateToken(message, OAC_URI_OBS_TOKEN_LENGTH);
+        memcpy(outToken, otCoapMessageGetToken(message), OAC_URI_OBS_TOKEN_LENGTH);
+        // outToken = otapp_coap_token;
+
+        otCoapMessageAppendObserveOption(message, 0);
+    }
     // send request. otapp_coap_responseHandler 
-    error = otCoapSendRequest(otapp_getOpenThreadInstancePtr(), message, &mMessage, otapp_coap_responseHandler, NULL);
+    error = otCoapSendRequest(otapp_getOpenThreadInstancePtr(), message, &mMessage, responseHandler, aContext); // 
     if (error != OT_ERROR_NONE) { goto exit; }
 
 exit:
@@ -262,14 +275,19 @@ exit:
     }   
 }
 
-void otapp_coap_clientSendPut(const otIp6Address *peer_addr, const char *aUriPath, const char *payloadMsg)
+void otapp_coap_clientSendPutByte(const otIp6Address *peer_addr, const char *aUriPath, const uint8_t *payloadMsg, const uint16_t payloadMsgSize, otCoapResponseHandler responseHandler)
 {
-   otapp_coap_client_send(peer_addr, aUriPath, OT_COAP_CODE_PUT, payloadMsg);
+   otapp_coap_client_send(peer_addr, aUriPath, OT_COAP_CODE_PUT, (const uint8_t *)payloadMsg, payloadMsgSize, responseHandler, NULL, NULL);
 }
 
-void otapp_coap_clientSendGet(const otIp6Address *peer_addr, const char *aUriPath)
+void otapp_coap_clientSendPutChar(const otIp6Address *peer_addr, const char *aUriPath, const char *payloadMsg, otCoapResponseHandler responseHandler)
 {
-   otapp_coap_client_send(peer_addr, aUriPath, OT_COAP_CODE_GET, NULL);
+   otapp_coap_client_send(peer_addr, aUriPath, OT_COAP_CODE_PUT, (const char *)payloadMsg, strlen(payloadMsg), responseHandler, NULL, NULL);
+}
+
+void otapp_coap_clientSendGet(const otIp6Address *peer_addr, const char *aUriPath, otCoapResponseHandler responseHandler, void *aContext, uint8_t *outToken)
+{
+   otapp_coap_client_send(peer_addr, aUriPath, OT_COAP_CODE_GET, NULL, 0, responseHandler, aContext, outToken);
 }
 
 // char *charTest = {"test"};
@@ -277,7 +295,7 @@ void otapp_coap_clientSendGet(const otIp6Address *peer_addr, const char *aUriPat
 void otapp_coapSendtoTestGet()
 {
     printf("CoAP sent get to uri: test\n");
-    otapp_coap_clientSendGet(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_TEST));
+    otapp_coap_clientSendGet(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_TEST), otapp_coap_responseHandler, NULL, NULL);
 }
 
 // char *charLed = {"device/led"};
@@ -285,12 +303,27 @@ char *charLedPayload = {"LED_ON"};
 void otapp_coapSendtoTestPut()
 {
     printf("CoAP sent put to uri: device/led \n");
-    otapp_coap_clientSendPut(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_TEST_LED), charLedPayload);
+    otapp_coap_clientSendPutChar(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_TEST_LED), charLedPayload, otapp_coap_responseHandler);
 }
 void otapp_coapSendDeviceNamePut()
 {
     printf("CoAP sent multicast device name \n");
-    otapp_coap_clientSendPut(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_PARING_SERVICES), otapp_deviceNameFullGet());
+    otapp_coap_clientSendPutChar(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_PARING_SERVICES), otapp_deviceNameFullGet(), otapp_coap_responseHandler);
+}
+
+void otapp_coapSendGetUri_Well_known(const otIp6Address *ipAddr, otCoapResponseHandler responseHandler, void *aContext)
+{
+   otapp_coap_clientSendGet(ipAddr, otapp_coap_getUriNameFromDefault(OTAPP_URI_WELL_KNOWN_CORE), responseHandler, aContext, NULL);
+}
+
+void otapp_coapSendPutUri_subscribed_uris(const otIp6Address *ipAddr, const uint8_t *data, uint16_t dataSize)
+{
+    otapp_coap_clientSendPutByte(ipAddr, otapp_coap_getUriNameFromDefault(OTAPP_URI_SUBSCRIBED_URIS), data, dataSize, otapp_coap_responseHandler);
+}
+
+void otapp_coapSendGetSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *outToken)
+{
+    otapp_coap_clientSendGet(ipAddr, aUriPath, otapp_coap_responseHandler, NULL, outToken);
 }
 
 int8_t otapp_coap_initCoapResource(otapp_coap_uri_t *uriTable, uint8_t tableSize)
@@ -331,7 +364,7 @@ int8_t otapp_coap_init(ot_app_devDrv_t *devDriver)
     }
 
     
-    error = otapp_coap_initCoapResource(devDriver->uriGetList(), devDriver->uriGetListSize);
+    error = otapp_coap_initCoapResource(devDriver->uriGetList_clb(), devDriver->uriGetListSize);
     if (error != OTAPP_COAP_URI_OK)
     {
        return OTAPP_COAP_URI_ERROR;

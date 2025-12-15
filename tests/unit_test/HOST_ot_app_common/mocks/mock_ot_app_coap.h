@@ -35,9 +35,16 @@ typedef enum {
 }otapp_coap_uriIndex_t;
 
 // from coap.h
+typedef enum otError
+{
+    OT_ERROR_GENERIC = 255,
+}otError;
 
 typedef void (*otCoapRequestHandler)();
-
+typedef void (*otCoapResponseHandler)(void                *aContext,
+                                      otMessage           *aMessage,
+                                      const otMessageInfo *aMessageInfo,
+                                      otError              aResult);
 typedef struct otCoapResource
 {
     const char            *mUriPath; ///< The URI Path string
@@ -49,7 +56,8 @@ typedef struct otCoapResource
 // end of coap.h
 
 DECLARE_FAKE_VALUE_FUNC(const char *, otapp_coap_getUriNameFromDefault, otapp_coap_uriIndex_t);
-
+DECLARE_FAKE_VOID_FUNC3(otapp_coapSendGetUri_Well_known, const otIp6Address *, otCoapResponseHandler, void *);
+DECLARE_FAKE_VOID_FUNC3(otapp_coapSendPutUri_subscribed_uris, const otIp6Address *,  const uint8_t *, uint16_t);
 void otapp_ip6AddressPrint(const otIp6Address *aAddress);
 
 #endif  /* MOCK_OT_APP_COAP_H_ */

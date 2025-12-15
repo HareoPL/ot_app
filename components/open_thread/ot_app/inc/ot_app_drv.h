@@ -24,19 +24,52 @@
 
 #include "ot_app_coap.h"
 #include "ot_app_pair.h"
+#include "ot_app_coap_uri_obs.h"
 
 #include "stdint.h"
 
+#ifndef UNIT_TEST
+    #include "ot_app.h"
+#else
+    #include "mock_ot_app.h"          
+#endif
 
 typedef uint8_t ot_app_size_t;
 typedef otapp_pair_rule_t *(*pairRuleGet_callback_t)(void);
 typedef otapp_coap_uri_t *(*uriGet_callback_t)(void);
+typedef void (*subscribedUris_callback_t)(oac_uri_dataPacket_t *dataPacket);
 
+typedef struct ot_app_drv_obs_t{
+        /**
+         * @brief get observer instance 
+         * @return oac_uri_observer_t pointer
+         */
+        oac_uri_observer_t *(*getHandle)(void);
+        oac_uri_dataPacket_t *(*getDataPacket)(void);
+        
+        int8_t (*notify)(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);
+        int8_t (*parseMessage)(const uint8_t *inBuffer, oac_uri_dataPacket_t *out);
+        int8_t (*subscribe)(oac_uri_observer_t *subListHandle, oac_uri_observer_t *subscribeData);
+        int8_t (*unsubscribe)(oac_uri_observer_t *subListHandle, const oacu_token_t *token);
+        int8_t (*XdeleteAll)(oac_uri_observer_t *subListHandle);
+}ot_app_drv_obs_t;
+
+// typedef struct ot_app_drv_coap_t{
+//         // send 
+// }ot_app_drv_coap_t;
+
+typedef struct ot_app_devDrvAPI_t{
+       ot_app_drv_obs_t         obs;    // uri observer functions
+//        ot_app_drv_coap_t        coap;   // coap functions  
+}ot_app_devDrvAPI_t;
 
 typedef struct ot_app_devDrv_t{
-        otapp_pair_observerCallback_t pairedObserver;        
+        subscribedUris_callback_t     obs_subscribedUri; // it will be called from subscribed_uris uri
+        otapp_pair_observerCallback_t obs_pairedDevice;  // it will be called when new device has been properly paired
+
         pairRuleGet_callback_t      pairRuleGetList;
         uriGet_callback_t           uriGetList;
+        const char *uriResources;
 
         const char *deviceName;
         const otapp_deviceType_t *deviceType;
@@ -44,6 +77,10 @@ typedef struct ot_app_devDrv_t{
         ot_app_size_t               pairRuleGetListSize;
         ot_app_size_t               uriGetListSize;
 
+        ot_app_devDrvAPI_t api;
 }ot_app_devDrv_t;
+
+
+ot_app_devDrv_t *ot_app_drv_getInstance(void);
 
 #endif  /* OT_APP_DRV_H_ */

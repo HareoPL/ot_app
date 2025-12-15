@@ -120,6 +120,11 @@ otInstance *otapp_getOpenThreadInstancePtr()
     return openThreadInstance;
 }
 
+ot_app_devDrv_t *otapp_getDevDrvInstance(void)
+{
+    return otapp_devDrv;
+}
+
 /////////////////////////
 // char buffer
 //
@@ -180,13 +185,9 @@ void otapp_network_init() // this function will be initialize in ot_task_worker 
     otapp_srpInit();
 }
 
-int8_t otapp_init(ot_app_devDrv_t *deviceDrv) //app init
-{
-    if(deviceDrv == NULL)
-    {
-        return OTAPP_ERROR;
-    }
-    otapp_devDrv = deviceDrv;
+int8_t otapp_init() //app init
+{    
+    otapp_devDrv = ot_app_drv_getInstance();
 
     openThreadInstance = esp_openthread_get_instance();
     otapp_cli_init();    

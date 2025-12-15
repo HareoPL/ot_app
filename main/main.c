@@ -60,7 +60,8 @@ void app_main(void)
     ESP_UNUSED(TAG);
 
     otapp_gpioInit(); // only for test coap get sent
-    otapp_init(ad_devDrvGetTemp());
+    ad_tempInit();
+    otapp_init();
     
     // wifi_initSTA();
     // wifi_initAP();

@@ -1,9 +1,9 @@
 /**
- * @file ad_temp.h
+ * @file ot_app_drv.c
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief template implementation of hardware device for openThread app
+ * @brief 
  * @version 0.1
- * @date 06-09-2025
+ * @date 17-09-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -20,9 +20,35 @@
  * 
  */
 
-#ifndef AD_TEMP_H_
-#define AD_TEMP_H_
+#include "ot_app_drv.h"
 
-void ad_tempInit();
+static ot_app_devDrv_t ot_app_devDrv = {
+    .obs_subscribedUri = NULL,      
+    .obs_pairedDevice = NULL,      
 
-#endif  /* AD_TEMP_H_ */
+    .pairRuleGetList = NULL,        
+    .uriGetList = NULL,            
+    .uriResources = NULL,           
+
+    .deviceName = NULL,
+    .deviceType = NULL,             
+
+    .pairRuleGetListSize = 0,
+    .uriGetListSize = 0,
+
+    .api.obs = {
+        .getHandle = oac_uri_obs_getSubListHandle,
+        .getDataPacket = oac_uri_obs_getdataPacketHandle,
+        .notify = oac_uri_obs_notify,
+        .parseMessage = oac_uri_obs_parseMessage,
+        .subscribe = oac_uri_obs_subscribe,
+        .unsubscribe = oac_uri_obs_unsubscribe,
+        .XdeleteAll = oac_uri_obs_deleteAll,
+        }
+};
+
+ot_app_devDrv_t *ot_app_drv_getInstance()
+{
+    return &ot_app_devDrv;
+    
+}

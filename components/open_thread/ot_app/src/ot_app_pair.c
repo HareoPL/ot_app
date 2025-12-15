@@ -28,6 +28,7 @@
     #include "mock_freertos_queue.h"
     #include "mock_freertos_task.h"
     #include "mock_ot_app_deviceName.h"
+    #include "mock_ip6.h"
  #else
     #include "freertos/FreeRTOS.h"
     #include "freertos/task.h"
@@ -300,7 +301,7 @@ int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char 
     return OTAPP_PAIR_NO_NEED_UPDATE ;
 }
 
-int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, otapp_coap_uriIndex_t uriIndex)
+int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, uint8_t uriIndex)
 {
     if(pairDeviceList == NULL || deviceNameFull == NULL || uriIndex >= (OTAPP_PAIR_URI_MAX_VAL) || uriIndex == OTAPP_PAIR_NO_URI)
     {
@@ -614,7 +615,7 @@ int8_t otapp_pair_init(ot_app_devDrv_t *devDriver)
     
     otapp_pair_devDrv = devDriver;
 
-    otapp_pair_observerPairedDeviceRegisterCallback(otapp_pair_devDrv->pairedObserver);
+    otapp_pair_observerPairedDeviceRegisterCallback(otapp_pair_devDrv->obs_pairedDevice);
 
     result = otapp_pair_initQueue();
     if(result != OTAPP_PAIR_OK)

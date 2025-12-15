@@ -25,9 +25,11 @@
 #include "hro_utils.h"
 #include "ot_app_coap.h"
 
-#include "openthread/dataset.h"
-#include "esp_openthread.h"
-#include "openthread/dns_client.h"
+#ifdef UNIT_TEST
+    #include "mock_ip6.h"
+#else
+    #include "openthread/dns_client.h"
+#endif
 
 #define OTAPP_OK        (-1)
 #define OTAPP_ERROR     (-2)
@@ -67,6 +69,13 @@ typedef enum {
 
     OTAPP_END_OF_DEVICE_TYPE
 }otapp_deviceType_t;
+
+/**
+ * @brief todo
+ * 
+ * @return ot_app_devDrv_t* 
+ */
+ot_app_devDrv_t *otapp_getDevDrvInstance(void);
 
 /**
  * @brief todo
@@ -128,7 +137,7 @@ const otExtAddress *otapp_macAddrGet(void);
  * @brief todo
  * 
  */
-int8_t otapp_init(ot_app_devDrv_t *deviceDrv);
+int8_t otapp_init(void);
 
 /**
  * @brief todo

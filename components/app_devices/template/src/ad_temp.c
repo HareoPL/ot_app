@@ -22,33 +22,72 @@
 
 
 #include "ad_temp.h"
-#include "ot_app.h"
-#include "ot_app_coap.h"
-#include "ot_app_pair.h"
+
 #include "ot_app_drv.h"
 
 #define AD_TEMP_DEVICE_NAME ("device1")
 static const otapp_deviceType_t ad_temp_deviceType = OTAPP_SWITCH;
 
+static ot_app_devDrv_t *drv;
 // URI
-static const char ad_temp_resourceContentTEST[] = 
-    "</temp>;rt=\"sensor\","
-    "</led>;rt=\"actuator\"";
 
-void ad_temp_uri_well_knownCoreHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
+typedef enum {
+        AD_TEMP_NO_URI_INDEX = 0,
+
+        AD_TEMP_LIGHT_ON_OFF,
+        AD_TEMP_LIGHT_DIMM,
+        AD_TEMP_LIGHT_RGB,
+
+        AD_TEMP_END_OF_INDEX,
+    }ad_temp_uriIndex_t;
+
+
+/* Common Web Linking Parameters in CoRE Link Format (RFC 6690):
+ *
+ * rt       - Resource Type: Describes the semantic type of the resource.
+ *            Example values: "temperature-c", "sensor"
+ *
+ * if       - Interface Description: Describes the interface or interaction method.
+ *            Example values: "on,off,set-color"
+ *
+ * title    - Human-readable title to describe the resource.
+ *            Example: "Outdoor temperature sensor"
+ *
+ * ct       - Content Type: Media type of the resource representation (Content-Format in CoAP).
+ *            Example: 50 (JSON), 0 (plain text)
+ *
+ * sz       - Size: Size of the resource in bytes.
+ *            Example: 123
+ *
+ * obs      - Observable: Indicates that the resource supports observation (Observe feature).
+ *            Typically used as a flag with no value.
+ * otCoapOptionContentFormat
+ */
+static const char ad_temp_uriResources[] =  // format: Web Linking RFC 6690
+    "</light/on_off>;rt=\"actuator\";if=\"on,off\";title=\"Light on-off\";ct=0;obs,"                      // OT_COAP_OPTION_CONTENT_FORMAT_TEXT_PLAIN
+    "</light/dimm>;rt=\"actuator\";if=\"on,off,dimm\";title=\"Light dimmable\";ct=50;obs;sz=4,"      // OT_COAP_OPTION_CONTENT_FORMAT_JSON
+    "</light/rgb>;rt=\"actuator\";if=\"on,off,set-color\";title=\"Light RGB\";ct=50;obs;sz=4";     // OT_COAP_OPTION_CONTENT_FORMAT_JSON
+   
+void ad_temp_uri_light_on_off_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    otapp_coap_printSenderIP(aMessageInfo);
 
-    if (request)
-    {
-        otapp_coap_sendResponse(request, aMessageInfo, ad_temp_resourceContentTEST);
-    }
 }
 
+void ad_temp_uri_light_dimm_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+
+}
+
+void ad_temp_uri_light_rgb_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+
+}
 
 static otapp_coap_uri_t ad_temp_uri[] ={
-    {OTAPP_URI_WELL_KNOWN_CORE, {".well-known/core", ad_temp_uri_well_knownCoreHandle, NULL, NULL},},
-
+    {AD_TEMP_LIGHT_ON_OFF,  {"light/on_off", ad_temp_uri_light_on_off_CoreHandle, NULL, NULL},},
+    {AD_TEMP_LIGHT_DIMM,    {"light/dimm", ad_temp_uri_light_dimm_CoreHandle, NULL, NULL},},
+    {AD_TEMP_LIGHT_RGB,     {"light/dimm", ad_temp_uri_light_rgb_CoreHandle, NULL, NULL},},
+ 
 };
 #define AD_TEMP_URI_SIZE (sizeof(ad_temp_uri) / sizeof(ad_temp_uri[0]))
 
@@ -81,22 +120,26 @@ void ad_temp_pairedCallback(otapp_pair_Device_t *newDevice)
     printf("Dev Temp detect NEW DEVICE! %s \n", newDevice->devNameFull);
 }
 
-// drv
-ot_app_devDrv_t switchDriver = {
-    .pairRuleGetList = ad_temp_pairRulesGetList,
-    .pairRuleGetListSize = AD_TEMP_RULES_SIZE,
-
-    .uriGetList = ad_temp_uriGetList,
-    .uriGetListSize = AD_TEMP_URI_SIZE,
-
-    .pairedObserver = ad_temp_pairedCallback,
-
-    .deviceName = AD_TEMP_DEVICE_NAME,
-    .deviceType = &ad_temp_deviceType,
-};
-
-
-ot_app_devDrv_t *ad_devDrvGetTemp(void)
+void ad_temp_subscribedUrisCallback(oac_uri_dataPacket_t *newDevice)
 {
-    return &switchDriver;
+    printf("Dev Temp from subs! \n");
+}
+
+
+void ad_tempInit()
+{    
+    drv = ot_app_drv_getInstance();
+    drv->pairRuleGetList = ad_temp_pairRulesGetList;
+    drv->pairRuleGetListSize = AD_TEMP_RULES_SIZE;
+
+    drv->uriGetList = ad_temp_uriGetList;
+    drv->uriGetListSize = AD_TEMP_URI_SIZE;
+
+    drv->obs_pairedDevice = ad_temp_pairedCallback;
+    drv->obs_subscribedUri = ad_temp_subscribedUrisCallback;
+
+    drv->deviceName = AD_TEMP_DEVICE_NAME;
+    drv->deviceType = &ad_temp_deviceType;
+    drv->uriResources = ad_temp_uriResources;
+
 }
