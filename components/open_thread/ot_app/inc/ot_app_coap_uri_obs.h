@@ -138,7 +138,7 @@ int8_t oac_uri_obs_unsubscribe(oac_uri_observer_t *subListHandle, char* deviceNa
  * @param dataSize 
  * @return int8_t 
  */
-int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, oacu_uriIndex_t uriIndex, const uint8_t *dataToNotify, uint16_t dataSize);
+int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, const otIp6Address *excludedIpAddr, oacu_uriIndex_t uriIndex, const uint8_t *dataToNotify, uint16_t dataSize);
 
 /**
  * @brief 

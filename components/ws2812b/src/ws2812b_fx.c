@@ -203,6 +203,15 @@ void (*mMode[MODE_COUNT])(void) =
     mode_icu
 };
 
+FX_STATUS WS2812BFX_ForceAllColor(uint16_t Segment, uint8_t r, uint8_t g, uint8_t b)
+{
+  WS2812BFX_Stop(Segment);
+  WS2812BFX_SetAllRGB(Segment, r, g, b);
+  wsDrv->Refresh();
+
+  return FX_OK;
+}
+
 FX_STATUS WS2812BFX_Init(const ws2812b_drv_t *drv, uint16_t Segments)
 {
   if(NULL == drv)

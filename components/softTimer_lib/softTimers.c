@@ -1,11 +1,11 @@
 /**
- * @file ad_temp.h
+ * @file softTimers.c
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief template implementation of hardware device for openThread app
+ * @brief software timers - opjective library
  * @version 0.1
- * @date 06-09-2025
+ * @date 30-11-2024
  * 
- * @copyright The MIT License (MIT) Copyright (c) 2025 
+ * @copyright The MIT License (MIT) Copyright (c) 2024 
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
  * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
@@ -20,9 +20,45 @@
  * 
  */
 
-#ifndef AD_TEMP_H_
-#define AD_TEMP_H_
+#include "softTimers.h"
 
-void ad_tempInit();
+void SoftTim_eventTask(softTim_t *timer)
+{
+    if((timer->delayTime != 0) && (SOFT_TIM_GET_MS() - timer->lastTick >= timer->delayTime))
+    {
+        timer->lastTick = SOFT_TIM_GET_MS();
 
-#endif  /* AD_TEMP_H_ */
+        if(timer->action == NULL)
+        {
+            return;
+        }else
+        {
+            timer->action();
+
+            if(timer->doActionOnes)
+            {
+                timer->delayTime = 0;
+            }
+        }
+    }
+}
+
+void SoftTim_init(softTim_t *timer, softTim_callback _action, uint8_t doActionOnes)
+{
+    timer->action = _action;
+    timer->doActionOnes = doActionOnes;
+}
+
+void SoftTim_start(softTim_t *timer, uint32_t delay)
+{
+    if(delay != 0)
+    {
+        timer->delayTime = delay;
+        timer->lastTick = SOFT_TIM_GET_MS();
+    }
+}
+
+void SoftTim_stop(softTim_t *timer)
+{
+    timer->delayTime = 0;
+}

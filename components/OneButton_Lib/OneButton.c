@@ -71,7 +71,7 @@ void ButtonOneclick(OneButton_t *Btn)
 
 	if(NULL != Btn->OneClick)
 	{
-		Btn->OneClick();
+		Btn->OneClick(Btn->GpioPin);
 	}
 }
 
@@ -82,7 +82,7 @@ void ButtonDoubleClick(OneButton_t *Btn)
 
 	if(NULL != Btn->DoubleClick)
 	{
-		Btn->DoubleClick();
+		Btn->DoubleClick(Btn->GpioPin);
 	}
 }
 
@@ -97,7 +97,7 @@ void ButtonLongPress(OneButton_t *Btn)
 
 			if (NULL != Btn->LongPressStart)
 			{
-				Btn->LongPressStart();
+				Btn->LongPressStart(Btn->GpioPin);
 			}
 		}
 	}
@@ -107,7 +107,7 @@ void ButtonLongPress(OneButton_t *Btn)
 
 		if (NULL != Btn->LongPressStop)
 		{
-			Btn->LongPressStop();
+			Btn->LongPressStop(Btn->GpioPin);
 		}
 
 	}
@@ -190,8 +190,12 @@ void OneButtonCallbackLongPressStop(OneButton_t *Btn, CallBackFunLongPressStop_t
 }
 
 // initialized function
-// void OneButtonInit(OneButton_t *Btn, GPIO_TypeDef *GpioPort, uint16_t GpioPin)
-void OneButtonInit(OneButton_t *Btn, uint16_t GpioPin)
+#ifdef OB_STM32_PLATFORM
+	void OneButtonInit(OneButton_t *Btn, GPIO_TypeDef *GpioPort, uint16_t GpioPin)
+#endif
+#ifdef OB_ESP32_PLATFORM
+	void OneButtonInit(OneButton_t *Btn, uint16_t GpioPin)
+#endif
 {
 	Btn->State = IDLE;
 	Btn->CoundClick = 0;
@@ -205,8 +209,10 @@ void OneButtonInit(OneButton_t *Btn, uint16_t GpioPin)
 	Btn->TimerDoubleClick = 350;
 	Btn->TimerLongPressStart = 700;
 	Btn->TimerLongPressTick = 500;
-
-	// Btn->GpioPort = GpioPort;
+#ifdef OB_STM32_PLATFORM
+	 Btn->GpioPort = GpioPort;
+#endif
+	
 	Btn->GpioPin = GpioPin;
 }
 

@@ -1,0 +1,332 @@
+/**
+ * @mainpage OpenThread Application Framework
+ * 
+ * @section intro_sec Introduction
+ * 
+ * Welcome to the **OpenThread Application Framework** documentation!
+ * 
+ * The OpenThread Application Framework is a comprehensive middleware solution for building
+ * Thread-based IoT devices. It provides a clean abstraction layer between OpenThread/CoAP
+ * protocols and device-specific hardware implementations, enabling rapid development of
+ * smart home devices such as buttons, lights, switches, and sensors.
+ * 
+ * **Key Features:**
+ * - ✅ Device abstraction layer with unified API
+ * - ✅ Automatic device discovery and pairing
+ * - ✅ CoAP application layer with simplified URI management
+ * - ✅ Hardware-independent device driver interface
+ * - ✅ Event-driven callback architecture
+ * - ✅ Device name grouping for organized pairing
+ * - ✅ Real-time status updates via CoAP Observe
+ * - ✅ Configurable pairing rules and device filtering
+ * - ✅ Factory reset capability
+ * - ✅ Multi-platform support (STM32, ESP32)
+ * 
+ * @section framework_architecture Framework Architecture
+ * 
+ * The framework follows a layered architecture that separates concerns and provides
+ * clear abstraction boundaries:
+ * 
+ * ```
+ * ┌────────────────────────────────────────────────────────────┐
+ * │              Application/Device Layer                       │
+ * │  (Button Device, Light Device, Sensor Device, etc.)        │
+ * │  - Device-specific logic                                    │
+ * │  - User interaction handling                                │
+ * │  - Device state management                                  │
+ * ├────────────────────────────────────────────────────────────┤
+ * │         OpenThread Application Framework                    │
+ * │  ┌──────────────────────────────────────────────────────┐  │
+ * │  │  Device Management API                               │  │
+ * │  │  - Device discovery and pairing                      │  │
+ * │  │  - Device name groups                                │  │
+ * │  │  - Pairing rules and filtering                       │  │
+ * │  ├──────────────────────────────────────────────────────┤  │
+ * │  │  CoAP Application API                                │  │
+ * │  │  - URI endpoint registration                         │  │
+ * │  │  - CoAP Observe (subscription/notification)          │  │
+ * │  │  - Resource management                               │  │
+ * │  ├──────────────────────────────────────────────────────┤  │
+ * │  │  Device Driver Interface                             │  │
+ * │  │  - Callback-based event handling                     │  │
+ * │  │  - Task management                                   │  │
+ * │  │  - Device lifecycle management                       │  │
+ * │  └──────────────────────────────────────────────────────┘  │
+ * ├────────────────────────────────────────────────────────────┤
+ * │           Protocol Stack (OpenThread + CoAP)                │
+ * │  - Thread mesh networking                                   │
+ * │  - IPv6 addressing                                          │
+ * │  - CoAP protocol                                            │
+ * │  - Network commissioning                                    │
+ * ├────────────────────────────────────────────────────────────┤
+ * │         Hardware Abstraction Layer (HAL)                    │
+ * │  - GPIO drivers (buttons, LEDs)                             │
+ * │  - Timer drivers                                            │
+ * │  - Peripheral drivers (SPI, I2C, UART)                      │
+ * │  - Platform-specific implementations                        │
+ * └────────────────────────────────────────────────────────────┘
+ * ```
+ * 
+ * @section quick_start Quick Start
+ * 
+ * **1. Hardware Setup:**
+ * - Connect hardware peripherals (buttons, LEDs, sensors) to GPIO pins
+ * - Ensure proper power supply and connections
+ * - Configure GPIO pins in hardware-specific files
+ * 
+ * **2. Software Integration:**
+ * @code{.c}
+ * #include "ad_button.h"
+ * 
+ * void app_main() {
+ *     // Initialize OpenThread network
+ *     otInstance *instance = otInstanceInitSingle();
+ *     
+ *     // Initialize button device with device name group
+ *     // This identifies the device and enables pairing with devices in same group
+ *     ad_button_Init("kitchen");  // or "bedroom", "garage", etc.
+ *     
+ *     // Main loop
+ *     while(1) {
+ *         otTaskletsProcess(instance);  // Process OpenThread tasks
+ *         ad_button_task();             // Process device tasks
+ *         vTaskDelay(pdMS_TO_TICKS(10));
+ *     }
+ * }
+ * @endcode
+ * 
+ * **3. Pair Devices:**
+ * - Press a button briefly
+ * - Turn on the target device (e.g., light)
+ * - Device is automatically paired (only if in same name group)
+ * 
+ * @section framework_features Framework Features
+ * 
+ * @subsection feature_device_abstraction Device Abstraction
+ * 
+ * The framework provides a unified API for creating different device types:
+ * - **Button devices** - Control switches with single/double/long-press
+ * - **Light devices** - Dimmable and color-changing lights
+ * - **Sensor devices** - Temperature, humidity, motion sensors
+ * - **Custom devices** - Extend framework for new device types
+ * 
+ * @subsection feature_auto_pairing Automatic Device Pairing
+ * 
+ * Built-in discovery and pairing mechanisms:
+ * - **Device discovery** - Automatic detection of OpenThread devices
+ * - **Device name groups** - Logical grouping for controlled pairing
+ * - **Pairing rules** - Configurable device type filtering
+ * - **Persistent storage** - NVS-based pairing data persistence
+ * 
+ * @subsection feature_coap_api CoAP Application API
+ * 
+ * Simplified CoAP resource management:
+ * - **URI registration** - Easy endpoint definition
+ * - **CoAP Observe** - Subscribe to device state changes
+ * - **Request handlers** - GET/POST/PUT method support
+ * - **Response builders** - Simplified payload creation
+ * 
+ * @subsection feature_hw_abstraction Hardware Abstraction
+ * 
+ * Clean separation between application and hardware:
+ * - **Driver interface** - Platform-independent API
+ * - **Callback system** - Event-driven architecture
+ * - **Multi-platform** - ESP32, STM32, portable to others
+ * - **Hardware libraries** - OneButton, WS2812B, timers, etc.
+ * 
+ * @section device_grouping Device Name Grouping
+ * 
+ * The framework supports **device name groups** for organized pairing and network segmentation.
+ * 
+ * **What is a Device Name Group?**
+ * - A string identifier (max 9 characters) that groups related devices
+ * - Enables pairing only between devices in the same group
+ * - Prevents accidental pairing across different rooms or zones
+ * 
+ * **Common Grouping Strategies:**
+ * 
+ * **Room-Based Grouping:**
+ * @code{.c}
+ * ad_button_Init("kitchen");   // Kitchen devices
+ * ad_button_Init("bedroom1");  // Bedroom 1 devices
+ * ad_button_Init("garage");    // Garage devices
+ * @endcode
+ * 
+ * **Function-Based Grouping:**
+ * @code{.c}
+ * ad_button_Init("lights");    // All lighting control
+ * ad_button_Init("security");  // Security system
+ * ad_button_Init("climate");   // HVAC control
+ * @endcode
+ * 
+ * **Building-Based Grouping:**
+ * @code{.c}
+ * ad_button_Init("house_a");   // Main house
+ * ad_button_Init("house_b");   // Guest house
+ * ad_button_Init("workshop");  // Workshop building
+ * @endcode
+ * 
+ * @note Both controller and target device must have matching name groups to pair
+ * @see @ref device_naming for detailed device name group guide
+ * 
+ * @section modules_sec Framework Modules
+ * 
+ * ### Core Framework Components
+ * - **Device Management** - Discovery, pairing, device lifecycle
+ * - **CoAP Application Layer** - URI handlers, observers, resource management
+ * - **Device Driver Interface** - Callback system, task management
+ * 
+ * ### Device Implementations
+ * - @ref device_button "Button Device" - Three-button control device
+ * - @ref device_btn_assign "Button Assignment" - Device pairing and button mapping
+ * - @ref device_btn_uri "URI Management" - CoAP endpoint handlers
+ * - @ref device_butn_dim "Brightness Control" - Adaptive dimming algorithm
+ * 
+ * ### Hardware Libraries
+ * - @ref libs "Utility Libraries" - OneButton, Software Timers, SPIFFS, WS2812B
+ * - @ref drivers "Hardware Drivers" - GPIO, timers, peripheral drivers
+ * 
+ * @section button_functions Button Functions (Example Device)
+ * 
+ * Each button supports multiple interaction types:
+ * 
+ * | Button Action | Function | Example Use Case |
+ * |---------------|----------|------------------|
+ * | **Single-click** | Toggle on/off | Turn light on or off |
+ * | **Double-click** | Change mode/color | Cycle through light colors |
+ * | **Long-press** | Continuous adjustment | Dim or brighten light |
+ * 
+ * @section pairing_rules Flexible Pairing Rules
+ * 
+ * Three predefined pairing rule sets:
+ * - **Custom Rules** - Allow only specific device types (default: lighting devices)
+ * - **Allow All** - Pair with any OpenThread device
+ * - **Block All** - Disable pairing (security/maintenance mode)
+ * 
+ * @section coap_integration CoAP Integration
+ * 
+ * Example device endpoints:
+ * - `btn/state` - Button state queries and notifications
+ * - `light/state` - Light on/off state
+ * - `light/brightness` - Brightness control
+ * - `light/color` - RGB color control
+ * 
+ * All endpoints support CoAP Observe for real-time updates.
+ * 
+ * @section platform_support Platform Support
+ * 
+ * The framework provides multi-platform support through compile-time configuration:
+ * 
+ * | Platform | Microcontroller | SDK/HAL | Status |
+ * |----------|----------------|---------|--------|
+ * | **ESP32** | ESP32-C6 | ESP-IDF | ✅ Active |
+ * | **STM32** | STM32 series | STM32 HAL | ✅ Supported |
+ * | **Custom** | Any | User-defined | 🔧 Portable |
+ * 
+ * @section documentation_pages Documentation Pages
+ * 
+ * - @subpage getting_started "Getting Started Guide"
+ * - @subpage device_naming "Device Name Group Guide"
+ * - @subpage platform_setup "Platform Setup Instructions"
+ * - @subpage configuration "Configuration Guide"
+ * - @subpage api_reference "API Reference"
+ * - @subpage examples "Code Examples"
+ * 
+ * @section resources_sec Additional Resources
+ * 
+ * - **OpenThread Official Site:** https://openthread.io/
+ * - **ESP-IDF Documentation:** https://docs.espressif.com/projects/esp-idf/
+ * - **STM32 HAL Documentation:** https://www.st.com/
+ * - **Thread Group:** https://www.threadgroup.org/
+ * 
+ * @section author_sec Author & License
+ * 
+ * **Author:** Jan Łukaszewicz (pldevluk@gmail.com)
+ * 
+ * **License:** MIT License
+ * 
+ * Copyright (c) 2025
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * 
+ * @note This documentation was generated using Doxygen
+ */
+
+//////////////////////////
+// SUB PAGES
+//////////////////////////
+
+[... reszta stron zostaje bez zmian - getting_started, device_naming, platform_setup, configuration, api_reference, examples ...]
+
+//////////////////////////
+// GROUPS DEFINITIONS
+//////////////////////////
+
+/**
+ * @defgroup ot_app_framework OpenThread Application Framework
+ * @brief High-level API for building OpenThread-enabled devices
+ * 
+ * This is the core framework providing device abstraction, automatic pairing,
+ * and CoAP application layer for OpenThread IoT devices.
+ */
+
+  /**
+   * @defgroup ot_app_core Framework Core
+   * @ingroup ot_app_framework
+   * @brief Core framework functionality
+   * 
+   * Device lifecycle management, initialization, and main task processing.
+   */
+  
+  /**
+   * @defgroup ot_app_device_api Device API
+   * @ingroup ot_app_framework
+   * @brief API for device implementation
+   * 
+   * Device driver interface with callbacks, tasks, and event handling.
+   */
+  
+  /**
+   * @defgroup ot_app_pairing Device Pairing
+   * @ingroup ot_app_framework
+   * @brief Automatic device discovery and pairing
+   * 
+   * Device discovery, pairing rules, device name groups, and pairing persistence.
+   */
+  
+  /**
+   * @defgroup ot_app_coap CoAP Application Layer
+   * @ingroup ot_app_framework
+   * @brief CoAP URI management and observers
+   * 
+   * URI endpoint registration, CoAP Observe subscriptions, and resource management.
+   */
+
+/**
+ * @defgroup devices Device Implementations
+ * @brief Hardware device implementations using the framework
+ * 
+ * Concrete device implementations built on top of the OpenThread Application Framework.
+ */
+
+/**
+ * @defgroup libs Utility Libraries
+ * @brief Reusable libraries and utilities
+ * 
+ * Platform-portable libraries for hardware abstraction and common functionality.
+ */
+
+/**
+ * @defgroup drivers Hardware Drivers
+ * @brief Low-level hardware drivers
+ * 
+ * Platform-specific drivers for GPIO, timers, and other peripherals.
+ */

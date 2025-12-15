@@ -89,7 +89,7 @@ typedef struct ot_app_drv_obs_t{
     
     struct{
         oac_uri_observer_t *(*getHandle)(void);
-        int8_t (*notify)(oac_uri_observer_t *subListHandle, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);        
+        int8_t (*notify)(oac_uri_observer_t *subListHandle, const otIp6Address *excludedIpAddr, oacu_uriIndex_t serverUri, const uint8_t *dataToNotify, uint16_t dataSize);        
         int8_t (*subscribe)(oac_uri_observer_t *subListHandle, otMessage *aMessage, const otMessageInfo *aMessageInfo, oacu_uriIndex_t uriId, char* deviceNameFull);
         int8_t (*unsubscribe)(oac_uri_observer_t *subListHandle, char* deviceNameFull, const oacu_token_t *token);
         int8_t (*XdeleteAll)(oac_uri_observer_t *subListHandle);

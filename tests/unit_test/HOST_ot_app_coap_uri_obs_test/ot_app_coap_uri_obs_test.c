@@ -1094,13 +1094,13 @@ TEST(ot_app_coap_uri_obs, GivenNullHandleArg_WhenCallingNotify_ThenReturnError)
     oacu_result_t result_;
     uint8_t data_ = 255;
 
-    result_ = oac_uri_obs_notify(NULL, TEST_OBS_URI_INDEX_2, &data_, 1);
+    result_ = oac_uri_obs_notify(NULL, NULL, TEST_OBS_URI_INDEX_2, &data_, 1);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
 
-    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, TEST_OBS_URI_INDEX_2, NULL, 1);
+    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, NULL, TEST_OBS_URI_INDEX_2, NULL, 1);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
 
-    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, TEST_OBS_URI_INDEX_2, &data_, OAC_URI_OBS_BUFFER_SIZE+1);
+    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, NULL, TEST_OBS_URI_INDEX_2, &data_, OAC_URI_OBS_BUFFER_SIZE+1);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
 }
 
@@ -1109,7 +1109,7 @@ TEST(ot_app_coap_uri_obs, GivenIncorrectUriArg_WhenCallingNotify_ThenReturnError
     oacu_result_t result_;
     uint8_t data_ = 255;
 
-    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, 0, &data_, 1);
+    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, NULL, 0, &data_, 1);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
 }
 
@@ -1118,7 +1118,7 @@ TEST(ot_app_coap_uri_obs, GivenTrueArgs_WhenEmptySubscribeListCallingNotify_Then
     oacu_result_t result_;
     uint8_t data_ = 255;
 
-    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, TEST_OBS_URI_INDEX_2, &data_, 1);
+    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, NULL, TEST_OBS_URI_INDEX_2, &data_, 1);
     TEST_ASSERT_EQUAL(0, result_);   
 }
 
@@ -1136,7 +1136,7 @@ TEST(ot_app_coap_uri_obs, GivenTrueArgs_WhenSubscribeListIsFullCallingNotify_The
     test_obs_fillListExampleData(subList);
     test_obs_fillTxBuffer(subList, data_, OAC_URI_OBS_BUFFER_SIZE);
 
-    result_ = oac_uri_obs_notify(subList, TEST_OBS_URI_INDEX_2, data_, OAC_URI_OBS_BUFFER_SIZE);
+    result_ = oac_uri_obs_notify(subList, NULL, TEST_OBS_URI_INDEX_2, data_, OAC_URI_OBS_BUFFER_SIZE);
     TEST_ASSERT_EQUAL(20, result_);
 
     TEST_ASSERT_EQUAL(20, otapp_coapSendPutUri_subscribed_uris_fake.call_count);                                                // check count of calls
@@ -1155,7 +1155,7 @@ TEST(ot_app_coap_uri_obs, CheckNotify_GivenTrueArgs_WhenCallingNotify_ThenReturn
     const uint8_t *dataFromNotify;
 
     oac_uri_obs_subscribe(TEST_OBS_HANDLE, test_obs_obsTrue.uri->token, test_obs_obsTrue.uri->uriIndex, &test_obs_obsTrue.ipAddr, test_obs_obsTrue.deviceNameFull);
-    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, test_obs_obsTrue.uri->uriIndex, &data_, dataSize_);
+    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, NULL, test_obs_obsTrue.uri->uriIndex, &data_, dataSize_);
 
     ipAddrFromNotify = otapp_coapSendPutUri_subscribed_uris_fake.arg0_val;
     dataFromNotify = otapp_coapSendPutUri_subscribed_uris_fake.arg1_val;
@@ -1167,6 +1167,30 @@ TEST(ot_app_coap_uri_obs, CheckNotify_GivenTrueArgs_WhenCallingNotify_ThenReturn
     TEST_ASSERT_EQUAL(data_, test_obs_dataPacketOut.buffer[0]);
     TEST_ASSERT_EQUAL(1, result_); // one subscriber
 
+}
+
+TEST(ot_app_coap_uri_obs, CheckNotify_GivenTwoSubscribersOneWillExclude_WhenCallingNotify_ThenReturnOk)
+{
+    oacu_result_t result_;
+    uint8_t data_ = 254;
+    uint8_t dataSize_ = 1;
+
+    const otIp6Address *ipAddrFromNotify;
+    const uint8_t *dataFromNotify;
+
+    oac_uri_obs_subscribe(TEST_OBS_HANDLE, test_obs_obsTrue.uri->token, test_obs_obsTrue.uri->uriIndex, &test_obs_obsTrue.ipAddr, test_obs_obsTrue.deviceNameFull);
+    oac_uri_obs_subscribe(TEST_OBS_HANDLE, test_obs_obsTrue2.uri->token, test_obs_obsTrue.uri->uriIndex, &test_obs_obsTrue2.ipAddr, test_obs_obsTrue2.deviceNameFull);
+    result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, &test_obs_obsTrue2.ipAddr, test_obs_obsTrue.uri->uriIndex, &data_, dataSize_);
+
+    ipAddrFromNotify = otapp_coapSendPutUri_subscribed_uris_fake.arg0_val;
+    dataFromNotify = otapp_coapSendPutUri_subscribed_uris_fake.arg1_val;
+    
+    oac_uri_obs_parseMessageFromNotify(dataFromNotify, &test_obs_dataPacketOut);
+    
+    TEST_ASSERT_EQUAL(1, result_); // one subscriber
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(&test_obs_obsTrue.ipAddr, ipAddrFromNotify, OT_IP6_ADDRESS_SIZE);
+    
+    TEST_ASSERT_EQUAL(data_, test_obs_dataPacketOut.buffer[0]);
 }
 
 // parseMessage()
