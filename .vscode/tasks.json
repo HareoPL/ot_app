@@ -9,7 +9,7 @@
                 "Bypass",
                 // "-NoExit",
                 "-Command",
-                "& { . ${config:idfTask.cfgCMD.path} -IdfId ${config:idfTask.cfgCMD.IdfId}; idf.py build; idf.py size}"
+                "& { . ${config:idfTask.cfgCMD.path} -IdfId ${config:idfTask.cfgCMD.IdfId}; idf.py build ${config:idfTask.OTDEVICE}; idf.py size}"
             ],
             "presentation": {
                 "echo": true,

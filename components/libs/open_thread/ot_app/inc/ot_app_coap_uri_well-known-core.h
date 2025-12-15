@@ -1,9 +1,9 @@
 /**
- * @file main.h
+ * @file ot_app_coap_uri_well-known-core.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 08-04-2025
+ * @date 24-07-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,24 +19,11 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MAIN_H_
-#define MAIN_H_
+#ifndef OT_APP_COAP_URI_WELL_KNOWN_CORE_H_
+#define OT_APP_COAP_URI_WELL_KNOWN_CORE_H_
 
-#include <stdio.h>
-#include "stdint.h"
+#include "ot_app_coap.h"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
+void otapp_coap_uri_well_knownCoreHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo);
 
-#include "sdkconfig.h"
-
-#include "esp_log.h"
-#include "esp_err.h"
-
-#include "hro_utils.h"
-
-#define DEBUG
-
-
-#endif  /* MAIN_H_ */
+#endif  /* OT_APP_COAP_URI_WELL_KNOWN_CORE_H_ */

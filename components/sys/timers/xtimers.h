@@ -27,4 +27,6 @@ void xTim_Init(void);
 void xTim_printTaskListEnable(void);
 void xTim_printTaskListDisable(void);
 
+uint32_t xTim_getTick(void);
+
 #endif  /* XTIMERS_H_ */
