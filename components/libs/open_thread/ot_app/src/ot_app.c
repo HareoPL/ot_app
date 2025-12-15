@@ -24,6 +24,7 @@
 #include "ot_app_coap.h"
 #include "ot_app_pair.h"
 #include "ot_app_dataset_tlv.h"
+#include "ot_app_deviceName.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,7 +41,6 @@
 
 static const char *TAG = "ot_app";
 
-static char otapp_deviceName[OTAPP_DNS_SRV_LABEL_SIZE]; // = "device1_1_588c81fffe301ea4";
 static const char *otapp_serviceName = "_coap._udp";
 static const char *otapp_browseDefaultServiceName = "_coap._udp.default.service.arpa.";
 
@@ -76,78 +76,6 @@ otInstance *otapp_getOpenThreadInstancePtr()
     return openThreadInstance;
 }
 
-/////////////////////////
-// deviceName functions
-//
-void otapp_deviceNameSet(const char *deviceName, otapp_deviceType_t deviceType)
-{
-    snprintf(otapp_deviceName, OTAPP_DNS_SRV_LABEL_SIZE - 1, "%s_%d_%02x%02x%02x%02x%02x%02x%02x%02x", 
-                        deviceName, (int)deviceType,
-                        otapp_factoryEUI_64.m8[0], otapp_factoryEUI_64.m8[1], otapp_factoryEUI_64.m8[2], otapp_factoryEUI_64.m8[3],
-                        otapp_factoryEUI_64.m8[4], otapp_factoryEUI_64.m8[5], otapp_factoryEUI_64.m8[6], otapp_factoryEUI_64.m8[7]);
-}
-
-const char *otapp_deviceNameFullGet()
-{
-    return otapp_deviceName;
-}
-
-uint8_t otapp_deviceNameFullIsSame(const char *deviceNameFull)
-{
-    if(strcmp(deviceNameFull, otapp_deviceNameFullGet()) == 0)
-    {
-        return 1;
-    }
-    return 0;
-}
-
-// device1
-uint8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint16_t bufLength)
-{
-    char inDeviceName[OTAPP_DEVICE_NAME_SIZE];
-    char curDeviceName[OTAPP_DEVICE_NAME_SIZE];
-
-    strncpy(inDeviceName, deviceNameFull, bufLength);
-    strncpy(curDeviceName, otapp_deviceNameFullGet(), bufLength);
-    
-    strtok(inDeviceName, "_");
-    strtok(curDeviceName, "_");
-
-    if(strcmp(inDeviceName, curDeviceName) == 0)
-    {
-        return 1;
-    }
-    return 0;
-}
-
-otapp_deviceType_t otapp_deviceNameConvertToDevId(const char *deviceNameFull, uint16_t bufLength)
-{
-    char buf[OTAPP_DEVICE_NAME_SIZE];
-    char *ptr;
-    strncpy(buf, deviceNameFull, bufLength);
-    
-    strtok(buf, "_");
-    ptr = strtok(NULL, "_");
-
-    return atoi(ptr);
-}
-
-static void otapp_deviceNameFullAddDomain(char *labelName)
-{
-    strcat(labelName, ".default.service.arpa.");
-}
-
-int8_t otapp_hostNameToDeviceNameFull(char *hostName)
-{
-    char *chrPtr;
-    chrPtr = strtok(hostName, ".");
-
-    if(chrPtr == NULL)
-    {
-        return OTAPP_ERROR;
-    }
-    return 0;
-}
 
 /////////////////////////
 // char buffer
@@ -509,7 +437,7 @@ otError otapp_srpClientAddService(otInstance *instance, otSrpClientItemState mSt
     otError error;
 
     otapp_otSrpClientService.mName = otapp_serviceName;               
-    otapp_otSrpClientService.mInstanceName = otapp_deviceName;    
+    otapp_otSrpClientService.mInstanceName = otapp_deviceNameFullGet();    
     otapp_otSrpClientService.mSubTypeLabels = NULL;              
     otapp_otSrpClientService.mTxtEntries = NULL;                 
     otapp_otSrpClientService.mPort = OTAPP_COAP_PORT;               
@@ -565,7 +493,7 @@ void otapp_otSrpClientCallback(otError aError, const otSrpClientHostInfo *aHostI
         if(aHostInfo->mState == OT_SRP_CLIENT_ITEM_STATE_REGISTERED)
         {
             otapp_srpServiceLeaseCheckTaskInit();   
-            printf("CHECK DNS BROWSE: \n");
+            
             otapp_dnsClientBrowse(otapp_getOpenThreadInstancePtr(), otapp_browseDefaultServiceName);
 
             otapp_coapSendDeviceNamePut();
@@ -588,7 +516,7 @@ void otapp_srpClientAutoStartCallback(const otSockAddr *aServerSockAddr, void *a
 static void otapp_srpClientInit(otInstance *instance)
 {
     otSrpClientStop(instance);
-    otapp_srpClientSetHostName(instance, otapp_deviceName);
+    otapp_srpClientSetHostName(instance, otapp_deviceNameFullGet());
     otapp_srpClientEnableAutoHostAddress(instance);
     otapp_srpClientAddService(instance, OT_SRP_CLIENT_ITEM_STATE_TO_ADD);
      

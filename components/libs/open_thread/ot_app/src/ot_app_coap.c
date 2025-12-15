@@ -22,6 +22,7 @@
 #include "main.h"
 #include "ot_app_coap.h"
 #include "ot_app.h"
+#include "ot_app_deviceName.h"
 
 #include <openthread/ip6.h>
 #include <openthread/coap.h>
