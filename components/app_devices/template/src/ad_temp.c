@@ -22,71 +22,40 @@
 
 
 #include "ad_temp.h"
-
+#include "string.h"
 #include "ot_app_drv.h"
 
 #define AD_TEMP_DEVICE_NAME ("device1")
-static const otapp_deviceType_t ad_temp_deviceType = OTAPP_SWITCH;
+static const otapp_deviceType_t ad_temp_deviceType = OTAPP_LIGHTING;
 
 static ot_app_devDrv_t *drv;
 // URI
 
-typedef enum {
-        AD_TEMP_NO_URI_INDEX = 0,
 
-        AD_TEMP_LIGHT_ON_OFF,
-        AD_TEMP_LIGHT_DIMM,
-        AD_TEMP_LIGHT_RGB,
-
-        AD_TEMP_END_OF_INDEX,
-    }ad_temp_uriIndex_t;
-
-
-/* Common Web Linking Parameters in CoRE Link Format (RFC 6690):
- *
- * rt       - Resource Type: Describes the semantic type of the resource.
- *            Example values: "temperature-c", "sensor"
- *
- * if       - Interface Description: Describes the interface or interaction method.
- *            Example values: "on,off,set-color"
- *
- * title    - Human-readable title to describe the resource.
- *            Example: "Outdoor temperature sensor"
- *
- * ct       - Content Type: Media type of the resource representation (Content-Format in CoAP).
- *            Example: 50 (JSON), 0 (plain text)
- *
- * sz       - Size: Size of the resource in bytes.
- *            Example: 123
- *
- * obs      - Observable: Indicates that the resource supports observation (Observe feature).
- *            Typically used as a flag with no value.
- * otCoapOptionContentFormat
- */
-static const char ad_temp_uriResources[] =  // format: Web Linking RFC 6690
-    "</light/on_off>;rt=\"actuator\";if=\"on,off\";title=\"Light on-off\";ct=0;obs,"                      // OT_COAP_OPTION_CONTENT_FORMAT_TEXT_PLAIN
-    "</light/dimm>;rt=\"actuator\";if=\"on,off,dimm\";title=\"Light dimmable\";ct=50;obs;sz=4,"      // OT_COAP_OPTION_CONTENT_FORMAT_JSON
-    "</light/rgb>;rt=\"actuator\";if=\"on,off,set-color\";title=\"Light RGB\";ct=50;obs;sz=4";     // OT_COAP_OPTION_CONTENT_FORMAT_JSON
-   
 void ad_temp_uri_light_on_off_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-
+    printf("@@@@@@@@@@@@@@@ FROM light_on_off \n");
+    otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_TEST), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_TEST)) );
 }
 
 void ad_temp_uri_light_dimm_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-
+    printf("@@@@@@@@@@@@@@@ FROM light_dimm\n");
+    otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_TEST), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_TEST)) );
 }
 
 void ad_temp_uri_light_rgb_CoreHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-
+    printf("@@@@@@@@@@@@@@@ FROM light_rgb\n");
+    otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_TEST), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_TEST)) );
 }
 
-static otapp_coap_uri_t ad_temp_uri[] ={
-    {AD_TEMP_LIGHT_ON_OFF,  {"light/on_off", ad_temp_uri_light_on_off_CoreHandle, NULL, NULL},},
-    {AD_TEMP_LIGHT_DIMM,    {"light/dimm", ad_temp_uri_light_dimm_CoreHandle, NULL, NULL},},
-    {AD_TEMP_LIGHT_RGB,     {"light/dimm", ad_temp_uri_light_rgb_CoreHandle, NULL, NULL},},
+// max uris:            OTAPP_PAIRED_URI_MAX
+// max lengh uri name:  OTAPP_COAP_URI_MAX_LENGHT
+static otapp_coap_uri_t ad_temp_uri[] = {   
+    {OTAPP_LIGHTING_ON_OFF,  {"light/on_off", ad_temp_uri_light_on_off_CoreHandle, NULL, NULL},},
+    {OTAPP_LIGHTING_DIMM,    {"light/dimm", ad_temp_uri_light_dimm_CoreHandle, NULL, NULL},},
+    {OTAPP_LIGHTING_RGB,     {"light/rgb", ad_temp_uri_light_rgb_CoreHandle, NULL, NULL},},
  
 };
 #define AD_TEMP_URI_SIZE (sizeof(ad_temp_uri) / sizeof(ad_temp_uri[0]))
@@ -96,28 +65,51 @@ otapp_coap_uri_t *ad_temp_uriGetList()
     return ad_temp_uri;
 }
 
-
+//////////////////////
 // RULES
-static otapp_pair_rule_t ad_temp_deviceRules[] = {
-    {ad_temp_deviceType, {OTAPP_PAIR_NO_RULES}}, // NO RULES, pair every incoming device
+static otapp_pair_rule_t ad_temp_deviceRules_all_allowed = {
+    .allowed = {OTAPP_PAIR_NO_RULES} // NO RULES, pair every incoming device
+};
+static otapp_pair_rule_t ad_temp_deviceRules_no_allowed = {
+    .allowed = {OTAPP_PAIR_NO_ALLOWED} // every devices are not allowed
+};
+static otapp_pair_rule_t ad_temp_deviceRules = {
+    .allowed = {OTAPP_LIGHTING, OTAPP_LIGHTING_ON_OFF, OTAPP_LIGHTING_DIMM, OTAPP_LIGHTING_RGB}   
 };
 
-// static otapp_pair_rule_t ad_temp_deviceRules[] = {
-//     {ad_temp_deviceType, {OTAPP_LIGHTING_ON_OFF, OTAPP_LIGHTING_DIMM, OTAPP_LIGHTING_RGB}},   
-// };
+otapp_pair_rule_t *ad_temp_pairRulesGetList_all_allowed()
+{
+    return &ad_temp_deviceRules_all_allowed;
+}
 
-#define AD_TEMP_RULES_SIZE (sizeof(ad_temp_deviceRules) / sizeof(ad_temp_deviceRules[0]))
+otapp_pair_rule_t *ad_temp_pairRulesGetList_no_allowed()
+{
+    return &ad_temp_deviceRules_no_allowed;
+}
 
 otapp_pair_rule_t *ad_temp_pairRulesGetList()
 {
-    return ad_temp_deviceRules;
+    return &ad_temp_deviceRules;
 }
 
+//////////////////////
 //observer 
+void testHandleGetByte(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
+{
+
+}
 
 void ad_temp_pairedCallback(otapp_pair_Device_t *newDevice)
 {
+    printf("\n");
     printf("Dev Temp detect NEW DEVICE! %s \n", newDevice->devNameFull);
+    printf("      uri 0: %s\n", newDevice->urisList[0].uri);
+    printf("      uri 1: %s\n", newDevice->urisList[1].uri);
+    printf("      uri 2: %s\n", newDevice->urisList[2].uri);
+    printf("\n");
+    drv->api.coap.sendByteGet(&newDevice->ipAddr, newDevice->urisList[0].uri, testHandleGetByte, NULL);
+    drv->api.coap.sendByteGet(&newDevice->ipAddr, newDevice->urisList[1].uri, testHandleGetByte, NULL);
+    drv->api.coap.sendByteGet(&newDevice->ipAddr, newDevice->urisList[2].uri, testHandleGetByte, NULL);
 }
 
 void ad_temp_subscribedUrisCallback(oac_uri_dataPacket_t *newDevice)
@@ -125,21 +117,22 @@ void ad_temp_subscribedUrisCallback(oac_uri_dataPacket_t *newDevice)
     printf("Dev Temp from subs! \n");
 }
 
-
+//////////////////////
+// init
 void ad_tempInit()
 {    
     drv = ot_app_drv_getInstance();
-    drv->pairRuleGetList = ad_temp_pairRulesGetList;
-    drv->pairRuleGetListSize = AD_TEMP_RULES_SIZE;
 
-    drv->uriGetList = ad_temp_uriGetList;
+    drv->pairRuleGetList_clb = ad_temp_pairRulesGetList_all_allowed;     // if you want to pair all devices
+    // drv->pairRuleGetList_clb = ad_temp_pairRulesGetList_no_allowed;      // if you do not want to pair devices
+    // drv->pairRuleGetList_clb = ad_temp_pairRulesGetList;                    // if you have some rules
+    
+    drv->uriGetList_clb = ad_temp_uriGetList;
     drv->uriGetListSize = AD_TEMP_URI_SIZE;
 
-    drv->obs_pairedDevice = ad_temp_pairedCallback;
-    drv->obs_subscribedUri = ad_temp_subscribedUrisCallback;
+    drv->obs_pairedDevice_clb = ad_temp_pairedCallback;
+    drv->obs_subscribedUri_clb = ad_temp_subscribedUrisCallback;
 
     drv->deviceName = AD_TEMP_DEVICE_NAME;
     drv->deviceType = &ad_temp_deviceType;
-    drv->uriResources = ad_temp_uriResources;
-
 }

@@ -93,7 +93,18 @@ typedef struct otMessage
 {
 }otMessage;
 typedef struct otMessageInfo
-{   
+{
+    otIp6Address mSockAddr; ///< The local IPv6 address.
+    otIp6Address mPeerAddr; ///< The peer IPv6 address.
+    uint16_t     mSockPort; ///< The local transport-layer port.
+    uint16_t     mPeerPort; ///< The peer transport-layer port.
+    uint8_t      mHopLimit; ///< The IPv6 Hop Limit value. Only applies if `mAllowZeroHopLimit` is FALSE.
+                            ///< If `0`, IPv6 Hop Limit is default value `OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT`.
+                            ///< Otherwise, specifies the IPv6 Hop Limit.
+    uint8_t mEcn : 2;       ///< The ECN status of the packet, represented as in the IPv6 header.
+    // bool    mIsHostInterface : 1;   ///< TRUE if packets sent/received via host interface, FALSE otherwise.
+    // bool    mAllowZeroHopLimit : 1; ///< TRUE to allow IPv6 Hop Limit 0 in `mHopLimit`, FALSE otherwise.
+    // bool    mMulticastLoop : 1;     ///< TRUE to allow looping back multicast, FALSE otherwise.
 } otMessageInfo;
 
 #endif  /* MOCK_IP6_H_ */

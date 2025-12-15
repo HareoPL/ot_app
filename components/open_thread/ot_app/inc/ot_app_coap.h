@@ -37,6 +37,10 @@
 #define OTAPP_COAP_URI_OK       (-1)
 #define OTAPP_COAP_URI_ERROR    (-2)
 
+#define OTAPP_COAP_OK       OTAPP_COAP_URI_OK
+#define OTAPP_COAP_ERROR    OTAPP_COAP_URI_ERROR
+#define OTAPP_COAP_OK_OBSERVER_REQUEST (-3)
+
 typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
 
 #ifndef UNIT_TEST
@@ -80,8 +84,16 @@ void otapp_coapSendtoTestGet();
 void otapp_coapSendDeviceNamePut();
 void otapp_coapSendGetUri_Well_known(const otIp6Address *ipAddr, otCoapResponseHandler responseHandler, void *aContext);
 void otapp_coapSendPutUri_subscribed_uris(const otIp6Address *ipAddr, const uint8_t *data, uint16_t dataSize);
-void otapp_coapSendGetSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *outToken);
+void otapp_coapSendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *tokenOut);
+void otapp_coapSendSubscribeRequestUpdate(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *tokenIn);
+
+void otapp_coap_clientSendPutByte(const otIp6Address *peer_addr, const char *aUriPath, const uint8_t *payloadMsg, const uint16_t payloadMsgSize, otCoapResponseHandler responseHandler, void *aContext);
+void otapp_coap_clientSendGetByte(const otIp6Address *peer_addr, const char *aUriPath, otCoapResponseHandler responseHandler, void *aContext);
 
 const char *otapp_coap_getUriNameFromDefault(otapp_coap_uriIndex_t uriIndex);
+
+int8_t otapp_coapReadPayload(otMessage *aMessage, uint8_t *bufferOut, uint16_t bufferSize, uint16_t *readBytesOut);
+
+int8_t otapp_coap_processUriRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo, uint8_t uriId, uint8_t *bufOut, uint16_t bufSize);
 
 #endif  /* OT_APP_COAP_H_ */

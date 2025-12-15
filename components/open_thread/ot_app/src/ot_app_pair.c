@@ -21,23 +21,25 @@
  */
 
  #include "ot_app_pair.h"
- #include "ot_app_deviceName.h"
- #include "ot_app_drv.h"
 
+ #include "ot_app_drv.h"
+ 
  #ifdef UNIT_TEST
     #include "mock_freertos_queue.h"
     #include "mock_freertos_task.h"
     #include "mock_ot_app_deviceName.h"
     #include "mock_ip6.h"
+    #include "mock_ot_message.h"
  #else
+    #include "ot_app_deviceName.h"
     #include "freertos/FreeRTOS.h"
     #include "freertos/task.h"
-    #include "freertos/queue.h"
+    #include "freertos/queue.h"    
 #endif
     
 static const char *TAG = "ot_app_pair";
 
-ot_app_devDrv_t *otapp_pair_devDrv;
+static ot_app_devDrv_t *drv;
 
 typedef struct otapp_pair_DeviceList_t{
     otapp_pair_Device_t list[OTAPP_PAIR_DEVICES_MAX];
@@ -48,6 +50,8 @@ static otapp_pair_DeviceList_t otapp_pair_DeviceList;
 static QueueHandle_t otapp_pair_queueHandle;
 static otapp_pair_queueItem_t otapp_pair_queueIteam;
 
+static otapp_pair_resUrisParseData_t resUrisParseData[OTAPP_PAIR_URI_MAX];
+static otapp_pair_resUrisBuffer_t resUrisBuffer[OTAPP_PAIR_URI_MAX];
 //////////////////
 // observer
 static otapp_pair_observerCallback_t otapp_pair_observerPairedDeviceCallback[OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE] = {NULL};
@@ -212,7 +216,7 @@ int8_t otapp_pair_DeviceDelete(otapp_pair_DeviceList_t *pairDeviceList, const ch
     {
         memset(pairDeviceList->list[tableIndex].devNameFull, 0, OTAPP_PAIR_NAME_FULL_SIZE);
         memset(&pairDeviceList->list[tableIndex].ipAddr, 0, sizeof(otIp6Address));
-        memset(pairDeviceList->list[tableIndex].uriIndex, 0, OTAPP_PAIR_URI_MAX);
+        memset(&pairDeviceList->list[tableIndex].urisList, 0, (sizeof(otapp_pair_uris_t) * OTAPP_PAIR_URI_MAX));
         pairDeviceList->takenPosition[tableIndex] = 0;
         
         return tableIndex;
@@ -232,8 +236,7 @@ int8_t otapp_pair_DeviceDeleteAll(otapp_pair_DeviceList_t *pairDeviceList)
         memset(pairDeviceList->list[i].devNameFull, 0, OTAPP_PAIR_NAME_FULL_SIZE);
         memset(&pairDeviceList->list[i].ipAddr, 0, sizeof(otIp6Address));
         pairDeviceList->takenPosition[i] = 0;
-                
-        memset(pairDeviceList->list[i].uriIndex, 0, OTAPP_PAIR_URI_MAX);  
+        memset(&pairDeviceList->list[i].urisList, 0, (sizeof(otapp_pair_uris_t) * OTAPP_PAIR_URI_MAX));
     }
 
     return OTAPP_PAIR_OK;
@@ -257,6 +260,18 @@ int8_t otapp_pair_DeviceIndexGet(otapp_pair_DeviceList_t *pairDeviceList, const 
     return deviceIndex;
 }
 
+otapp_pair_Device_t *otapp_pair_DeviceGet(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull)
+{
+    if(pairDeviceList == NULL || deviceNameFull == NULL)
+    {
+        return NULL;
+    }
+    int8_t deviceIndex;
+    deviceIndex = otapp_pair_DeviceIndexGet(pairDeviceList, deviceNameFull);
+
+    return &pairDeviceList->list[deviceIndex];
+}
+
 int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, otIp6Address *ipAddr)
 {
     if(pairDeviceList == NULL || deviceNameFull == NULL || ipAddr == NULL)
@@ -266,8 +281,14 @@ int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char 
 
     int8_t tableIndex;
     uint16_t strLen = 0;
+    int8_t result = 0;
 
-    if(otapp_pair_DeviceIsExist(pairDeviceList, deviceNameFull) == OTAPP_PAIR_NO_EXIST)
+    result = otapp_pair_DeviceIsExist(pairDeviceList, deviceNameFull);
+    if(result == OTAPP_PAIR_ERROR) 
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+    else if(result == OTAPP_PAIR_NO_EXIST)
     {
        tableIndex = otapp_pair_DeviceIsFreeSpace(pairDeviceList);
        
@@ -289,7 +310,8 @@ int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char 
        {
             return OTAPP_PAIR_DEVICE_NO_SPACE;
        }
-    }else
+    }
+    else
     {
         tableIndex = otapp_pair_DeviceIndexGet(pairDeviceList, deviceNameFull); 
         if(otapp_pair_ipAddressUpdate(pairDeviceList, tableIndex, ipAddr) == OTAPP_PAIR_UPDATED)
@@ -300,53 +322,6 @@ int8_t otapp_pair_DeviceAdd(otapp_pair_DeviceList_t *pairDeviceList, const char 
     
     return OTAPP_PAIR_NO_NEED_UPDATE ;
 }
-
-int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, uint8_t uriIndex)
-{
-    if(pairDeviceList == NULL || deviceNameFull == NULL || uriIndex >= (OTAPP_PAIR_URI_MAX_VAL) || uriIndex == OTAPP_PAIR_NO_URI)
-    {
-        return OTAPP_PAIR_ERROR;
-    }
-
-    int8_t tableIndex = otapp_pair_DeviceIsExist(pairDeviceList, deviceNameFull);
-    if(tableIndex != OTAPP_PAIR_ERROR)
-    {
-        for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
-        {
-            if(pairDeviceList->list[tableIndex].uriIndex[i] == OTAPP_PAIR_NO_URI)
-            {
-                pairDeviceList->list[tableIndex].uriIndex[i] = uriIndex;
-                return ((tableIndex << 8) | (i));
-            }
-        }
-    }
-
-    return OTAPP_PAIR_ERROR;
-}
-
-otapp_coap_uriIndex_t otapp_pair_deviceUriIndexGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, uint8_t indexUri)
-{
-    otapp_coap_uriIndex_t uriIndex;
-
-    if(pairDeviceList == NULL || indexDevice >= OTAPP_PAIR_DEVICES_MAX || indexUri >= OTAPP_PAIR_URI_MAX)
-    {
-        return OTAPP_PAIR_ERROR;
-    }
-
-    if(otapp_pair_spaceIsTaken(pairDeviceList, indexDevice) == 0)
-    {
-        return OTAPP_PAIR_NO_EXIST;
-    }
-
-    uriIndex = pairDeviceList->list[indexDevice].uriIndex[indexUri];
-
-    if(uriIndex == OTAPP_PAIR_NO_URI)
-    {
-        return OTAPP_PAIR_NO_URI;
-    }
-    return uriIndex;
-}
-
 
 otIp6Address *otapp_pair_ipAddressGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice)
 {
@@ -436,8 +411,7 @@ void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t
 
     for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
     {
-        uriIndex = otapp_pair_deviceUriIndexGet(pairDeviceList, indexDevice, i);
-
+       
         if(uriIndex == OTAPP_PAIR_NO_URI)
         {
             if(i == 0)
@@ -452,32 +426,27 @@ void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t
     }
 }
 
-PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_deviceType_t mainDeviceID, otapp_deviceType_t incommingDeviceID)
+PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_deviceType_t incommingDeviceID)
 {    
     if(deviceDrv == NULL)
     {
         return OTAPP_PAIR_ERROR;
     }
 
-    otapp_pair_rule_t *rules = deviceDrv->pairRuleGetList();
-    uint8_t rulesSize = deviceDrv->pairRuleGetListSize;
-
-    if(rules == NULL || rulesSize > OTAPP_PAIR_RULES_ALLOWED_SIZE)
+    otapp_pair_rule_t *rules = deviceDrv->pairRuleGetList_clb();
+    
+    if(rules == NULL)
     {
         return OTAPP_PAIR_ERROR;
     }
 
-    for(uint8_t i = 0; i < rulesSize; i++) 
-    {
-        if(rules[i].main == mainDeviceID) 
+    for(int i = 0; OTAPP_PAIR_RULES_ALLOWED_SIZE; i++) 
+    {   
+        if(rules->allowed[i] == OTAPP_PAIR_END_OF_RULES)  break;
+        
+        if(rules->allowed[i] == OTAPP_PAIR_NO_RULES || rules->allowed[i] == incommingDeviceID) 
         {
-            for(int j = 0; OTAPP_PAIR_RULES_ALLOWED_SIZE; j++) 
-            {
-                if(rules[i].allowed[j] == OTAPP_PAIR_NO_RULES || rules[i].allowed[j] == incommingDeviceID) 
-                {
-                    return OTAPP_PAIR_IS;
-                }
-            }
+            return OTAPP_PAIR_IS;
         }
     }
     return OTAPP_PAIR_IS_NOT;
@@ -490,7 +459,6 @@ PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_queueItem_t *queu
         return OTAPP_PAIR_ERROR;
     }
 
-    int16_t mainDevID;
     int16_t incomingDevID;
     const char *thisDevNameFull;
     
@@ -503,12 +471,10 @@ PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_queueItem_t *queu
             return OTAPP_PAIR_ERROR;
         }
 
-        mainDevID = otapp_deviceNameGetDevId(thisDevNameFull, strlen(thisDevNameFull));
         incomingDevID = otapp_deviceNameGetDevId(queueIteam->deviceNameFull, strlen(queueIteam->deviceNameFull));
-        if(mainDevID == OTAPP_DEVICENAME_ERROR || mainDevID == OTAPP_DEVICENAME_TOO_LONG){ return OTAPP_PAIR_ERROR; }
         if(incomingDevID == OTAPP_DEVICENAME_ERROR || incomingDevID == OTAPP_DEVICENAME_TOO_LONG){ return OTAPP_PAIR_ERROR; }
 
-        if(otapp_pair_deviceIsAllowed(otapp_pair_devDrv, mainDevID, incomingDevID) == OTAPP_PAIR_IS)
+        if(otapp_pair_deviceIsAllowed(drv, incomingDevID) == OTAPP_PAIR_IS)
         {
             return OTAPP_PAIR_IS;
         }        
@@ -517,13 +483,323 @@ PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_queueItem_t *queu
     return OTAPP_PAIR_IS_NOT;
 }
 
+static inline int8_t otapp_pair_uriCheckArgs(const void *buf, uint16_t *outDataSize) 
+{      
+    return (buf == NULL || outDataSize == NULL) ? OTAPP_PAIR_ERROR : OTAPP_PAIR_OK;
+}
+
+static inline int8_t otapp_pair_uriCheckString(const char* uri)
+{   
+    if(strlen(uri) >= OTAPP_URI_MAX_NAME_LENGHT) // the string len should be decrease by one becouse it must be at the end \0
+    {           
+        return OTAPP_PAIR_ERROR;
+    }
+    return OTAPP_PAIR_OK;
+}
+
+otapp_pair_resUrisBuffer_t *otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, int8_t *result, uint16_t *outBufSize)
+{   
+    uint8_t *uriBuff = (uint8_t*)resUrisBuffer;
+
+    if(result == NULL) return NULL;
+    if(otapp_pair_uriCheckArgs(uri, outBufSize) == OTAPP_PAIR_ERROR || uriSize == 0 || uriSize > OTAPP_PAIR_URI_MAX)
+    {
+        *result = OTAPP_PAIR_ERROR;
+        return NULL;
+    }
+    
+    memset(uriBuff, 0, sizeof(resUrisBuffer)); // clear buffer
+
+    for (uint8_t i = 0; i < uriSize; i++)
+    {
+        if(otapp_pair_uriCheckString(uri[i].resource.mUriPath) == OTAPP_PAIR_ERROR)
+        {
+            *result = OTAPP_PAIR_ERROR;
+            return NULL;
+        }
+        // serialize from uri to bytes buffer
+        strcpy((char*)uriBuff, uri[i].resource.mUriPath);   // char uri name
+        
+        uriBuff += OTAPP_URI_MAX_NAME_LENGHT;
+        *uriBuff = uri[i].devType;                           // devTypeUriFn from otapp_deviceType_t
+        
+        uriBuff +=  sizeof(otapp_deviceType_t);
+        *uriBuff = 1;                                        // uint8_t
+        
+        uriBuff += sizeof(uint8_t);
+    }
+    
+    *outBufSize = (OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE * uriSize);
+    *result = OTAPP_PAIR_OK;
+    return resUrisBuffer;
+}
+
+otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(const uint8_t *inBuffer, uint16_t inBufferSize, int8_t *result, uint16_t *outParsedDataSize)
+{
+    const uint8_t *inBuffer_tmp = inBuffer;
+    uint16_t numOfDataToParse = 0;
+
+    if(result == NULL) return NULL;
+
+    if(otapp_pair_uriCheckArgs(inBuffer, outParsedDataSize) == OTAPP_PAIR_ERROR || inBufferSize == 0 || inBufferSize > (OTAPP_PAIR_URI_RESOURCE_BUFFER_MAX_SIZE))
+    {
+        *result = OTAPP_PAIR_ERROR;
+        return NULL;
+    }
+  
+    memset(resUrisParseData, 0, sizeof(resUrisParseData)); // clear buffer
+
+    numOfDataToParse = inBufferSize / OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE;
+    if(numOfDataToParse > OTAPP_PAIR_URI_MAX)
+    {
+       *result = OTAPP_PAIR_ERROR;
+        return NULL; 
+    }
+
+    for (uint8_t i = 0; i < numOfDataToParse; i++)
+    {
+        if(otapp_pair_uriCheckString((char*)inBuffer_tmp) == OTAPP_PAIR_ERROR)
+        {
+            *result = OTAPP_PAIR_ERROR;
+            return NULL;
+        }
+        // deserialize from bytes buffer to struct
+        strcpy(resUrisParseData[i].uri, (char*)inBuffer_tmp);
+
+        inBuffer_tmp += OTAPP_URI_MAX_NAME_LENGHT; 
+        resUrisParseData[i].devTypeUriFn = *inBuffer_tmp;
+
+        inBuffer_tmp += sizeof(otapp_deviceType_t);
+        resUrisParseData[i].obs = *inBuffer_tmp;
+
+        inBuffer_tmp += sizeof(uint8_t);
+    }      
+    
+    *outParsedDataSize = numOfDataToParse;
+    *result =  OTAPP_PAIR_OK;
+    return resUrisParseData;
+}
+
+PRIVATE int8_t otapp_pair_uriTokenIsValid(const oacu_token_t *token)
+{
+    uint8_t count = 0;
+
+    for (uint8_t i = 0; i < OAC_URI_OBS_TOKEN_LENGTH; i++)
+    {
+        if(token[i] == 0)
+        {
+            count++;
+        }
+    }
+
+    if(count == OAC_URI_OBS_TOKEN_LENGTH)
+    {
+        return OTAPP_PAIR_IS_NOT;
+    }
+
+    return OTAPP_PAIR_IS;
+}
+
+int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUriListIndex, const otapp_pair_resUrisParseData_t *uriData, const oacu_token_t *token)
+{
+    uint8_t uriLen = 0;
+    
+    if(deviceUriListIndex == NULL || uriData == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+    
+    uriLen = strlen(uriData->uri);
+    if(uriLen > OTAPP_URI_MAX_NAME_LENGHT || uriLen == 0)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    if(uriData->devTypeUriFn == 0)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    if(token != NULL) // token is only when before addUri() uri is subscribed
+    {   
+        if(otapp_pair_uriTokenIsValid(token) == OTAPP_PAIR_IS) // check token is not empty
+        {
+            memcpy(deviceUriListIndex->token, token, OAC_URI_OBS_TOKEN_LENGTH);
+        }else
+        {
+            return OTAPP_PAIR_ERROR;
+        }
+    }    
+    memset(deviceUriListIndex->uri, 0, OTAPP_URI_MAX_NAME_LENGHT);
+    deviceUriListIndex->devTypeUriFn = uriData->devTypeUriFn;
+    strcpy(deviceUriListIndex->uri, uriData->uri);
+     
+    return OTAPP_PAIR_OK;
+
+}
+
+int8_t otapp_pair_uriGetIdList(otapp_pair_Device_t *deviceHandle, otapp_deviceType_t uriDevType)
+{
+    if(deviceHandle == NULL) return OTAPP_PAIR_ERROR;
+
+    for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
+    {
+       if(deviceHandle->urisList[i].devTypeUriFn == uriDevType)
+       {
+            return i;
+       }
+    }
+    
+    return OTAPP_PAIR_NO_EXIST;
+}
+
+PRIVATE int8_t otapp_pair_tokenIsSame(otapp_pair_DeviceList_t *pairDeviceList, int8_t devListId, int8_t uriListId, const oacu_token_t *tokenToCheck)
+{
+    if(tokenToCheck == NULL || pairDeviceList == NULL || devListId >= OTAPP_PAIR_DEVICES_MAX || uriListId >= OTAPP_PAIR_URI_MAX)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    for (uint8_t i = 0; i < OAC_URI_OBS_TOKEN_LENGTH; i++)
+    {
+       if(pairDeviceList->list[devListId].urisList[uriListId].token[i] != tokenToCheck[i])
+       {
+            return OTAPP_PAIR_IS_NOT;
+       }
+    }
+        
+    return OTAPP_PAIR_IS;
+}
+
+// return uriLIstId or error
+otapp_pair_uris_t *otapp_pair_tokenGetUriIteams(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token)
+{
+    if(pairDeviceList == NULL || token == NULL) return NULL; 
+
+    if(otapp_pair_uriTokenIsValid(token) == OTAPP_PAIR_IS)          // check if token is not empty
+    {
+        for (uint8_t i = 0; i < OTAPP_PAIR_DEVICES_MAX; i++)        // check if device list is taken
+        {
+            if(otapp_pair_spaceIsTaken(pairDeviceList, i))
+            {
+                for (uint8_t j = 0; j < OTAPP_PAIR_URI_MAX; j++)    // check if token form uriLIst is same
+                {
+                   if(otapp_pair_tokenIsSame(pairDeviceList, i, j, token) == OTAPP_PAIR_IS)
+                   {
+                       return &pairDeviceList->list[i].urisList[j]; // return uriList ptr
+                   }
+                }
+                
+            }
+        }
+    }
+
+    return NULL;
+}
+
+int8_t otapp_pair_uriStateSet(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token, const uint32_t *uriState)
+{   
+    otapp_pair_uris_t *uriIteams;
+
+    if(pairDeviceList == NULL || token == NULL || uriState == NULL) return OTAPP_PAIR_ERROR; 
+    
+    uriIteams = otapp_pair_tokenGetUriIteams(pairDeviceList, token);
+    if(uriIteams == NULL) return OTAPP_PAIR_ERROR;
+
+    uriIteams->uriState = *uriState;
+
+    return OTAPP_PAIR_OK;
+}
+
+// return OTAPP_PAIR_ERROR or count of updated devices
+int8_t otapp_pair_subSendUpdateIP(otapp_pair_DeviceList_t *pairDeviceList)
+{
+    int8_t result = 0;
+    int8_t countUpdatedDev = 0 ;
+
+    otIp6Address *ipAddr = NULL;
+    oacu_token_t *token = NULL;
+    char *uri = NULL;
+
+    if(pairDeviceList == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+
+    for (uint8_t i = 0; i < OTAPP_PAIR_DEVICES_MAX; i++) // check saved devices in the deviceList
+    {
+        result = otapp_pair_spaceIsTaken(pairDeviceList, i);
+        if(result)
+        {
+            for (uint8_t j = 0; j < OTAPP_PAIR_URI_MAX; j++) // check uri token is saved
+            {
+                if(otapp_pair_uriTokenIsValid(pairDeviceList->list[i].urisList[j].token) == OTAPP_PAIR_IS)
+                {
+                    ipAddr = &pairDeviceList->list[i].ipAddr;
+                    uri     = pairDeviceList->list[i].urisList[j].uri;
+                    token   = pairDeviceList->list[i].urisList[j].token;
+
+                    oac_uri_obs_sendSubscribeRequestUpdate(ipAddr, uri, token);
+                    countUpdatedDev++;
+                }            
+            }
+            
+        }
+        
+    }
+
+    return countUpdatedDev;
+}
+
+void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
+{
+    UNUSED(aMessageInfo);
+    UNUSED(aResult);
+
+    if(pairedDevice == NULL) return;
+
+    static uint8_t urisBuffer[OTAPP_PAIR_URI_RESOURCE_BUFFER_MAX_SIZE];
+    static oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
+    int8_t result = 0;
+    uint16_t msgLen = 0;
+    uint16_t readBytes = 0;
+    otapp_pair_resUrisParseData_t *parsedData = NULL;
+    uint16_t parsedDataSize = 0; // number of uri structures to add to the list
+
+    otapp_pair_Device_t *device = (otapp_pair_Device_t*)pairedDevice;
+
+    if (aMessage)
+    {
+        msgLen = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+        readBytes = otMessageRead(aMessage, otMessageGetOffset(aMessage), urisBuffer, msgLen);
+        if(readBytes != msgLen) return;
+
+        parsedData = otapp_pair_uriParseMessage(urisBuffer, readBytes, &result, &parsedDataSize);
+        if(parsedData == NULL || result == OTAPP_PAIR_ERROR) return;
+
+        for (uint8_t i = 0; i < parsedDataSize; i++)
+        {            
+            if(parsedData[i].obs)
+            {                
+                oac_uri_obs_sendSubscribeRequest(&device->ipAddr, parsedData[i].uri, token);
+                otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], token);
+            }else
+            {
+                otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], NULL);
+            }
+        }
+        otapp_pair_observerPairedDeviceNotify(device); 
+    }
+}
+
 void otapp_pair_task(void *params) 
 {
     UNUSED(params);
 
     int8_t result;
-    otapp_pair_DeviceList_t *deviceList;
+    otapp_pair_DeviceList_t *deviceListHandle;
     otapp_pair_Device_t *newDevice;
+    otIp6Address *ipAddr;
 
     while (1)
     {
@@ -535,9 +811,9 @@ void otapp_pair_task(void *params)
 
                 if(otapp_pair_deviceIsMatchingFromQueue(&otapp_pair_queueIteam) == OTAPP_PAIR_IS)
                 {
-                    result = otapp_pair_DeviceAdd(otapp_pair_getHandle(), otapp_pair_queueIteam.deviceNameFull, &otapp_pair_queueIteam.ipAddress);
-                    // todo otapp_pair_DeviceUriIndexAdd raczej przez kolejne wywolanie ? 
-                    // bo trzeba opracowac mechanizm uri OTAPP_URI_WELL_KNOWN_CORE
+                    deviceListHandle = otapp_pair_getHandle();
+                    
+                    result = otapp_pair_DeviceAdd(deviceListHandle, otapp_pair_queueIteam.deviceNameFull, &otapp_pair_queueIteam.ipAddress);
                     
                     switch (result)
                     {
@@ -552,18 +828,20 @@ void otapp_pair_task(void *params)
                         otapp_ip6AddressPrint(&otapp_pair_queueIteam.ipAddress);
                         break;
 
-                    case OTAPP_PAIR_NO_NEED_UPDATE:                    
-                        printf("is exist and no need update\n");
+                    case OTAPP_PAIR_NO_NEED_UPDATE:
+                        otapp_pair_subSendUpdateIP(otapp_pair_getHandle()); // todo check
+                        printf("no need IP update\n");
                         break;                   
                    
                     default:
                         if(result >= 0)
-                        {
-                            printf("has been success paired on index %d \n", result);
+                        {                            
+                            newDevice = &deviceListHandle->list[result];                            
+                            ipAddr = otapp_pair_ipAddressGet(deviceListHandle, result);
 
-                            deviceList = otapp_pair_getHandle();
-                            newDevice = &deviceList->list[result];
-                            otapp_pair_observerPairedDeviceNotify(newDevice); 
+                            otapp_coapSendGetUri_Well_known(ipAddr, otapp_pair_responseHandlerUriWellKnown, (otapp_pair_Device_t*)newDevice); // .well-known/core
+                         
+                            printf("has been success paired on index %d \n", result);
                         }else
                         {
                             printf(" Error: %d \n", result);
@@ -573,7 +851,7 @@ void otapp_pair_task(void *params)
                     }
                 }else
                 {
-                    printf("= current device \n ");
+                    printf("= current device, or NOT allowed \n ");
                 }
             }
 
@@ -613,9 +891,9 @@ int8_t otapp_pair_init(ot_app_devDrv_t *devDriver)
 
     int8_t result;
     
-    otapp_pair_devDrv = devDriver;
+    drv = devDriver;
 
-    otapp_pair_observerPairedDeviceRegisterCallback(otapp_pair_devDrv->obs_pairedDevice);
+    otapp_pair_observerPairedDeviceRegisterCallback(drv->obs_pairedDevice_clb);
 
     result = otapp_pair_initQueue();
     if(result != OTAPP_PAIR_OK)

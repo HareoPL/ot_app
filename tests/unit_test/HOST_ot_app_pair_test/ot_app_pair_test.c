@@ -19,6 +19,37 @@
 #define UT_OAP_DEVICE_NAME_FULL_3 (3)
 #define UT_OAP_DEVICE_NAME_FULL_9 (9)
 
+#define UT_OAP_DEVICELIST_INDEX_0           0
+#define UT_OAP_DEVICELIST_INDEX_MAX         (OAC_URI_OBS_SUBSCRIBERS_MAX_NUM - 1)
+#define UT_OAP_DEVICELIST_INDEX_OVERFLOW    OAC_URI_OBS_SUBSCRIBERS_MAX_NUM
+
+#define UT_OAP_DEVICEURI_INDEX_INDEX_0           0
+#define UT_OAP_DEVICEURI_INDEX_INDEX_MAX         (OAC_URI_OBS_PAIRED_URI_MAX - 1)
+#define UT_OAP_DEVICEURI_INDEX_INDEX_OVERFLOW    OAC_URI_OBS_PAIRED_URI_MAX
+
+#define UT_OAP_DEVICEURI_INDEX_1 1
+#define UT_OAP_DEVICEURI_INDEX_2 2
+#define UT_OAP_DEVICEURI_INDEX_3 3
+#define UT_OAP_DEVICEURI_INDEX_4 4
+#define UT_OAP_DEVICEURI_INDEX_5 5
+
+oacu_token_t ut_oap_devicetoken_4Byte[] = {0xFA, 0x04, 0xB6, 0xD1};
+oacu_token_t ut_oap_devicetoken_4Byte_other[] = {0xFA, 0x04, 0xB6, 0x1D};
+oacu_token_t ut_oap_devicetoken_4Byte_other2[] = {0xFA, 0x04, 0x6B, 0x1D};
+oacu_token_t ut_oap_devicetoken_3Byte[] = {0xFA, 0x04, 0xB6};
+static otapp_pair_resUrisParseData_t ut_oap_uriData_1 = {
+    .devTypeUriFn = 2,
+    .obs = 1,
+    .uri = "light/on_off",
+};
+
+static otapp_pair_resUrisParseData_t ut_oap_uriData_2 = {
+    .devTypeUriFn = 3,
+    .obs = 1,
+    .uri = "light/on_off2",
+};
+
+
 static char *deviceNameFull_0 = {"device1_1_588c81fffe301ea1"};
 static char *deviceNameFull_1 = {"device1_1_588c81fffe301ea2"};
 static char *deviceNameFull_2 = {"device1_1_588c81fffe301ea3"};
@@ -51,22 +82,6 @@ static otIp6Address ipAddr_bad_to_short_lenght = {
 static otIp6Address *ipAddr_same = &ipAddr_ok_1;
 static otIp6Address *ipAddr_new = &ipAddr_ok_2;
 
-static void ut_oap_DeviceUriIndexAddFillAll(otapp_coap_uriIndex_t uriIndex)
-{
-    for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
-    {
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_0, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_1, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_2, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_3, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_4, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_5, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_6, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_7, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_8, uriIndex);
-       otapp_pair_DeviceUriIndexAdd(otapp_pair_getHandle(), deviceNameFull_9, uriIndex);
-    }
-}
 
 static int8_t ut_oap_deviceAddFullFill(void)
 {
@@ -204,7 +219,6 @@ TEST(ot_app_pair, GivenTrueVariable_WhenCallingDeviceDelete_ThenReturn3)
 {
     int8_t result;
     ut_oap_deviceAddFullFill();
-    ut_oap_DeviceUriIndexAddFillAll(UT_OAP_URI_TABLE_2);
 
     result = otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_3);
 
@@ -215,7 +229,6 @@ TEST(ot_app_pair, GivenSameDeviceNameTwice_WhenCallingDeviceDelete_ThenReturnErr
 {
     int8_t result;
     ut_oap_deviceAddFullFill();
-    ut_oap_DeviceUriIndexAddFillAll(UT_OAP_URI_TABLE_2);
 
     otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_3);
     result = otapp_pair_DeviceDelete(otapp_pair_getHandle(), deviceNameFull_3);
@@ -492,4 +505,152 @@ TEST(ot_app_pair, GivenNewIpAddress_WhenCallingIpAddressUpdateAndIpAddressIsSame
     result = otapp_pair_ipAddressIsSame(otapp_pair_getHandle(), deviceIndex, ipAddr_new);
 
     TEST_ASSERT_EQUAL(OTAPP_PAIR_IS , result);
+}
+// otapp_pair_tokenIsSame
+TEST(ot_app_pair, GivenNullHandleArg_WhenCallingTokenIsSame_ThenReturnError)
+{
+    oacu_result_t result_;
+
+    result_ = otapp_pair_tokenIsSame(NULL, UT_OAP_DEVICELIST_INDEX_0, UT_OAP_DEVICEURI_INDEX_INDEX_0, ut_oap_devicetoken_4Byte);
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result_);
+}
+
+TEST(ot_app_pair, GivenNullTokenToCheckArg_WhenCallingTokenIsSame_ThenReturnError)
+{
+    oacu_result_t result_;
+    result_ = otapp_pair_tokenIsSame(otapp_pair_getHandle(), UT_OAP_DEVICELIST_INDEX_0, UT_OAP_DEVICEURI_INDEX_INDEX_0, NULL);
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result_);
+}
+
+TEST(ot_app_pair, GivenOverFlowTabDevIdArg_WhenCallingTokenIsSame_ThenReturnError)
+{
+    oacu_result_t result_;
+    result_ = otapp_pair_tokenIsSame(otapp_pair_getHandle(), UT_OAP_DEVICELIST_INDEX_OVERFLOW, UT_OAP_DEVICEURI_INDEX_INDEX_0, ut_oap_devicetoken_4Byte);
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result_);
+}
+
+TEST(ot_app_pair, GivenOverFlowTabUriIdArg_WhenCallingTokenIsSame_ThenReturnError)
+{
+    oacu_result_t result_;
+    result_ = otapp_pair_tokenIsSame(otapp_pair_getHandle(), UT_OAP_DEVICELIST_INDEX_0, UT_OAP_DEVICEURI_INDEX_INDEX_OVERFLOW, ut_oap_devicetoken_4Byte);
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result_);
+}
+
+TEST(ot_app_pair, GivenSameTokenToCheck_WhenCallingTokenIsSame_ThenReturnIs)
+{
+    oacu_result_t result_;
+    ut_oap_deviceAddFullFill();
+    otapp_pair_DeviceList_t *deviceListHandle = otapp_pair_getHandle();
+    otapp_pair_Device_t *newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_0);   
+
+    otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_devicetoken_4Byte);
+
+    result_ = otapp_pair_tokenIsSame(deviceListHandle, UT_OAP_DEVICELIST_INDEX_0, UT_OAP_DEVICEURI_INDEX_INDEX_0, ut_oap_devicetoken_4Byte);
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_IS, result_);
+}
+
+TEST(ot_app_pair, GivenDifferentTokenToCheck_WhenCallingTokenIsSame_ThenReturnIsNot)
+{
+    oacu_result_t result_;
+    ut_oap_deviceAddFullFill();
+    otapp_pair_DeviceList_t *deviceListHandle = otapp_pair_getHandle();
+    otapp_pair_Device_t *newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_0);   
+
+    otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_devicetoken_4Byte);
+
+    result_ = otapp_pair_tokenIsSame(otapp_pair_getHandle(), UT_OAP_DEVICELIST_INDEX_0, UT_OAP_DEVICEURI_INDEX_INDEX_0, ut_oap_devicetoken_3Byte);
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_IS_NOT, result_);
+}
+
+// otapp_pair_tokenGetUriIteams
+TEST(ot_app_pair, GivenNullArgs_WhenCallingTokenGetUriIteams_ThenReturnError)
+{
+    otapp_pair_uris_t *uriIteam = NULL;
+    ut_oap_deviceAddFullFill();
+    otapp_pair_DeviceList_t *deviceListHandle = otapp_pair_getHandle();
+    otapp_pair_Device_t *newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_0);   
+
+    otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_devicetoken_4Byte);
+
+    uriIteam = otapp_pair_tokenGetUriIteams(NULL, ut_oap_devicetoken_4Byte);
+    TEST_ASSERT_NULL(uriIteam);
+
+    uriIteam = otapp_pair_tokenGetUriIteams(deviceListHandle, NULL);
+    TEST_ASSERT_NULL(uriIteam);
+}
+
+TEST(ot_app_pair, GivenTrueArgs_WhenCallingTokenGetUriIteams_ThenReturn_ptrToData)
+{
+    otapp_pair_uris_t *uriIteam = NULL;
+    ut_oap_deviceAddFullFill();
+    otapp_pair_DeviceList_t *deviceListHandle = otapp_pair_getHandle();
+    otapp_pair_Device_t *newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_0);   
+
+    otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_devicetoken_4Byte);
+
+    uriIteam = otapp_pair_tokenGetUriIteams(deviceListHandle, ut_oap_devicetoken_4Byte);
+    TEST_ASSERT_NOT_NULL(uriIteam);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(&ut_oap_uriData_1, uriIteam, sizeof(&ut_oap_uriData_1));
+}
+
+TEST(ot_app_pair, GivenTrueArgsButOtherToken_WhenCallingTokenGetUriIteams_ThenReturn_NULL)
+{
+    otapp_pair_uris_t *uriIteam = NULL;
+    ut_oap_deviceAddFullFill();
+    otapp_pair_DeviceList_t *deviceListHandle = otapp_pair_getHandle();
+    otapp_pair_Device_t *newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_0);   
+
+    otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_devicetoken_4Byte);
+
+    uriIteam = otapp_pair_tokenGetUriIteams(deviceListHandle, ut_oap_devicetoken_4Byte_other);
+    TEST_ASSERT_NULL(uriIteam);
+}
+
+TEST(ot_app_pair, GivenTrueArgsAnd2DiffrentTokenOnLIst_WhenCallingTokenGetUriIteams_ThenReturn_ptrToData)
+{
+    otapp_pair_uris_t *uriIteam = NULL;
+    ut_oap_deviceAddFullFill();
+    otapp_pair_DeviceList_t *deviceListHandle = otapp_pair_getHandle();
+    otapp_pair_Device_t *newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_0);   
+
+    otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_devicetoken_4Byte);
+    otapp_pair_uriAdd(&newDevice->urisList[1], &ut_oap_uriData_2, ut_oap_devicetoken_4Byte_other);
+
+    uriIteam = otapp_pair_tokenGetUriIteams(deviceListHandle, ut_oap_devicetoken_4Byte_other);
+    TEST_ASSERT_NOT_NULL(uriIteam);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(&ut_oap_uriData_1, uriIteam, sizeof(&ut_oap_uriData_1));
+}
+
+
+// otapp_pair_uriStateSet
+TEST(ot_app_pair, GivenNullArgs_WhenCallingUriStateSet_ThenReturnError)
+{
+    int8_t result;
+    uint32_t value = 256;
+    otapp_pair_DeviceList_t *deviceListHandle = otapp_pair_getHandle();
+
+    result = otapp_pair_uriStateSet(NULL, ut_oap_devicetoken_4Byte, &value);    
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+
+    result = otapp_pair_uriStateSet(deviceListHandle, NULL, &value);    
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+
+    result = otapp_pair_uriStateSet(deviceListHandle, ut_oap_devicetoken_4Byte, NULL);    
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+}
+
+TEST(ot_app_pair, GivenTrueArgs_WhenCallingUriStateSet_ThenReturnOK)
+{
+    int8_t result;
+    uint32_t value = 256;
+    ut_oap_deviceAddFullFill();
+    otapp_pair_DeviceList_t *deviceListHandle = otapp_pair_getHandle();
+    otapp_pair_Device_t *newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_0);   
+
+    otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_devicetoken_4Byte_other);
+    otapp_pair_uriAdd(&newDevice->urisList[1], &ut_oap_uriData_1, ut_oap_devicetoken_4Byte);
+
+    result = otapp_pair_uriStateSet(deviceListHandle, ut_oap_devicetoken_4Byte, &value);    
+    TEST_ASSERT_EQUAL(OTAPP_PAIR_OK, result);    
+    TEST_ASSERT_EQUAL(value, newDevice->urisList[1].uriState);
 }

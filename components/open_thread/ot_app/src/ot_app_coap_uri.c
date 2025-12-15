@@ -26,7 +26,14 @@
 #include "ot_app.h"
 #include "ot_app_deviceName.h"
 #include "ot_app_pair.h"
+#include "ot_app_drv.h"
 
+#include <openthread/coap.h>
+#include <openthread/instance.h>
+#include <openthread/message.h>
+#include <string.h>
+
+#define OTAPP_COA_URI_BUFFER 264
 void otapp_coap_uri_testHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {
     otapp_coap_printSenderIP(aMessageInfo);
@@ -34,7 +41,7 @@ void otapp_coap_uri_testHandle(void *aContext, otMessage *request, const otMessa
     if (request)
     {
 
-        otapp_coap_sendResponse(request, aMessageInfo, otapp_coap_getMessage(OTAPP_MESSAGE_TEST));
+        otapp_coap_sendResponse(request, aMessageInfo, (uint8_t*) otapp_coap_getMessage(OTAPP_MESSAGE_TEST), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_TEST)));
     }
 }
 
@@ -42,50 +49,90 @@ static char charBuffer[1024];
 
 void otapp_coap_uri_ledControlHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {
+    uint16_t readBytes = 0;
     otapp_coap_printSenderIP(aMessageInfo);
 
     if (request)
     {
-        uint16_t len = otMessageGetLength(request) - otMessageGetOffset(request);
-
-        uint16_t lenOfReadedBytes = otMessageRead(request, otMessageGetOffset(request), charBuffer, len);
-
-        printf("Sender data: %s bytes: %d\n ", charBuffer, lenOfReadedBytes);
-        otapp_coap_sendResponse(request, aMessageInfo, NULL);
+        if(otapp_coapReadPayload(request, (uint8_t*)charBuffer, 1024, &readBytes) == OTAPP_COAP_ERROR) return; 
+        
+        otapp_coap_sendResponse(request, aMessageInfo, NULL, 0);        
+        printf("Sender data: %s bytes: %d \n ", charBuffer, readBytes);
     }
 }
 
 void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {    
     otapp_pair_queueItem_t queueItem; 
-    uint16_t len = 0;
-    uint16_t lenOfReadedBytes = 0;
+    uint16_t readBytes = 0;
 
     if (request)
     {
         printf("from uri: paring_services \n");
-
-        len = otMessageGetLength(request) - otMessageGetOffset(request);
-
-        if(len > OTAPP_DEVICENAME_FULL_SIZE)
-        {
-            printf("ERROR otapp_coap_uri_paringServicesHandle OTAPP_DEVICENAME_FULL_SIZE");
-            return ;
-        }
-
-        lenOfReadedBytes = otMessageRead(request, otMessageGetOffset(request), queueItem.deviceNameFull, len);
-        queueItem.deviceNameFull[lenOfReadedBytes] = '\0';
+        if(otapp_coapReadPayload(request, (uint8_t*)queueItem.deviceNameFull, OTAPP_PAIR_NAME_FULL_SIZE, &readBytes) == OTAPP_COAP_ERROR) return; 
         
-        otapp_coap_sendResponse(request, aMessageInfo, NULL);
+        otapp_coap_sendResponse(request, aMessageInfo, NULL, 0);
 
         queueItem.type = OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST;
         memcpy(&queueItem.ipAddress, &aMessageInfo->mPeerAddr, sizeof(otIp6Address));
 
-        printf("Sender data: %s bytes: %d \n ", queueItem.deviceNameFull, lenOfReadedBytes);
+        printf("Sender data: %s \n ", queueItem.deviceNameFull );
         otapp_coap_printSenderIP(aMessageInfo);
 
         printf("URI: Add item to queue\n ");
         otapp_pair_addToQueue(&queueItem);    
     }
 }
+void ad_temp_uri_well_knownCoreHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
+{
+    ot_app_devDrv_t *devDrv_ = otapp_getDevDrvInstance();
+    ot_app_size_t uriSize = 0;
+    otapp_coap_uri_t *urisList = NULL;
+    otapp_pair_resUrisBuffer_t *uriBuf = NULL;
+    uint16_t uriBufSize = 0;
 
+    int8_t result = 0;
+
+    if (request)
+    {
+        if(devDrv_ == NULL) return;
+
+        uriSize = devDrv_->uriGetListSize;
+        urisList = devDrv_->uriGetList_clb();
+        if(urisList == NULL) return;
+
+        uriBuf = otapp_pair_uriResourcesCreate(urisList, uriSize, &result, &uriBufSize);
+        if(result == OTAPP_PAIR_ERROR || uriBuf == NULL) return;
+
+        otapp_coap_sendResponse(request, aMessageInfo, (uint8_t*)uriBuf, uriBufSize);
+    }
+}
+
+void otapp_coap_uri_subscribedHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
+{
+    ot_app_devDrv_t *drv;
+    oac_uri_dataPacket_t *dataPacket;
+    uint16_t readBytes = 0;
+   
+    uint8_t buffer[OTAPP_COA_URI_BUFFER];
+    int8_t result;
+
+    if (request)
+    {
+        if(otapp_coapReadPayload(request, buffer, OTAPP_COA_URI_BUFFER, &readBytes) != OTAPP_COAP_OK) return;         
+        
+        otapp_coap_sendResponse(request, aMessageInfo, NULL, 0);
+
+        drv = otapp_getDevDrvInstance();
+
+        dataPacket = oac_uri_obs_getdataPacketHandle();
+        result = oac_uri_obs_parseMessageFromNotify(buffer, dataPacket); 
+        if(result == OAC_URI_OBS_ERROR)
+        {
+            printf("ERROR: otapp_coap_uri_subscribedHandle\n ");
+            return;
+        }
+
+        drv->obs_subscribedUri_clb(dataPacket); // inform app device about new subscribed event.         
+    }
+}

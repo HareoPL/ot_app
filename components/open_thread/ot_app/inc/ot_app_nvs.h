@@ -1,9 +1,9 @@
 /**
- * @file mock_ot_app_deviceName.h
+ * @file ot_app_nvs.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 01-09-2025
+ * @date 24-10-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,34 +19,41 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MOCK_OT_APP_DEVICENAME_H_
-#define MOCK_OT_APP_DEVICENAME_H_
+
+#ifndef OT_APP_NVS_H_
+#define OT_APP_NVS_H_
 
 #include "stdint.h"
-#include "fff.h"
+#include "ot_app_drv.h"
 
-#define otapp_deviceNameIsMatching mock_oadevName_otapp_deviceNameIsMatching
+#define OT_APP_NVS_OK               (-1)
+#define OT_APP_NVS_ERROR            (-2)
+#define OT_APP_NVS_IS               (-3)
+#define OT_APP_NVS_IS_NOT           (-4)
+#define OT_APP_NVS_IS_NO_SPACE      (-5)
 
-#define OTAPP_DEVICENAME_IS                 (1)
-#define OTAPP_DEVICENAME_IS_NOT             (2)
-#define OTAPP_DEVICENAME_OK                 (-1)
+/**
+ * @brief save data into NVS partition
+ * 
+ * @param inData        [in] ptr to data
+ * @param keyId         [in] it is id for saved data. It will be necessary for update or read data
+ * @return int8_t       OT_APP_NVS_ERROR or OT_APP_NVS_OK
+ */
+int8_t ot_app_nvs_saveString(const char *inData, const uint8_t keyId);
 
-#define OTAPP_DEVICENAME_ERROR              (-2)
-#define OTAPP_DEVICENAME_TOO_LONG           (-3)
-#define OTAPP_DEVICENAME_TOO_SHORT          (-4)
-#define OTAPP_DEVICENAME_BUFFER_TOO_SMALL   (-5)
-#define OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN   (-6)
+/**
+ * @brief read data from NVS partition
+ * 
+ * @param outData        [out] ptr to data
+ * @param outDataSize    [out] ptr to the size of the data that was read
+ * @param keyId          [in] it is id for saved data. It will be necessary for update or read data
+ * @return int8_t        OT_APP_NVS_ERROR or OT_APP_NVS_OK
+ */
+int8_t ot_app_nvs_readString(char *outBuff, uint8_t outBuffSize, const uint8_t keyId);
 
-#ifndef OTAPP_DEVICENAME_FULL_SIZE
-    #define OTAPP_DEVICENAME_FULL_SIZE  32 // OT_DNS_MAX_LABEL_SIZE host name: "device1_1_588c81fffe301ea4"
-#endif
+int8_t ot_app_nvs_init(void);
 
-
-int8_t mock_oadevName_otapp_deviceNameIsMatching(char *deviceFullName);
-void mock_oadevName_state(int8_t returnState);
-
-DECLARE_FAKE_VALUE_FUNC0(const char *, otapp_deviceNameFullGet);
-DECLARE_FAKE_VALUE_FUNC2(int16_t, otapp_deviceNameGetDevId, const char *, uint8_t);
+void ot_app_nvs_test();
 
 
-#endif  /* MOCK_OT_APP_DEVICENAME_H_ */
+#endif  /* OT_APP_NVS_H_ */

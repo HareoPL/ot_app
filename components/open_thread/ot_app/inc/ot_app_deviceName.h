@@ -43,7 +43,11 @@
 #define OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN   (-6)
 
 #define OTAPP_DEVICENAME_MAX_DEVICE_TYPE    OTAPP_END_OF_DEVICE_TYPE
-#define OTAPP_DEVICENAME_FULL_SIZE          OTAPP_DNS_SRV_LABEL_SIZE
+
+#ifndef OTAPP_DEVICENAME_FULL_SIZE
+    #define OTAPP_DEVICENAME_FULL_SIZE OTAPP_DNS_SRV_LABEL_SIZE
+#endif
+
 #define OTAPP_DEVICENAME_SIZE               (OTAPP_DEVICENAME_FULL_SIZE - 22)
 #define OTAPP_DEVICENAME_MIN_SIZE           (OTAPP_DEVICENAME_FULL_SIZE - OTAPP_DEVICENAME_SIZE + 1)
 #define OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE           (2 * OTAPP_DEVICENAME_FULL_SIZE)
@@ -133,5 +137,17 @@ int8_t otapp_deviceNameIsMatching(const char *deviceFullName);
  * 
  */
 void otapp_deviceNameDelete(void);
+
+/**
+ * @brief return EUI ptr frim deviceNameFull
+ * 
+ * @param deviceNameFull    [in] string ptr to device name full
+ * @param stringLength      [in] string lenght
+ * @param outEuiChrPtr      [out] ptr to EUI ptr from string. It looks for EUI string from deviceNameFull and return ptr to first element of EUI string 
+ * @return int8_t 
+ */
+int8_t otapp_deviceNameFullToEUI(const char *deviceNameFull, uint8_t stringLength, char **outEuiChrPtr);
+
+int8_t otapp_deviceNameEuiIsSame(const char *deviceNameFull, const char *eui);
 
 #endif  /* OT_APP_DEVICENAME_H_ */

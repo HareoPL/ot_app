@@ -1,9 +1,9 @@
 /**
- * @file mock_ot_app_deviceName.h
+ * @file mock_ot_message.c
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 01-09-2025
+ * @date 01-10-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,34 +19,11 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MOCK_OT_APP_DEVICENAME_H_
-#define MOCK_OT_APP_DEVICENAME_H_
 
-#include "stdint.h"
-#include "fff.h"
+#include "mock_ot_message.h"
 
-#define otapp_deviceNameIsMatching mock_oadevName_otapp_deviceNameIsMatching
+// DEFINE_FFF_GLOBALS;  
 
-#define OTAPP_DEVICENAME_IS                 (1)
-#define OTAPP_DEVICENAME_IS_NOT             (2)
-#define OTAPP_DEVICENAME_OK                 (-1)
-
-#define OTAPP_DEVICENAME_ERROR              (-2)
-#define OTAPP_DEVICENAME_TOO_LONG           (-3)
-#define OTAPP_DEVICENAME_TOO_SHORT          (-4)
-#define OTAPP_DEVICENAME_BUFFER_TOO_SMALL   (-5)
-#define OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN   (-6)
-
-#ifndef OTAPP_DEVICENAME_FULL_SIZE
-    #define OTAPP_DEVICENAME_FULL_SIZE  32 // OT_DNS_MAX_LABEL_SIZE host name: "device1_1_588c81fffe301ea4"
-#endif
-
-
-int8_t mock_oadevName_otapp_deviceNameIsMatching(char *deviceFullName);
-void mock_oadevName_state(int8_t returnState);
-
-DECLARE_FAKE_VALUE_FUNC0(const char *, otapp_deviceNameFullGet);
-DECLARE_FAKE_VALUE_FUNC2(int16_t, otapp_deviceNameGetDevId, const char *, uint8_t);
-
-
-#endif  /* MOCK_OT_APP_DEVICENAME_H_ */
+DEFINE_FAKE_VALUE_FUNC1(uint16_t, otMessageGetLength, const otMessage *);
+DEFINE_FAKE_VALUE_FUNC1(uint16_t, otMessageGetOffset, const otMessage *);
+DEFINE_FAKE_VALUE_FUNC4(uint16_t, otMessageRead, const otMessage *, uint16_t, void *, uint16_t);

@@ -25,7 +25,8 @@ file(GLOB_RECURSE SRCS
 list(APPEND SRCS
 	# ADD your source file here ex. ../test.c	
 	../../../components/open_thread/ot_app/src/ot_app_pair.c
-	../../../components/open_thread/ot_app/src/ot_app_deviceName.c
+	# ../../../components/open_thread/ot_app/src/ot_app_deviceName.c
+	../../../components/open_thread/ot_app/src/ot_app_coap_uri_obs.c
 	../../../utils/hro_utils.c
 	# ../../../main/main.c
 
