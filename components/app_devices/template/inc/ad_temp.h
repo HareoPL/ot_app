@@ -1,9 +1,9 @@
 /**
- * @file ot_app_coap_uri_well-known-core.h
+ * @file ad_temp.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief 
+ * @brief template implementation of hardware device for openThread app
  * @version 0.1
- * @date 24-07-2025
+ * @date 06-09-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,11 +19,12 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef OT_APP_COAP_URI_WELL_KNOWN_CORE_H_
-#define OT_APP_COAP_URI_WELL_KNOWN_CORE_H_
 
-#include "ot_app_coap.h"
+#ifndef AD_TEMP_H_
+#define AD_TEMP_H_
 
-void otapp_coap_uri_well_knownCoreHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo);
+typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
 
-#endif  /* OT_APP_COAP_URI_WELL_KNOWN_CORE_H_ */
+ot_app_devDrv_t *ad_devDrvGetTemp(void);
+
+#endif  /* AD_TEMP_H_ */

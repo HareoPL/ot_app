@@ -10,6 +10,27 @@
       "type": "espidf",
       "name": "Launch",
       "request": "launch"
+    },
+    {
+      "name": "C Local Debug (GDB/MinGW)",
+      "type": "cppdbg",
+      "request": "launch",
+      // "program": "${workspaceFolder}/build/unit_test/HOST_ot_app_pair_test/HOST_ot_app_pair_test.exe",
+      "program": "${workspaceFolder}/build/unit_test/HOST_ot_app_deviceName_test/HOST_ot_app_deviceName_test.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceFolder}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerPath": "C:/.Programy/msys64/ucrt64/bin/gdb.exe",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
     }
   ]
 }

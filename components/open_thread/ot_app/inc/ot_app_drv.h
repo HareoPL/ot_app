@@ -1,9 +1,9 @@
 /**
- * @file utils.h
+ * @file ot_app_drv.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 28-04-2025
+ * @date 08-09-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,30 +19,31 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef OT_APP_DRV_H_
+#define OT_APP_DRV_H_
 
-#include "main.h"
+#include "ot_app_coap.h"
+#include "ot_app_pair.h"
 
-#define UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS
-// #define UNIT_TEST
+#include "stdint.h"
 
 
-#ifndef UNIT_TEST
-    #define PRIVATE static
-#else
-    #define PRIVATE
-#endif
+typedef uint8_t ot_app_size_t;
+typedef otapp_pair_rule_t *(*pairRuleGet_callback_t)(void);
+typedef otapp_coap_uri_t *(*uriGet_callback_t)(void);
 
-#ifdef UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS  
-    #define UTILS_RTOS_CHECK_FREE_STACK() \
-        do{ \
-            const char *task_name = pcTaskGetName(NULL); \
-            UBaseType_t stack_free = uxTaskGetStackHighWaterMark(NULL); \
-            ESP_LOGI(TAG, "task %s free stack: %d ", task_name, stack_free); \
-        }while(0)
-#else
-    #define UTILS_RTOS_CHECK_FREE_STACK() do{}while(0)
-#endif 
 
-#endif  /* UTILS_H_ */
+typedef struct ot_app_devDrv_t{
+        otapp_pair_observerCallback_t pairedObserver;        
+        pairRuleGet_callback_t      pairRuleGetList;
+        uriGet_callback_t           uriGetList;
+
+        const char *deviceName;
+        const otapp_deviceType_t *deviceType;
+
+        ot_app_size_t               pairRuleGetListSize;
+        ot_app_size_t               uriGetListSize;
+
+}ot_app_devDrv_t;
+
+#endif  /* OT_APP_DRV_H_ */

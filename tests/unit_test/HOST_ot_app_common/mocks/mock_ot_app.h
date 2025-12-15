@@ -42,4 +42,6 @@ typedef enum {
     OTAPP_END_OF_DEVICE_TYPE
 }otapp_deviceType_t;
 
+typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
+
 #endif  /* MOCK_OT_APP_H_ */

@@ -25,6 +25,7 @@
 #include "string.h"
 #include "ot_app.h"
 #include "ot_app_deviceName.h"
+#include "ot_app_pair.h"
 
 void otapp_coap_uri_testHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {
@@ -56,33 +57,35 @@ void otapp_coap_uri_ledControlHandle(void *aContext, otMessage *request, const o
 
 void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {    
+    otapp_pair_queueItem_t queueItem; 
+    uint16_t len = 0;
+    uint16_t lenOfReadedBytes = 0;
+
     if (request)
     {
         printf("from uri: paring_services \n");
-        char incommingHostName[OTAPP_DEVICENAME_FULL_SIZE];
 
-        uint8_t strCompare = 0;
+        len = otMessageGetLength(request) - otMessageGetOffset(request);
 
+        if(len > OTAPP_DEVICENAME_FULL_SIZE)
+        {
+            printf("ERROR otapp_coap_uri_paringServicesHandle OTAPP_DEVICENAME_FULL_SIZE");
+            return ;
+        }
 
-            uint16_t len = otMessageGetLength(request) - otMessageGetOffset(request);    
-            uint16_t lenOfReadedBytes = otMessageRead(request, otMessageGetOffset(request), incommingHostName, len);
-            incommingHostName[lenOfReadedBytes] = '\0';
+        lenOfReadedBytes = otMessageRead(request, otMessageGetOffset(request), queueItem.deviceNameFull, len);
+        queueItem.deviceNameFull[lenOfReadedBytes] = '\0';
+        
+        otapp_coap_sendResponse(request, aMessageInfo, NULL);
 
-            printf("Sender data: %s bytes: %d\n ", incommingHostName, lenOfReadedBytes);
-            otapp_coap_sendResponse(request, aMessageInfo, NULL);
+        queueItem.type = OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST;
+        memcpy(&queueItem.ipAddress, &aMessageInfo->mPeerAddr, sizeof(otIp6Address));
 
+        printf("Sender data: %s bytes: %d \n ", queueItem.deviceNameFull, lenOfReadedBytes);
+        otapp_coap_printSenderIP(aMessageInfo);
 
-            strCompare = otapp_deviceNameIsSame(incommingHostName, lenOfReadedBytes);
-
-            if(strCompare)
-            {
-                printf("new devica has been successfully paired. Dev ID: %d \n", otapp_deviceNameGetDevId(incommingHostName, lenOfReadedBytes));
-                // todo check otapp pair.... 
-            }else
-            {
-                printf("new device has NOT been paried ! \n ");
-            }
-       
+        printf("URI: Add item to queue\n ");
+        otapp_pair_addToQueue(&queueItem);    
     }
 }
 

@@ -33,7 +33,7 @@ static otIp6Address ipAddr = {
                    0x00, 0x00, 0x8a, 0x2e, 0x03, 0x70, 0x73, 0x34}
 };
 
-static void ut_oap_DeviceUriIndexAddFillAll(otapp_coap_uriTableIndex_t uriIndex)
+static void ut_oap_DeviceUriIndexAddFillAll(otapp_coap_uriIndex_t uriIndex)
 {
     for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
     {

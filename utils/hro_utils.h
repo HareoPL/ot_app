@@ -1,9 +1,9 @@
 /**
- * @file main.h
+ * @file utils.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 08-04-2025
+ * @date 28-04-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,23 +19,46 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MAIN_H_
-#define MAIN_H_
+#ifndef UTILS_H_
+#define UTILS_H_
+
+#include <stdio.h>
+#include "stdint.h"
+
+#ifndef UNIT_TEST    
+    #define UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS
+    #define PRIVATE static
+    #define BREAK_U_TEST
+#else
+    #define PRIVATE
+    #define BREAK_U_TEST break;
+#endif
+
+#define HRO_TOOL_PACKED_BEGIN
+#define HRO_TOOL_PACKED_FIELD   __attribute__((packed))
+#define HRO_TOOL_PACKED_END     __attribute__((packed))
+#define HRO_TOOL_WEAK           __attribute__((weak))
+
+#ifndef NULL
+    #define NULL ((void *)0)
+#endif
+
+#ifdef UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS  
+    #include "main.h"
+    #define UTILS_RTOS_CHECK_FREE_STACK() \
+        do{ \
+            const char *task_name = pcTaskGetName(NULL); \
+            UBaseType_t stack_free = uxTaskGetStackHighWaterMark(NULL); \
+            ESP_LOGI(TAG, "task %s free stack: %d ", task_name, stack_free); \
+        }while(0)
+#else
+    #define UTILS_RTOS_CHECK_FREE_STACK() do{}while(0)
+#endif 
+
+#ifndef UNUSED
+    #define UNUSED(x) (void)(x)
+#endif
 
 
-#include "hro_utils.h"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
-
-#include "sdkconfig.h"
-
-#include "esp_log.h"
-#include "esp_err.h"
-
-
-#define DEBUG
-
-
-#endif  /* MAIN_H_ */
+#endif  /* UTILS_H_ */

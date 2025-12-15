@@ -1,9 +1,9 @@
 /**
- * @file ot_app_coap_uri_well-known-core.c
+ * @file ot_app_srp_client.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 24-07-2025
+ * @date 06-09-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,22 +19,30 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
+#ifndef OT_APP_SRP_CLIENT_H_
+#define OT_APP_SRP_CLIENT_H_
 
- 
-#include "main.h"
-#include "ot_app_coap_uri_well-known-core.h"
+#include "hro_utils.h"
+#include "esp_openthread.h"
 
 
-static const char resourceContentTEST[] = 
-    "</temp>;rt=\"sensor\","
-    "</led>;rt=\"actuator\"";
+#define OTAPP_DNS_LEASE_TASK_DELAY  300  // in secounds = 5m
+#define OTAPP_DNS_LEASE_TIME        7200 // in secounds = 2h
+#define OTAPP_DNS_LEASE_GUARD       (4 * OTAPP_DNS_LEASE_TASK_DELAY) // 20 min before end the time lease
+#define OTAPP_DNS_M_KEY_LEASE_TIME  86400
 
-void otapp_coap_uri_well_knownCoreHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
-{
-    otapp_coap_printSenderIP(aMessageInfo);
 
-    if (request)
-    {
-        otapp_coap_sendResponse(request, aMessageInfo, resourceContentTEST);
-    }
-}
+/**
+ * @brief todo
+ * 
+ * @param instance 
+ */
+void otapp_srpClientUpdateHostAddress(otInstance *instance);
+
+/**
+ * @brief todo
+ * 
+ */
+void otapp_srpInit();
+
+#endif  /* OT_APP_SRP_CLIENT_H_ */

@@ -30,6 +30,8 @@
 #include "ot_app.h"
 #include "OneButton.h"
 
+#include "ad_temp.h"
+
 static const char *TAG = "main";
 
 #define BUTTON_GPIO GPIO_NUM_4
@@ -57,8 +59,8 @@ void app_main(void)
 {
     ESP_UNUSED(TAG);
 
-    otapp_init();
     otapp_gpioInit(); // only for test coap get sent
+    otapp_init(ad_devDrvGetTemp());
     
     // wifi_initSTA();
     // wifi_initAP();

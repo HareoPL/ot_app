@@ -1,9 +1,9 @@
 /**
- * @file main.h
+ * @file ot_app_dns.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
- * @date 08-04-2025
+ * @date 05-09-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -19,23 +19,22 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef MAIN_H_
-#define MAIN_H_
+#ifndef OTAPP_DNS_H_
 
-
+#include "esp_openthread.h"
 #include "hro_utils.h"
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/semphr.h"
 
-#include "sdkconfig.h"
+#define OTAPP_DNS_OK        (-1)
+#define OTAPP_DNS_ERROR     (-2)
 
-#include "esp_log.h"
-#include "esp_err.h"
+/**
+ * @brief todo
+ * 
+ * @param instance 
+ * @param serviceName 
+ * @return int8_t 
+ */
+int8_t otapp_dnsClientBrowse(otInstance *instance, const char *serviceName);
 
-
-#define DEBUG
-
-
-#endif  /* MAIN_H_ */
+#endif  /* OTAPP_DNS_H_ */

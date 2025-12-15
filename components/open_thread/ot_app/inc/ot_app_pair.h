@@ -33,15 +33,16 @@
 
 #define OTAPP_PAIR_IS                       (1)
 #define OTAPP_PAIR_IS_NOT                   (2)
-#define OTAPP_PAIR_UPDATED                  (OTAPP_PAIR_IS)
-#define OTAPP_PAIR_NO_NEED_UPDATE           (OTAPP_PAIR_IS_NOT)
 
 #define OTAPP_PAIR_OK                       (-1)
-#define OTAPP_PAIR_ERROR                    (-2)
-#define OTAPP_PAIR_NO_EXIST                 (-3)
-#define OTAPP_PAIR_DEVICE_NAME_EXIST        (-4)
-#define OTAPP_PAIR_DEVICE_NAME_TO_LONG      (-5)
-#define OTAPP_PAIR_DEVICE_NO_SPACE          (-6)
+#define OTAPP_PAIR_UPDATED                  (-2)
+#define OTAPP_PAIR_NO_NEED_UPDATE           (-3)
+
+#define OTAPP_PAIR_ERROR                    (-4)
+#define OTAPP_PAIR_NO_EXIST                 (-5)
+#define OTAPP_PAIR_DEVICE_NAME_EXIST        (-6)
+#define OTAPP_PAIR_DEVICE_NAME_TO_LONG      (-7)
+#define OTAPP_PAIR_DEVICE_NO_SPACE          (-8)
 
 #define OTAPP_PAIR_DEVICES_MAX    OTAPP_PAIRED_DEVICES_MAX // max number of devices to save them from DNS query
 #define OTAPP_PAIR_URI_MAX        OTAPP_PAIRED_URI_MAX 
@@ -51,10 +52,29 @@
 #define OTAPP_PAIR_URI_INIT       OTAPP_URI_END_OF_INDEX
 
 #define OTAPP_PAIR_QUEUE_LENGTH         10
-#define OTAPP_PAIR_TASK_STACK_DEPTH     (128 * 3)
+#define OTAPP_PAIR_TASK_STACK_DEPTH     (128 * 17)
 #define OTAPP_PAIR_TASK_PRIORITY        5
 
+#define OTAPP_PAIR_RULES_ALLOWED_SIZE           10
+#define OTAPP_PAIR_RULES_ALLOWED_ITEM_MAX_SIZE  OTAPP_END_OF_DEVICE_TYPE
+
+#define OTAPP_PAIR_NO_RULES (OTAPP_END_OF_DEVICE_TYPE + 1) 
+
+#define OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE 10
+
+typedef struct {
+    char devNameFull[OTAPP_PAIR_NAME_FULL_SIZE]; // deviceNameFull
+    otIp6Address ipAddr;
+    uint8_t uriIndex[OTAPP_PAIR_URI_MAX];    
+}otapp_pair_Device_t;
+
 typedef struct otapp_pair_DeviceList_t otapp_pair_DeviceList_t;
+
+typedef struct {
+    otapp_deviceType_t main;
+    otapp_deviceType_t allowed[OTAPP_PAIR_RULES_ALLOWED_SIZE]; 
+} otapp_pair_rule_t;
+
 
 typedef enum {
     OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST     
@@ -71,8 +91,22 @@ typedef struct {
  * 
  * @return int8_t 
  */
-int8_t otapp_pair_init(void);
+int8_t otapp_pair_init(ot_app_devDrv_t *driver);
 
+/**
+ * @brief observer Callback. 
+ * @param errorState     [in] error state. OTAPP_PAIR_OK or OTAPP_PAIR_ERROR
+ * @param deviceNameFull [in] char ptr to matching deviceNameFull
+ */
+typedef void (*otapp_pair_observerCallback_t)(otapp_pair_Device_t *newDevice);
+
+/**
+ * @brief TODO
+ * 
+ * @param callback 
+ * @return int8_t 
+ */
+int8_t otapp_pair_observerPairedDeviceRegisterCallback(otapp_pair_observerCallback_t callback);
 
 /**
  * @brief add new device to the pairing list
@@ -110,12 +144,12 @@ char *otapp_pair_DeviceNameGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t 
  * 
  * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle()
  * @param deviceNameFull  [in] char ptr of full device name ("device1_1_588c81fffe301ea4")
- * @param uriIndex        [in] uriIndex from otapp_coap_uriTableIndex_t
+ * @param uriIndex        [in] uriIndex from otapp_coap_uriIndex_t
  * @return int16_t        [out] return MSB = device index (pairDeviceList->list[]),
  *                                     LSB = uri index (pairDeviceList->list[].uriIndex[]) 
  *                                      or  OTAPP_PAIR_ERROR (-1)
  */
-int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, otapp_coap_uriTableIndex_t uriIndex);
+int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, const char *deviceNameFull, otapp_coap_uriIndex_t uriIndex);
 
 /**
  * @brief get URI index from uriIndex of device list 
@@ -123,10 +157,10 @@ int16_t otapp_pair_DeviceUriIndexAdd(otapp_pair_DeviceList_t *pairDeviceList, co
  * @param pairDeviceList  [in] handle ptr of otapp_pair_DeviceList_t. Use: otapp_pair_getHandle() 
  * @param indexDevice     [in] index of device 
  * @param indexUri        [in] index of URI 
- * @return otapp_coap_uriTableIndex_t [out] otapp_coap_uriTableIndex_t 
+ * @return otapp_coap_uriIndex_t [out] otapp_coap_uriIndex_t 
  *                                          or OTAPP_PAIR_NO_URI if there is not saved uri
  */
-otapp_coap_uriTableIndex_t otapp_pair_deviceUriIndexGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, uint8_t indexUri);
+otapp_coap_uriIndex_t otapp_pair_deviceUriIndexGet(otapp_pair_DeviceList_t *pairDeviceList, uint8_t indexDevice, uint8_t indexUri);
 
 /**
  * @brief delete paired device
@@ -258,7 +292,7 @@ PRIVATE int8_t otapp_pair_deviceNameIsSame(otapp_pair_DeviceList_t *pairDeviceLi
  * @param queueIteam 
  * @return PRIVATE 
  */
-PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_DeviceList_t *pairDeviceList, otapp_pair_queueItem_t *queueIteam);
+PRIVATE int8_t otapp_pair_deviceIsMatchingFromQueue(otapp_pair_queueItem_t *queueIteam);
 
 /**
  * @brief todo
@@ -273,6 +307,27 @@ PRIVATE int8_t otapp_pair_initQueue(void);
  * @return PRIVATE 
  */
 PRIVATE int8_t otapp_pair_initTask(void);
+
+/**
+ * @brief todo
+ * 
+ * @param errorState 
+ * @param deviceNameFull 
+ * @return PRIVATE 
+ */
+PRIVATE int8_t otapp_pair_observerPairedDeviceNotify(otapp_pair_Device_t *newDevice);
+
+/**
+ * @brief todo
+ * 
+ * @param deviceDrv 
+ * @param mainDeviceID 
+ * @param incommingDeviceID 
+ * @return int8_t 
+ */
+PRIVATE int8_t otapp_pair_deviceIsAllowed(ot_app_devDrv_t *deviceDrv, otapp_deviceType_t mainDeviceID, otapp_deviceType_t incommingDeviceID);
+
+
 #endif  /* UNIT_TEST */
 
 #endif  /* OT_APP_PAIR_H_ */

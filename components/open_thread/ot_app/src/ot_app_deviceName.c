@@ -27,7 +27,7 @@
 static char otapp_deviceName[OTAPP_DNS_SRV_LABEL_SIZE]; // = "device1_1_588c81fffe301ea4"
 static const char *otapp_deviceName_domain = ".default.service.arpa.";
 
-int8_t otapp_deviceNameSet(const char *deviceName, otapp_deviceType_t deviceType)
+int8_t otapp_deviceNameSet(const char *deviceName, const otapp_deviceType_t deviceType)
 {
     if(deviceName == NULL || deviceType >= OTAPP_DEVICENAME_MAX_DEVICE_TYPE || deviceType == OTAPP_NO_DEVICE_TYPE)
     {
