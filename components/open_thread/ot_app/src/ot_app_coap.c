@@ -318,7 +318,7 @@ char *charLedPayload = {"LED_ON"};
 void otapp_coapSendtoTestPut()
 {
     otapp_coap_uri_t *uri = drv->uriGetList_clb();
-    // "light/on_off"
+    if(uri == NULL) return;
     // otapp_coap_clientSendPutChar(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_TEST_LED), charLedPayload, otapp_coap_responseHandler);
     otapp_coap_clientSendPutChar(otapp_multicastAddressGet(), uri[0].resource.mUriPath, charLedPayload, otapp_coap_responseHandler);
     printf("CoAP sent put to uri: device/led \n");
@@ -403,7 +403,8 @@ int8_t otapp_coap_processUriRequest(otMessage *aMessage, const otMessageInfo *aM
 
     if(result != OTAPP_COAP_ERROR)
     {
-        result = oac_uri_obs_subscribeFromUri(obsHandle, aMessage, aMessageInfo, uriId, (char*)bufOut);
+        // check if this request concern adding thhis device to subscribe list
+        result = oac_uri_obs_subscribeFromUri(obsHandle, aMessage, aMessageInfo, uriId, (char*)bufOut);  
         if(result == OAC_URI_OBS_ERROR) return OTAPP_COAP_ERROR;
 
         if(result == OAC_URI_OBS_NOT_SUB_REQUEST) 
@@ -412,7 +413,7 @@ int8_t otapp_coap_processUriRequest(otMessage *aMessage, const otMessageInfo *aM
             otapp_coap_sendResponse(aMessage, aMessageInfo, (uint8_t*)otapp_coap_getMessage(OTAPP_MESSAGE_OK), strlen(otapp_coap_getMessage(OTAPP_MESSAGE_OK)) );            
            
             // notify subscribers about event
-            oac_uri_obs_notify(obsHandle, uriId, bufOut, bufSize); 
+            oac_uri_obs_notify(obsHandle, &aMessageInfo->mPeerAddr, uriId, bufOut, bufSize); 
 
         }else // if request concerned observer. result > 0 
         {
@@ -435,7 +436,7 @@ int8_t otapp_coap_initCoapResource(otapp_coap_uri_t *uriTable, uint8_t tableSize
 {   
     if(uriTable == NULL || tableSize == 0)
     {
-        return OTAPP_COAP_URI_OK;
+        return OTAPP_COAP_ERROR;
     }
 
     for (uint32_t i = 0; i < tableSize; i++)
@@ -470,11 +471,12 @@ int8_t otapp_coap_init(ot_app_devDrv_t *devDriver)
     }
 
     
-    error = otapp_coap_initCoapResource(devDriver->uriGetList_clb(), devDriver->uriGetListSize);
-    if (error != OTAPP_COAP_URI_OK)
-    {
-       return OTAPP_COAP_URI_ERROR;
-    }
+    otapp_coap_initCoapResource(devDriver->uriGetList_clb(), devDriver->uriGetListSize);
+    // error = otapp_coap_initCoapResource(devDriver->uriGetList_clb(), devDriver->uriGetListSize);
+    // if (error != OTAPP_COAP_URI_OK)
+    // {
+    //    return OTAPP_COAP_URI_ERROR;
+    // }
 
     return OTAPP_COAP_URI_OK;
 }
