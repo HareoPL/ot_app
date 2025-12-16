@@ -12,7 +12,4 @@ extern otInstance * PtOpenThreadInstance;
     #error "Unsupported platform. Define ESP_PLATFORM or STM_PLATFORM"
 #endif
 
-
-void otapp_port_openthread_start(otOperationalDatasetTlvs *datasetTlvs);
-
 #endif  /* OT_APP_PORT_OPENTHREAD_H_ */
