@@ -20,7 +20,7 @@
  * 
  */
 
-#include "main.h"
+// #include "main.h"
 #include "ot_app_coap_uri.h"
 #include "string.h"
 #include "ot_app.h"
@@ -32,6 +32,8 @@
 #include <openthread/instance.h>
 #include <openthread/message.h>
 #include <string.h>
+
+#define TAG "ot_app_coap_uri "
 
 #define OTAPP_COA_URI_BUFFER 264
 void otapp_coap_uri_testHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
@@ -57,7 +59,7 @@ void otapp_coap_uri_ledControlHandle(void *aContext, otMessage *request, const o
         if(otapp_coapReadPayload(request, (uint8_t*)charBuffer, 1024, &readBytes) == OTAPP_COAP_ERROR) return; 
         
         otapp_coap_sendResponse(request, aMessageInfo, NULL, 0);        
-        printf("Sender data: %s bytes: %d \n ", charBuffer, readBytes);
+        OTAPP_PRINTF(TAG, "Sender data: %s bytes: %d \n", charBuffer, readBytes);
     }
 }
 
@@ -68,7 +70,7 @@ void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, con
 
     if (request)
     {
-        printf("from uri: paring_services \n");
+        OTAPP_PRINTF(TAG, "from uri: paring_services \n");
         if(otapp_coapReadPayload(request, (uint8_t*)queueItem.deviceNameFull, OTAPP_PAIR_NAME_FULL_SIZE, &readBytes) == OTAPP_COAP_ERROR) return; 
         
         otapp_coap_sendResponse(request, aMessageInfo, NULL, 0);
@@ -76,10 +78,10 @@ void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, con
         queueItem.type = OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST;
         memcpy(&queueItem.ipAddress, &aMessageInfo->mPeerAddr, sizeof(otIp6Address));
 
-        printf("Sender data: %s \n ", queueItem.deviceNameFull );
+        OTAPP_PRINTF(TAG, "Sender data: %s \n", queueItem.deviceNameFull );
         otapp_coap_printSenderIP(aMessageInfo);
 
-        printf("URI: Add item to queue\n ");
+        OTAPP_PRINTF(TAG, "URI: Add item to queue\n");
         otapp_pair_addToQueue(&queueItem);    
     }
 }
@@ -129,7 +131,7 @@ void otapp_coap_uri_subscribedHandle(void *aContext, otMessage *request, const o
         result = oac_uri_obs_parseMessageFromNotify(buffer, dataPacket); 
         if(result == OAC_URI_OBS_ERROR)
         {
-            printf("ERROR: otapp_coap_uri_subscribedHandle\n ");
+            OTAPP_PRINTF(TAG, "ERROR: otapp_coap_uri_subscribedHandle\n");
             return;
         }
 

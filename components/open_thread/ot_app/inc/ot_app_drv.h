@@ -79,8 +79,7 @@
     #include "ot_app.h"
 #else
     #include "mock_ot_app.h"
-    #include "mock_ot_app_coap.h"
-    // #include "mock_ot_app_coap_uri_obs.`h"       
+    #include "mock_ot_app_coap.h"     
 #endif
 
 /**

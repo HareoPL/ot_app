@@ -31,7 +31,8 @@
 #include "esp_log.h"
 #include "esp_err.h"
 
-static const char *TAG = "ot_app_srp_client";
+#define TAG "ot_app_srp_client "
+
 static const char *otapp_serviceName = "_coap._udp";
 static const char *otapp_browseDefaultServiceName = "_coap._udp.default.service.arpa.";
 
@@ -76,7 +77,7 @@ void otapp_srpServiceLeaseCheckTask(void *arg)
     while (1)
     {
         otapp_srpServiceLeaseCountDecrease();
-        ESP_LOGI(TAG, "Current SRP lease interval: %" PRIu32 " seconds", otapp_srpServiceLeaseGetCount());
+        OTAPP_PRINTF(TAG, "Current SRP lease interval: %lu seconds", otapp_srpServiceLeaseGetCount());
 
         if (otapp_srpServiceLeaseCheckExpiry(otapp_srpServiceLeaseGetCount()))
         {
@@ -99,15 +100,15 @@ void otapp_srpServiceLeaseCheckTaskInit(void)
         if (result == pdPASS)
         {
             initFlag = 1;
-            ESP_LOGI(TAG, "SRP_Check_Service_Lease_Task created successfully");
+            OTAPP_PRINTF(TAG, "SRP_Check_Service_Lease_Task created successfully \n");
         }
         else
         {
-            ESP_LOGE(TAG, "Failed to create SRP_Check_Service_Lease_Task");
+            OTAPP_PRINTF(TAG, "Failed to create SRP_Check_Service_Lease_Task \n");
         }
     }else
     {
-         ESP_LOGI(TAG, "SRP_Check_Lease_Task has been created");
+        OTAPP_PRINTF(TAG, "SRP_Check_Lease_Task has been created  \n");
     }
 }
 
@@ -118,7 +119,7 @@ static void otapp_srpClientSetHostName(otInstance *instance, const char *hostNam
     error = otSrpClientSetHostName(instance, hostName);
     if (error != OT_ERROR_NONE)
     {
-        printf("Error: hostname SRP NOT set: %d\n", error);
+        OTAPP_PRINTF(TAG, "Error: hostname SRP NOT set: %d\n", error);
         return;
     }
 }
@@ -130,7 +131,7 @@ static void otapp_srpClientAddHostAddress(otInstance *instance)
     error = otSrpClientSetHostAddresses(instance, otapp_ip6AddressRefresh(), 1);
     if (error != OT_ERROR_NONE)
     {
-        printf("Error: SRP set IPv6 host addresses: %d\n", error);
+        OTAPP_PRINTF(TAG, "Error: SRP set IPv6 host addresses: %d\n", error);
         return;
     }
 }
@@ -163,7 +164,7 @@ otError otapp_srpClientAddService(otInstance *instance, otSrpClientItemState mSt
         error = otSrpClientClearService(instance, &otapp_otSrpClientService);
         if (error != OT_ERROR_NONE)
         {
-            printf("Error: SRP service clear: %d\n", error);
+            OTAPP_PRINTF(TAG, "Error: SRP service clear: %d\n", error);
             return error;
         }
     }
@@ -171,7 +172,7 @@ otError otapp_srpClientAddService(otInstance *instance, otSrpClientItemState mSt
     error = otSrpClientAddService(instance, &otapp_otSrpClientService);
     if (error != OT_ERROR_NONE)
     {
-        printf("Error: SRP service add: %d\n", error);
+        OTAPP_PRINTF(TAG, "Error: SRP service add: %d\n", error);
         return error;
     }
 
@@ -185,11 +186,11 @@ otError otapp_srpClientRefreshService(otInstance *instance)
     error = otapp_srpClientAddService(instance, OT_SRP_CLIENT_ITEM_STATE_TO_REFRESH);
     if (error != OT_ERROR_NONE)
     {
-        printf("Error: SRP service refreshing: %d\n", error);
+        OTAPP_PRINTF(TAG, "Error: SRP service refreshing: %d\n", error);
         return error;
     }
 
-    ESP_LOGI(TAG, "SRP SERVICES has been refreshed \n");
+    OTAPP_PRINTF(TAG, "SRP SERVICES has been refreshed \n");
 
     return error;
 }
@@ -212,11 +213,11 @@ void otapp_srpClientAutoStartCallback(const otSockAddr *aServerSockAddr, void *a
 {
     if(NULL != aServerSockAddr)
     {
-        printf("SRP SERVER detected on IP: ");
+        OTAPP_PRINTF(TAG, "SRP SERVER detected on IP: ");
         otapp_ip6AddressPrint(&aServerSockAddr->mAddress);
     }else
     {
-         printf("SRP SERVER lost\n");
+         OTAPP_PRINTF(TAG, "SRP SERVER lost\n");
     }
 }
 
@@ -229,14 +230,14 @@ static void otapp_srpClientInit(otInstance *instance)
      
     if(otSrpClientIsAutoStartModeEnabled(instance))
     {
-        printf("SRP client has already ran\n");
+        OTAPP_PRINTF(TAG, "SRP client has already ran\n");
         return;
     }else
     {
        otSrpClientEnableAutoStartMode(instance, otapp_srpClientAutoStartCallback, NULL); 
     }
     
-    printf("SRP client Auto start Enabled \n");
+    OTAPP_PRINTF(TAG, "SRP client Auto start Enabled \n");
 }
 
 void otapp_srpInit()

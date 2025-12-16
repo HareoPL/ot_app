@@ -26,6 +26,8 @@
 #include "ot_app_drv.h"
 #include "ad_light_uri.h"
 
+#define TAG "ad_light "
+
 /**
  * @brief Device name group buffer
  * 
@@ -87,21 +89,19 @@ otapp_pair_rule_t *ad_light_pairRulesGetList()
 //observer 
 
 void ad_light_pairedCallback(otapp_pair_Device_t *newDevice)
-{
-    printf("\n");
-    printf("Dev Light detect NEW DEVICE! %s \n", newDevice->devNameFull);
-    printf("      uri 0: %s\n", newDevice->urisList[0].uri);
-    printf("      uri 1: %s\n", newDevice->urisList[1].uri);
-    printf("      uri 2: %s\n", newDevice->urisList[2].uri);
-    printf("\n");
-
+{    
+    OTAPP_PRINTF(TAG, "Dev Light detect NEW DEVICE! %s \n", newDevice->devNameFull);
+    OTAPP_PRINTF(TAG, "      uri 0: %s\n", newDevice->urisList[0].uri);
+    OTAPP_PRINTF(TAG, "      uri 1: %s\n", newDevice->urisList[1].uri);
+    OTAPP_PRINTF(TAG, "      uri 2: %s\n", newDevice->urisList[2].uri);
+   
 }
 
 void ad_light_subscribedUrisCallback(oac_uri_dataPacket_t *data) 
 {
-    printf("@ Dev Light from subs: \n");
-    printf(" @--> token: 0x%x 0x%x 0x%x 0x%x\n", data->token[0], data->token[1], data->token[2], data->token[3]);
-    printf(" @--> data: %d\n", data->buffer[0]);
+    OTAPP_PRINTF(TAG, "@ Dev Light from subs: \n");
+    OTAPP_PRINTF(TAG, " @--> token: 0x%x 0x%x 0x%x 0x%x\n", data->token[0], data->token[1], data->token[2], data->token[3]);
+    OTAPP_PRINTF(TAG, " @--> data: %d\n", data->buffer[0]);
 }
 
 void ad_light_task()

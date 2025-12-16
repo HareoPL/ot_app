@@ -190,10 +190,10 @@ void OneButtonCallbackLongPressStop(OneButton_t *Btn, CallBackFunLongPressStop_t
 }
 
 // initialized function
-#ifdef OB_STM32_PLATFORM
+#ifdef STM_PLATFORM
 	void OneButtonInit(OneButton_t *Btn, GPIO_TypeDef *GpioPort, uint16_t GpioPin)
 #endif
-#ifdef OB_ESP32_PLATFORM
+#ifdef ESP_PLATFORM
 	void OneButtonInit(OneButton_t *Btn, uint16_t GpioPin)
 #endif
 {

@@ -27,7 +27,10 @@
 #ifdef UNIT_TEST
     #include "mock_ip6.h"
 #else
-    #include "esp_openthread.h"
+    #include "openthread/dataset.h"
+    #include "openthread/instance.h"
+
+    #include "openthread/ip6.h"
     #include <openthread/message.h>
     #include <openthread/coap.h>
 #endif

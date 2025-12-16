@@ -31,7 +31,7 @@
 
 #include "esp_ot_cli.h"
 
-#include "esp_openthread.h"
+// #include "esp_openthread.h"
 #include "openthread/udp.h"
 #include "openthread/dataset.h"
 #include "openthread/srp_client.h"

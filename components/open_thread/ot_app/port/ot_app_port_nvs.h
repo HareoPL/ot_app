@@ -1,5 +1,5 @@
 /**
- * @file ot_app_nvs.h
+ * @file ot_app_port_nvs.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief 
  * @version 0.1
@@ -24,7 +24,6 @@
 #define OT_APP_NVS_H_
 
 #include "stdint.h"
-#include "ot_app_drv.h"
 
 #define OT_APP_NVS_OK               (-1)
 #define OT_APP_NVS_ERROR            (-2)

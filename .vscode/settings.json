@@ -48,7 +48,7 @@
         "span": "c",
         "system_error": "c"
     },
-    "idf.portWin": "COM7",
+    "idf.portWin": "COM9",
 
     // variables for tasks.json
     "idfTask": {

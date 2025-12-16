@@ -22,7 +22,10 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include "main.h"
+// #include "main.h"
+#include "ot_app_port_rtos.h"
+
+#define HRO_LOG_ENABLE
 
 #ifndef UNIT_TEST    
     #define UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS
@@ -42,10 +45,15 @@
     #define NULL ((void *)0)
 #endif
 
-
-
 #ifndef UNUSED
     #define UNUSED(x) (void)(x)
+#endif
+
+#ifdef HRO_LOG_ENABLE
+    #define HRO_PRINTF(fmt, ...)        printf("$$ " fmt" &&--> " __VA_ARGS__)
+#else
+    // logs disable
+    #define HRO_PRINTF(fmt, ...)      ((void)0)
 #endif
 
 
@@ -54,7 +62,7 @@
         do{ \
             const char *task_name = pcTaskGetName(NULL); \
             UBaseType_t stack_free = uxTaskGetStackHighWaterMark(NULL); \
-            ESP_LOGI(TAG, "task %s free stack: %d ", task_name, stack_free); \
+            HRO_PRINTF("", "task %s free stack: %d ", task_name, stack_free); \
         }while(0)
 #else
     #define UTILS_RTOS_CHECK_FREE_STACK() do{}while(0)

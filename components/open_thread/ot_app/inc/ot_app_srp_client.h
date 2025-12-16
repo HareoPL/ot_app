@@ -23,7 +23,7 @@
 #define OT_APP_SRP_CLIENT_H_
 
 #include "hro_utils.h"
-#include "esp_openthread.h"
+#include "openthread/instance.h"
 
 
 #define OTAPP_DNS_LEASE_TASK_DELAY  300  // in secounds = 5m

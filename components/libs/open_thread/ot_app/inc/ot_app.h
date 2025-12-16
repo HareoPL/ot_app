@@ -22,10 +22,10 @@
 #ifndef THREAD_UDP_H_
 #define THREAD_UDP_H_
 
-#include "openthread/dataset.h"
-#include "esp_openthread.h"
+// #include "esp_openthread.h"
 #include "ot_app_coap.h"
 #include "openthread/dns_client.h"
+#include "openthread/dataset.h"
 
 #define OTAPP_ERROR     (-1)
 

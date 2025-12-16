@@ -32,6 +32,17 @@
     #include "openthread/dns_client.h"
 #endif
 
+#define OTAPP_LOG_ENABLE
+
+#ifdef OTAPP_LOG_ENABLE
+    #define OTAPP_PRINTF HRO_PRINTF 
+#else
+    // logs disable
+    #define HRO_PRINTF(fmt, ...) ((void)0)
+#endif
+
+#define OTAPP_CCA_THRESHOLD         (-70)
+
 #define OTAPP_OK        (-1)
 #define OTAPP_ERROR     (-2)
 

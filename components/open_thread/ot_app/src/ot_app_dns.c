@@ -25,6 +25,8 @@
 #include "ot_app_pair.h"
 #include "ot_app_deviceName.h"
 
+#define TAG "ot_app_dns "
+
 PRIVATE otapp_pair_queueItem_t queueItem;
 
 PRIVATE int8_t otapp_dnsPairDevice(const otDnsAddressResponse *aResponse)
@@ -53,7 +55,7 @@ PRIVATE int8_t otapp_dnsPairDevice(const otDnsAddressResponse *aResponse)
     queueItem.type = OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST;
     strcpy(queueItem.deviceNameFull, charBuff);
 
-    printf("DNS: Add item to queue\n");
+    OTAPP_PRINTF(TAG, "DNS: Add item to queue\n");
     otapp_pair_addToQueue(&queueItem);
    
     otapp_charBufRelease();
@@ -89,7 +91,7 @@ PRIVATE int8_t otapp_dnsClientResolve(otInstance *instance, const char *hostName
     if(error != OT_ERROR_NONE)
     {
         return OTAPP_DNS_ERROR;
-        printf("Error: otDnsClientResolveAddress\n");
+        OTAPP_PRINTF(TAG, "Error: otDnsClientResolveAddress\n");
     }
     return OTAPP_DNS_OK;
 }
@@ -103,23 +105,23 @@ void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResp
 
         if(buffer == NULL)
         {
-            printf("ERROR NULL PTR FROM otapp_charBufGet_withMutex()");
+            OTAPP_PRINTF(TAG, "ERROR NULL PTR FROM otapp_charBufGet_withMutex()");
             return;
         }
         
         otDnsBrowseResponseGetServiceName(aResponse, buffer, OTAPP_DNS_SRV_NAME_SIZE);    
-        printf("DNS browse response for %s \n", buffer);        
+        OTAPP_PRINTF(TAG, "DNS browse response for %s \n", buffer);        
 
         while (otDnsBrowseResponseGetServiceInstance(aResponse, index, buffer, OTAPP_DNS_SRV_LABEL_SIZE) == OT_ERROR_NONE)
         {
             if(index == OTAPP_PAIRED_DEVICES_MAX)
             {
-                printf("OTAPP_PAIRED_DEVICES_MAX has been reached");
+                OTAPP_PRINTF(TAG, "OTAPP_PAIRED_DEVICES_MAX has been reached");
                 otapp_charBufRelease();
                 return;
             }
 
-            printf("Device full name (label): %s \n", buffer);
+            OTAPP_PRINTF(TAG, "Device full name (label): %s \n", buffer);
 
             if(otapp_deviceNameFullAddDomain(buffer, OTAPP_CHAR_BUFFER_SIZE) != OTAPP_DEVICENAME_OK)
             {
@@ -128,7 +130,7 @@ void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResp
             }
             otapp_dnsClientResolve(otapp_getOpenThreadInstancePtr(), buffer);
             
-            printf("\n");
+            OTAPP_PRINTF(TAG, "\n");
             index++;
         }
         otapp_charBufRelease();
@@ -149,11 +151,11 @@ int8_t otapp_dnsClientBrowse(otInstance *instance, const char *serviceName)
     error = otDnsClientBrowse(instance, serviceName, otapp_dnsClientBrowseResponseCallback, NULL, config);
     if (error != OT_ERROR_NONE)
     {
-        printf("Error: DNS client browse: %d\n", error);
+        OTAPP_PRINTF(TAG, "Error: DNS client browse: %d\n", error);
         return OTAPP_DNS_ERROR;
     }else
     {
-        printf("DNS client browse. Checked reported services: \n");
+        OTAPP_PRINTF(TAG, "DNS client browse. Checked reported services: \n");
     }
 
     return OTAPP_DNS_OK; 

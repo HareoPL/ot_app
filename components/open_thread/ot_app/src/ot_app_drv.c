@@ -21,7 +21,7 @@
  */
 
 #include "ot_app_drv.h"
-#include "ot_app_nvs.h"
+#include "ot_app_port_nvs.h"
 
 static ot_app_devDrv_t ot_app_devDrv = {
     .obs_subscribedUri_clb = NULL,      

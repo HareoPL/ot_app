@@ -22,7 +22,7 @@
 #ifndef OT_APP_COAP_H_
 #define OT_APP_COAP_H_
 
-#include "esp_openthread.h"
+// #include "esp_openthread.h"
 #include <openthread/message.h>
 
 #define OTAPP_COAP_PORT 5683 ///< Default CoAP port, as specified in RFC 7252

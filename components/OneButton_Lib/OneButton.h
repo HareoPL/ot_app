@@ -25,16 +25,16 @@
  * @section onebutton_platform Platform Selection
  * 
  * **Select your target platform by defining ONE of the following:**
- * - `OB_STM32_PLATFORM` - For STM32 microcontrollers with HAL
- * - `OB_ESP32_PLATFORM` - For ESP32 microcontrollers with ESP-IDF
+ * - `STM_PLATFORM` - For STM32 microcontrollers with HAL
+ * - `ESP_PLATFORM` - For ESP32 microcontrollers with ESP-IDF
  * 
  * **Example:**
  * @code{.c}
  * // For STM32:
- * #define OB_STM32_PLATFORM
+ * #define STM_PLATFORM
  * 
  * // For ESP32:
- * #define OB_ESP32_PLATFORM
+ * #define ESP_PLATFORM
  * @endcode
  * 
  * @warning Define ONLY ONE platform macro at a time
@@ -121,10 +121,10 @@
  * 
  * void setup() {
  *     // Initialize button
- *     #ifdef OB_STM32_PLATFORM
+ *     #ifdef STM_PLATFORM
  *         OneButtonInit(&button1, GPIOA, GPIO_PIN_0);
  *     #endif
- *     #ifdef OB_ESP32_PLATFORM
+ *     #ifdef ESP_PLATFORM
  *         OneButtonInit(&button1, GPIO_NUM_9);
  *     #endif
  *     
@@ -183,7 +183,10 @@
 #ifndef INC_ONEBUTTON_H_
 #define INC_ONEBUTTON_H_
 
-#include "main.h"
+#include "driver/gpio.h" // for esp
+
+
+// #include "main.h"
 
 /**
  * @defgroup onebutton_platform_select Platform Selection
@@ -193,15 +196,13 @@
 
 /**
  * @brief Enable STM32 platform support (HAL-based)
- * @note Comment out when using ESP32
  */
-// #define OB_STM32_PLATFORM
+// #define STM_PLATFORM
 
 /**
  * @brief Enable ESP32 platform support (ESP-IDF)
- * @note Currently active platform
  */
-#define OB_ESP32_PLATFORM
+// #define ESP_PLATFORM
 
 /**
  * @}
@@ -213,7 +214,7 @@
  * @{
  */
 
-#ifdef OB_STM32_PLATFORM
+#ifdef STM_PLATFORM
 
 /**
  * @brief Read GPIO pin state (STM32 HAL)
@@ -237,9 +238,9 @@
  */
 #define OB_BUTTON_NOT_PRESSED    GPIO_PIN_SET
 
-#endif // OB_STM32_PLATFORM
+#endif // STM_PLATFORM
 
-#ifdef OB_ESP32_PLATFORM
+#ifdef ESP_PLATFORM
 
 #include "xtimers.h"
 #include "ot_app.h"
@@ -267,7 +268,7 @@
  */
 #define OB_BUTTON_NOT_PRESSED    1
 
-#endif // OB_ESP32_PLATFORM
+#endif // ESP_PLATFORM
 
 /**
  * @}
@@ -359,7 +360,7 @@ typedef struct
 {
     ButtonState State;                          ///< Current state machine state
     
-#ifdef OB_STM32_PLATFORM
+#ifdef STM_PLATFORM
     GPIO_TypeDef* GpioPort;                     ///< [STM32 only] GPIO port (e.g., GPIOA, GPIOB)
 #endif
     
@@ -403,7 +404,7 @@ typedef struct
  * 
  * **Platform-specific signatures:**
  */
-#ifdef OB_STM32_PLATFORM
+#ifdef STM_PLATFORM
 /**
  * @brief Initialize button (STM32 version)
  * @param[in,out] Btn Pointer to OneButton_t structure to initialize
@@ -413,7 +414,7 @@ typedef struct
 void OneButtonInit(OneButton_t *Btn, GPIO_TypeDef *GpioPort, uint16_t GpioPin);
 #endif
 
-#ifdef OB_ESP32_PLATFORM
+#ifdef ESP_PLATFORM
 /**
  * @brief Initialize button (ESP32 version)
  * @param[in,out] Btn Pointer to OneButton_t structure to initialize

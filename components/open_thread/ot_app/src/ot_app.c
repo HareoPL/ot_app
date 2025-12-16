@@ -19,7 +19,6 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#include "main.h"
 #include "ot_app.h"
 #include "ot_app_coap.h"
 #include "ot_app_pair.h"
@@ -34,20 +33,18 @@
 
 #include "esp_ot_cli.h"
 
-#include "esp_openthread.h"
+#include "ot_app_port_openthread.h"
 #include "openthread/dataset.h"
-
 
 #include <inttypes.h>
 
-// static const char *TAG = "ot_app";
+#define TAG "ot_app "
 
 static ot_app_devDrv_t *otapp_devDrv;
 
 static otInstance *openThreadInstance;
 const static otIp6Address *otapp_Ip6Address;
 
-static otOperationalDatasetTlvs dataset;
 static otExtAddress otapp_factoryEUI_64;
 
 static char otapp_charBuf[OTAPP_CHAR_BUFFER_SIZE];
@@ -87,7 +84,7 @@ void otapp_ip6AddressPrint(const otIp6Address *aAddress)
         char buf[OT_IP6_ADDRESS_STRING_SIZE];
 
         otIp6AddressToString(aAddress, buf, OTAPP_CHAR_BUFFER_SIZE); 
-        printf("%s\n", buf);
+        OTAPP_PRINTF(TAG, "%s\n", buf);
     }
 }
 
@@ -95,12 +92,12 @@ void otapp_macAddrPrint(const otExtAddress *macAddr)
 {
     if(macAddr != NULL)
     {
-        printf("Factory EUI-64: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
+        OTAPP_PRINTF(TAG, "Factory EUI-64: %02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x\n",
                macAddr->m8[0], macAddr->m8[1], macAddr->m8[2], macAddr->m8[3],
                macAddr->m8[4], macAddr->m8[5], macAddr->m8[6], macAddr->m8[7]);
     }else
     {
-        printf("ERROR: Factory EUI-64: - null ptr \n");
+        OTAPP_PRINTF(TAG, "ERROR: Factory EUI-64: - null ptr \n");
     }
 }
 
@@ -148,10 +145,56 @@ void otapp_cli_init(void)
 }
 
 void otapp_setDataset_tlv(void)
-{
-    memcpy(&dataset.mTlvs, otapp_dataset_tlv, sizeof(otapp_dataset_tlv));
-    dataset.mLength = sizeof(otapp_dataset_tlv);
-    esp_openthread_auto_start(&dataset);
+{ // do zmiany .. odrazu tlv struktura !! bez kopiowania !! 
+    otError error = OT_ERROR_NONE;
+
+    // otapp_port_openthread_start(&dataset); // czyli ta funkcja ma w calosci uruchomic openthread!!! wtedy nie jest potrzebne opentred start bo to wszystko robie ponizej 
+
+    error = otDatasetSetActiveTlvs(openThreadInstance, &otapp_dataset_tlv);
+    if (error != OT_ERROR_NONE)
+    {
+        OTAPP_PRINTF(TAG, "error: %d\n", error);
+    }
+
+    error = otPlatRadioSetCcaEnergyDetectThreshold(openThreadInstance, OTAPP_CCA_THRESHOLD);
+    if (error != OT_ERROR_NONE)
+    {
+        OTAPP_PRINTF(TAG, "error: %d\n", error);
+    }
+
+    // error = otLinkSetChannel(openThreadInstance, C_CHANNEL_NB);
+    // if (error != OT_ERROR_NONE)
+    // {
+    //     OTAPP_PRINTF(TAG, "error: %d\n", error);
+    // }
+
+    // error = otLinkSetPanId(openThreadInstance, C_PANID);
+    // if (error != OT_ERROR_NONE)
+    // {
+    //     OTAPP_PRINTF(TAG, "error: %d\n", error);
+    // }
+
+    // error = otThreadSetNetworkKey(openThreadInstance, &networkKey);
+    // if (error != OT_ERROR_NONE)
+    // {
+    //     OTAPP_PRINTF(TAG, "error: %d\n", error);
+    // }
+
+    otPlatRadioEnableSrcMatch(openThreadInstance, true);
+
+    error = otIp6SetEnabled(openThreadInstance, true);
+    if (error != OT_ERROR_NONE)
+    {
+        OTAPP_PRINTF(TAG, "error: %d\n", error);
+    }
+    error = otThreadSetEnabled(openThreadInstance, true);
+    if (error != OT_ERROR_NONE)
+    {
+        OTAPP_PRINTF(TAG, "error: %d\n", error);
+    }
+
+
+
 }
 
 static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context) 
@@ -166,15 +209,15 @@ static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context
         result = otapp_pair_subSendUpdateIP(otapp_pair_getHandle());
         if(result != OTAPP_PAIR_ERROR)
         {
-            printf(">>>>>>> Num of updated sub: %d \n", result);
+            OTAPP_PRINTF(TAG, "Num of updated sub: %d\n", result);
         }
-        
-        printf(">>>>>>> device address has been updated: ");
+
+        OTAPP_PRINTF(TAG, "device address has been updated \n");
         otapp_ip6AddressPrint(otapp_Ip6Address);
     }
     if (flags & OT_CHANGED_THREAD_RLOC_REMOVED) 
     {
-        printf(">>>>>>> device address has been deleted");
+        OTAPP_PRINTF(TAG, "device address has been deleted \n");
     }
 }
 
@@ -197,10 +240,12 @@ int8_t otapp_init() //app init
 {    
     otapp_devDrv = ot_app_drv_getInstance();
 
-    openThreadInstance = esp_openthread_get_instance();
+    openThreadInstance = otapp_port_openthread_get_instance();
     
-        
-    otapp_cli_init();    
+    #ifdef ESP_PLATFORM    
+        otapp_cli_init();
+    #endif 
+
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
     otapp_mutexBuf = xSemaphoreCreateMutex();
     otapp_pair_init(otapp_devDrv);
