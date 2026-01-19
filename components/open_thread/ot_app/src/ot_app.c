@@ -31,10 +31,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "esp_ot_cli.h"
+#ifdef ESP_PLATFORM
+    #include "esp_ot_cli.h"
+#endif
 
 #include "ot_app_port_openthread.h"
+#include "ot_app_port_rtos.h"
 #include "openthread/dataset.h"
+#include "openthread/instance.h"
+#include "openthread/thread.h"
 
 #include <inttypes.h>
 
@@ -139,21 +144,24 @@ void otapp_charBufRelease()
     xSemaphoreGive(otapp_mutexBuf);
 }
 
-void otapp_cli_init(void)
-{
-    esp_ot_cli_init();
-}
+#ifdef ESP_PLATFORM
+	void otapp_cli_init(void)
+	{
+		esp_ot_cli_init();
+	}
+#endif
 
 void otapp_setDataset_tlv(void)
-{ // do zmiany .. odrazu tlv struktura !! bez kopiowania !! 
+{
     otError error = OT_ERROR_NONE;
 
-    // otapp_port_openthread_start(&dataset); // czyli ta funkcja ma w calosci uruchomic openthread!!! wtedy nie jest potrzebne opentred start bo to wszystko robie ponizej 
-
-    error = otDatasetSetActiveTlvs(openThreadInstance, &otapp_dataset_tlv);
-    if (error != OT_ERROR_NONE)
+	if (!otDatasetIsCommissioned(openThreadInstance))
     {
-        OTAPP_PRINTF(TAG, "error: %d\n", error);
+		error = otDatasetSetActiveTlvs(openThreadInstance, &otapp_dataset_tlv);
+		if (error != OT_ERROR_NONE)
+		{
+			OTAPP_PRINTF(TAG, "error: %d\n", error);
+		}
     }
 
     error = otPlatRadioSetCcaEnergyDetectThreshold(openThreadInstance, OTAPP_CCA_THRESHOLD);
@@ -242,9 +250,11 @@ int8_t otapp_init() //app init
 
     openThreadInstance = otapp_port_openthread_get_instance();
     
-    #ifdef ESP_PLATFORM    
-        otapp_cli_init();
-    #endif 
+	#ifdef ESP_PLATFORM
+		otapp_cli_init();
+	#else
+		otapp_network_init();
+	#endif
 
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
     otapp_mutexBuf = xSemaphoreCreateMutex();
