@@ -11,6 +11,7 @@
     #include "FreeRTOS.h"
     #include "task.h"
     #include "queue.h" 
+	#include "semphr.h"
 
 #else
     #error "Unsupported platform. Define ESP_PLATFORM or STM_PLATFORM"
