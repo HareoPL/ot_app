@@ -33,15 +33,15 @@
 #include "ad_button.h"
 #include "ad_light.h"
 
-static const char *TAG = "main";
+#define TAG "main "
 
 void app_main(void)
 {
 //////////////////////////////////////////////////
 // add device init here
 
-    // ad_button_Init("device1"); // Initialize button device with the same group "device1"
-    ad_light_init("device1"); // Initialize light device with device name group "device1"
+    ad_button_Init("device1"); // Initialize button device with the same group "device1"
+    // ad_light_init("device1"); // Initialize light device with device name group "device1"
 
 //////////////////////////////////////////////////
 // DO NOT EDIT BELOW //

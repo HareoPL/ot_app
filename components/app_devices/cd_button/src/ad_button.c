@@ -27,6 +27,7 @@
 #include "string.h"
 #include "ot_app_drv.h"
 
+#define TAG "ad_button "
 /**
  * @brief Device name group buffer
  * 
@@ -204,12 +205,10 @@ void ad_button_pairedCallback(otapp_pair_Device_t *device)
 {        
     ad_btn_assignDevice(device);
 
-    printf("\n");
-    printf("Dev Button detect DEVICE! %s \n", device->devNameFull);
-    printf("      uri 0: %s\n", device->urisList[0].uri);
-    printf("      uri 1: %s\n", device->urisList[1].uri);
-    printf("      uri 2: %s\n", device->urisList[2].uri);
-    printf("\n");
+    OTAPP_PRINTF(TAG, "Dev Button detect DEVICE! %s \n", device->devNameFull);
+    OTAPP_PRINTF(TAG, "      uri 0: %s\n", device->urisList[0].uri);
+    OTAPP_PRINTF(TAG, "      uri 1: %s\n", device->urisList[1].uri);
+    OTAPP_PRINTF(TAG, "      uri 2: %s\n", device->urisList[2].uri);
 }
 
 /**
@@ -257,9 +256,9 @@ void ad_button_subscribedUrisCallback(oac_uri_dataPacket_t *data)
     drv->api.pair.uriStateSet(pairHandle, data->token, &uriState_);
     
     // Log status update for debugging
-    printf("@ Dev button from subs: \n");
-    printf(" @--> token: 0x%x 0x%x 0x%x 0x%x\n", data->token[0], data->token[1], data->token[2], data->token[3]);
-    printf(" @--> data: %ld\n", uriState_);
+    OTAPP_PRINTF(TAG, "@ Dev button from subs: \n");
+    OTAPP_PRINTF(TAG, " @--> token: 0x%x 0x%x 0x%x 0x%x\n", data->token[0], data->token[1], data->token[2], data->token[3]);
+    OTAPP_PRINTF(TAG, " @--> data: %ld\n", uriState_);
 }
 
 /**

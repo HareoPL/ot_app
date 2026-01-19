@@ -32,6 +32,17 @@
     #include "openthread/dns_client.h"
 #endif
 
+#define OTAPP_LOG_ENABLE
+
+#ifdef OTAPP_LOG_ENABLE
+    #define OTAPP_PRINTF HRO_PRINTF 
+#else
+    // logs disable
+    #define OTAPP_PRINTF(fmt, ...) ((void)0)
+#endif
+
+#define OTAPP_CCA_THRESHOLD         (-70)
+
 #define OTAPP_OK        (-1)
 #define OTAPP_ERROR     (-2)
 
@@ -40,8 +51,8 @@
 #define OTAPP_CHAR_BUFFER_SIZE 1024 
 
 #define OTAPP_PAIRED_DEVICES_MAX    10  // max number of devices to save them from DNS query
-#define OTAPP_PAIRED_URI_MAX        5   // max number of uris to save 
-#define OTAPP_URI_MAX_NAME_LENGHT   32  // max lenght of uri string name
+#define OTAPP_PAIRED_URI_MAX        3   // max number of uris to save 
+#define OTAPP_URI_MAX_NAME_LENGHT   24  // max lenght of uri string name
 
 #define OTAPP_DNS_SRV_NAME_SIZE     64 // OT_DNS_MAX_NAME_SIZE full service name: "_coap._udp.default.service.arpa." 
 #define OTAPP_DNS_SRV_LABEL_SIZE    32 // OT_DNS_MAX_LABEL_SIZE host name: "device1_1_588c81fffe301ea4"
@@ -153,7 +164,7 @@ int8_t otapp_init(void);
  * 
  */
 void otapp_network_init();
-
+void otapp_setDataset_tlv(void);
 
 #endif  /* THREAD_OT_APP_H_ */
 

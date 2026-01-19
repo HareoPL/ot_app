@@ -32,12 +32,10 @@
     #include "mock_ot_message.h"
  #else
     #include "ot_app_deviceName.h"
-    #include "freertos/FreeRTOS.h"
-    #include "freertos/task.h"
-    #include "freertos/queue.h"    
+    #include "ot_app_port_rtos.h"
 #endif
     
-static const char *TAG = "ot_app_pair";
+#define TAG "ot_app_pair "
 
 static ot_app_devDrv_t *drv;
 
@@ -403,11 +401,11 @@ void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t
     deviceName = otapp_pair_DeviceNameGet(pairDeviceList, indexDevice);
     ipAddr = otapp_pair_ipAddressGet(pairDeviceList, indexDevice);
 
-    printf("Paired device info: \n");
-    printf("  name: %s \n", deviceName);
-    printf("  IP: ");
+    OTAPP_PRINTF(TAG, "Paired device info: \n");
+    OTAPP_PRINTF(TAG, "  name: %s \n", deviceName);
+    OTAPP_PRINTF(TAG, "  IP: ");
     otapp_ip6AddressPrint(ipAddr);
-    printf("  URI: \n");
+    OTAPP_PRINTF(TAG, "  URI: \n");
 
     for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
     {
@@ -416,13 +414,13 @@ void otapp_pair_devicePrintData(otapp_pair_DeviceList_t *pairDeviceList, uint8_t
         {
             if(i == 0)
             {
-                printf("    no URI \n");
+                OTAPP_PRINTF(TAG, "    no URI \n");
             }
             return;
         }
 
         uriName = otapp_coap_getUriNameFromDefault(uriIndex);
-        printf("        %s\n", uriName);
+        OTAPP_PRINTF(TAG, "        %s\n", uriName);
     }
 }
 
@@ -810,7 +808,7 @@ void otapp_pair_task(void *params)
         {
             if (otapp_pair_queueIteam.type == OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST)
             {
-                printf("Pairing new device: %s ", otapp_pair_queueIteam.deviceNameFull);
+                OTAPP_PRINTF(TAG, "Pairing new device: %s \n", otapp_pair_queueIteam.deviceNameFull);
 
                 if(otapp_pair_deviceIsMatchingFromQueue(&otapp_pair_queueIteam) == OTAPP_PAIR_IS)
                 {
@@ -827,7 +825,7 @@ void otapp_pair_task(void *params)
                     case OTAPP_PAIR_ERROR:                    
                     case OTAPP_PAIR_DEVICE_NAME_TO_LONG:                    
                     case OTAPP_PAIR_DEVICE_NO_SPACE:                    
-                        printf("has NOT been paired. Error: %d \n", result);
+                        OTAPP_PRINTF(TAG, "has NOT been paired. Error: %d \n", result);
                         break;
 
                     case OTAPP_PAIR_UPDATED:                    
@@ -842,7 +840,7 @@ void otapp_pair_task(void *params)
 
                         otapp_pair_observerPairedDeviceNotify(newDevice);
 
-                        printf("has been updated index: %d (ip Addr): ", result);
+                        OTAPP_PRINTF(TAG, "has been updated index: %d (ip Addr): \n", result);
                         break;
 
                     case OTAPP_PAIR_NO_NEED_UPDATE:
@@ -857,7 +855,7 @@ void otapp_pair_task(void *params)
 
                         otapp_pair_observerPairedDeviceNotify(newDevice);
                         
-                        printf("no need IP update\n");
+                        OTAPP_PRINTF(TAG, "no need IP update \n");
                         break;                   
                    
                     default:
@@ -868,17 +866,17 @@ void otapp_pair_task(void *params)
 
                             otapp_coapSendGetUri_Well_known(ipAddr, otapp_pair_responseHandlerUriWellKnown, (otapp_pair_Device_t*)newDevice); // .well-known/core
                          
-                            printf("has been success paired on index %d \n", result);
+                            OTAPP_PRINTF(TAG, "has been success paired on index %d \n", result);
                         }else
                         {
-                            printf(" Error: %d \n", result);
+                            OTAPP_PRINTF(TAG, " Error: %d \n", result);
                         }                        
 
                         break;
                     }
                 }else
                 {
-                    printf("= current device, or NOT allowed \n ");
+                    OTAPP_PRINTF(TAG, "= current device, or NOT allowed \n");
                 }
             }
 

@@ -21,7 +21,7 @@
  */
 #ifndef OTAPP_DNS_H_
 
-#include "esp_openthread.h"
+#include "openthread/instance.h"
 #include "hro_utils.h"
 
 

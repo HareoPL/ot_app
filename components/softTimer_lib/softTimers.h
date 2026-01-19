@@ -139,7 +139,8 @@
 #ifndef SOFTTIMERS_H_
 #define SOFTTIMERS_H_
 
-#include "main.h"
+// #include "main.h"
+#include "ot_app_port_rtos.h"
 
 /**
  * @defgroup softtim_macros Timing Macros
@@ -158,8 +159,9 @@
  * @brief Get current time in milliseconds
  * @return uint32_t Current time in milliseconds since system start
  * @note Converts FreeRTOS ticks to milliseconds using pdTICKS_TO_MS()
- */
-#define SOFT_TIM_GET_MS() pdTICKS_TO_MS(SOFT_TIM_GET_TICK())
+//  */
+// #define SOFT_TIM_GET_MS() pdTICKS_TO_MS(SOFT_TIM_GET_TICK())
+#define SOFT_TIM_GET_MS() ( ( TickType_t ) ( ( uint64_t ) ( SOFT_TIM_GET_TICK() ) * 1000 / configTICK_RATE_HZ ) ) 
 
 /**
  * @}

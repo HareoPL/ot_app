@@ -22,10 +22,18 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-#include "main.h"
+// #include "main.h"
+#include "ot_app_port_rtos.h"
+#include <stdio.h>
+
+#ifdef STM_PLATFORM		
+    #include "stm32_adv_trace.h"
+#endif
+
+#define HRO_LOG_ENABLE
 
 #ifndef UNIT_TEST    
-    #define UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS
+    // #define UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS
     #define PRIVATE static
     #define BREAK_U_TEST
 #else
@@ -38,24 +46,51 @@
 #define HRO_TOOL_PACKED_END     __attribute__((packed))
 #define HRO_TOOL_WEAK           __attribute__((weak))
 
+#define HRO_ALIGN_16            __attribute__ ((aligned (16)))
+
+#define HRO_SEC_NVM             __attribute__ ((section (".nvm_keys")))
+#define HRO_SEC_NOINIT          __attribute__ ((section (".noinit")))
+
+#define HRO_SEC_NVM_AL16        __attribute__ ((section (".nvm_keys"))) HRO_ALIGN_16
+#define HRO_SEC_NOINIT_AL16     __attribute__ ((section (".noinit"))) HRO_ALIGN_16
+
 #ifndef NULL
     #define NULL ((void *)0)
 #endif
-
-
 
 #ifndef UNUSED
     #define UNUSED(x) (void)(x)
 #endif
 
+#ifdef HRO_LOG_ENABLE
+    #ifdef STM_PLATFORM		
+        #define HRO_PRINTF(fmt, ...)        UTIL_ADV_TRACE_FSend("$$ " fmt" &&--> " __VA_ARGS__)
+    #else
+        // #define HRO_PRINTF(fmt, ...)        printf("$$ " fmt" &&--> ", __VA_ARGS__)
+        #define HRO_PRINTF(fmt, ...)        printf("$$ " fmt" &&--> " __VA_ARGS__)
+        
+    #endif
+#else
+    // logs disable
+    #define HRO_PRINTF(fmt, ...)      ((void)0)
+#endif
+
 
 #ifdef UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS  
     #define UTILS_RTOS_CHECK_FREE_STACK() \
-        do{ \
-            const char *task_name = pcTaskGetName(NULL); \
-            UBaseType_t stack_free = uxTaskGetStackHighWaterMark(NULL); \
-            ESP_LOGI(TAG, "task %s free stack: %d ", task_name, stack_free); \
-        }while(0)
+        do {                                                              \
+        const char *task_name = pcTaskGetName(NULL);                      \
+        UBaseType_t stack_free = uxTaskGetStackHighWaterMark(NULL);       \
+        size_t heap_free = xPortGetFreeHeapSize();                        \
+        size_t heap_min_free = xPortGetMinimumEverFreeHeapSize();         \
+        HRO_PRINTF("",                                                    \
+                   "task %s free stack: %lu words | heap free: %u B | "   \
+                   "heap min free: %u B\n",                               \
+                   task_name,                                             \
+                   (unsigned long)stack_free,                             \
+                   (unsigned int)heap_free,                               \
+                   (unsigned int)heap_min_free);                          \
+    } while (0)
 #else
     #define UTILS_RTOS_CHECK_FREE_STACK() do{}while(0)
 #endif 

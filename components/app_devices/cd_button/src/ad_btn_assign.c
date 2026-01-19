@@ -29,6 +29,7 @@
 
 #include "string.h"
 
+#define TAG "ad_btn_assign "
 
 #define OT_BTN_MAX_RGB_SWITCH_COLOR 20
 #define OT_AD_BTN_ASSIGN_TIME_MS    40000 
@@ -207,7 +208,7 @@ static int8_t ad_btn_resetStart(ad_btn_reset_t *resHandle, uint16_t gpioNum, uin
 
             SoftTim_start(&ad_btn_assignTime, OT_BTN_RESET_TIME_MS);
 
-            printf("reset: start \n");   
+            OTAPP_PRINTF(TAG, "reset: start \n");   
             return AD_BUTTON_IS_IN_RESET_STATE;        
         }
     }
@@ -223,7 +224,7 @@ static int8_t ad_btn_resetStart(ad_btn_reset_t *resHandle, uint16_t gpioNum, uin
             {
                 SoftTim_stop(&ad_btn_assignTime);
                 ad_btn_resetFactory(resHandle); // do reset factory settings 
-                printf("factory reset has been done \n");
+                OTAPP_PRINTF(TAG, "factory reset has been done \n");
             }            
             
             return AD_BUTTON_IS_IN_RESET_STATE;
@@ -243,7 +244,7 @@ static int8_t ad_btn_resetStop(ad_btn_reset_t *resHandle, uint16_t gpioNum)
             ad_btn_resetDefaultsetHandle(resHandle);
             
             SoftTim_stop(&ad_btn_assignTime);
-            printf("reset and timer: stop \n");
+            OTAPP_PRINTF(TAG, "reset and timer: stop \n");
         }        
     }
     
@@ -346,7 +347,7 @@ static int8_t ad_btn_assignSetTrue(uint8_t btnListId)
     btnList[btnListId].btn.isMarkedAssign = 1;
     SoftTim_start(&ad_btn_assignTime, OT_AD_BTN_ASSIGN_TIME_MS);
 
-    printf("assignTimer started. btn: %d \n", btnListId);
+    OTAPP_PRINTF(TAG, "assignTimer started. btn: %d \n", btnListId);
 
     return AD_BUTTON_OK;
 }
@@ -381,7 +382,7 @@ static void ad_btn_assignSetFalseAll(void)
     }
     
     ad_btn_resetStop(&ad_btn_resHandle, OT_BTN_RESET_LONGPRESS_GPIO); // stop reset sequence
-    printf("assignTimer stoped \n");    
+    OTAPP_PRINTF(TAG, "assignTimer stoped \n");    
 }
 
 static int8_t ad_btn_assignNewDeviceToBtnList(otapp_pair_Device_t *newDevice)
@@ -418,7 +419,7 @@ int8_t ad_btn_assignDevice(otapp_pair_Device_t *newDevice)
         if(result == AD_BUTTON_ERROR) return AD_BUTTON_ERROR;
 
         SoftTim_stop(&ad_btn_assignTime);
-        printf("Assigned new device to btn: %d| Stop timer \n", result);
+        OTAPP_PRINTF(TAG, "Assigned new device to btn: %d| Stop timer \n", result);
         // assign new devica has been finished succesfull. 
         // todo-future let's togle light coap send togle 
     }
@@ -532,11 +533,11 @@ static int8_t ad_btn_event(uint16_t gpioNum, otapp_deviceType_t uriDevType, ad_b
 
         ad_btn_coapSend(btnListId, &newState, uriDevType);
 
-        printf("%s: send state: %ld  \n",btnName, newState);
+        OTAPP_PRINTF(TAG, "%s: send state: %ld  \n",btnName, newState);
     }
     else
     {
-        printf("%s device is not turned on or not assigned \n", btnName);
+        OTAPP_PRINTF(TAG, "%s device is not turned on or not assigned \n", btnName);
     }  
 
     return AD_BUTTON_OK;
@@ -570,11 +571,11 @@ static void ad_btn_eventOneClick(uint16_t gpioNum)
 
             ad_btn_coapSend(btnListId, &newState, OTAPP_LIGHTING_ON_OFF);
 
-            printf("oneClick: send state: %ld  \n", newState);
+            OTAPP_PRINTF(TAG, "oneClick: send state: %ld  \n", newState);
         }
         else
         {
-            printf("oneClick device is not turned on or not assigned  \n");
+            OTAPP_PRINTF(TAG, "oneClick device is not turned on or not assigned  \n");
         }
     }   
 }

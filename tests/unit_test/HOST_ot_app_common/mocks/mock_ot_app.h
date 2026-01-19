@@ -5,6 +5,14 @@
 #include <stdio.h>
 #include <string.h>
 
+// #define OTAPP_LOG_ENABLE
+
+#ifdef OTAPP_LOG_ENABLE
+    #define OTAPP_PRINTF HRO_PRINTF 
+#else
+    // logs disable
+    #define OTAPP_PRINTF(fmt, ...) ((void)0)
+#endif
 
 #define OTAPP_PAIRED_DEVICES_MAX    10  // max number of devices to save them from DNS query
 #define OTAPP_PAIRED_URI_MAX        5   // max number of uris to save 

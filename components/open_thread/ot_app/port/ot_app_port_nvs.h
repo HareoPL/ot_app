@@ -1,10 +1,9 @@
 /**
- * @file ws2812b_drv_RMT.h
+ * @file ot_app_port_nvs.h
  * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief ws2812b interface for esp32-c6 using RMT 
- * 
+ * @brief 
  * @version 0.1
- * @date 15-04-2025
+ * @date 24-10-2025
  * 
  * @copyright The MIT License (MIT) Copyright (c) 2025 
  * 
@@ -20,24 +19,40 @@
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
  * 
  */
-#ifndef WS2812B_DRV_RMT_H_
-#define WS2812B_DRV_RMT_H_
 
-#include "ws2812b_if.h"
+#ifndef OT_APP_NVS_H_
+#define OT_APP_NVS_H_
 
-#define WS2812B_IF_LEDS             5
+#include "stdint.h"
 
-#define RMT_LED_STRIP_GPIO_NUM      8
-#define RMT_LED_STRIP_RESOLUTION_HZ (10 * 1000 * 1000) // 10MHz resolution, 1 tick = 0.1us (led strip needs a high resolution)
+#define OT_APP_NVS_OK               (-1)
+#define OT_APP_NVS_ERROR            (-2)
+#define OT_APP_NVS_IS               (-3)
+#define OT_APP_NVS_IS_NOT           (-4)
+#define OT_APP_NVS_IS_NO_SPACE      (-5)
 
-#define RMT_TIME_03_US              (0.3 * RMT_LED_STRIP_RESOLUTION_HZ / 1000000) // T=0.3us
-#define RMT_TIME_09_US              (0.9 * RMT_LED_STRIP_RESOLUTION_HZ / 1000000) // T=0.9us
+/**
+ * @brief save data into NVS partition
+ * 
+ * @param inData        [in] ptr to data
+ * @param keyId         [in] it is id for saved data. It will be necessary for update or read data
+ * @return int8_t       OT_APP_NVS_ERROR or OT_APP_NVS_OK
+ */
+int8_t ot_app_nvs_saveString(const char *inData, const uint8_t keyId);
+
+/**
+ * @brief read data from NVS partition
+ * 
+ * @param outData        [out] ptr to data
+ * @param outDataSize    [out] ptr to the size of the data that was read
+ * @param keyId          [in] it is id for saved data. It will be necessary for update or read data
+ * @return int8_t        OT_APP_NVS_ERROR or OT_APP_NVS_OK
+ */
+int8_t ot_app_nvs_readString(char *outBuff, uint8_t outBuffSize, const uint8_t keyId);
+
+int8_t ot_app_nvs_init(void);
+
+void ot_app_nvs_test();
 
 
-const ws2812b_drv_t *ws2812b_if_getDrvRMT(void);
-
-void ws2812b_if_init(void);
-void ws2812b_if_simpleTest(void); // add to your task with osDelay
-
-
-#endif  /* WS2812B_DRV_RMT_H_ */
+#endif  /* OT_APP_NVS_H_ */

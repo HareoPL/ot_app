@@ -23,6 +23,8 @@
             ],
             "defines": [
             //  "UNIT_TEST",
+            "ESP_PLATFORM",
+            "OTAPP_LOG_ENABLE",
             "OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE 1",
             "OPENTHREAD_CONFIG_COAP_API_ENABLE 1"
             ]

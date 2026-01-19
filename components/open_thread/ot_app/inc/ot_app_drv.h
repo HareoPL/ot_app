@@ -79,8 +79,7 @@
     #include "ot_app.h"
 #else
     #include "mock_ot_app.h"
-    #include "mock_ot_app_coap.h"
-    // #include "mock_ot_app_coap_uri_obs.`h"       
+    #include "mock_ot_app_coap.h"     
 #endif
 
 /**
@@ -284,7 +283,7 @@ typedef struct ot_app_devDrv_t{
      * This allows the framework or application to discover and interact with device capabilities dynamically.
      *
      * @note Maximum URIs: OTAPP_PAIRED_URI_MAX
-     * @note Maximum URI name length: OTAPP_COAP_URI_MAX_LENGHT
+     * @note Maximum URI name length: OTAPP_URI_MAX_NAME_LENGHT
      * @return Pointer to the URI list.
      */
     uriGet_callback_t           uriGetList_clb;

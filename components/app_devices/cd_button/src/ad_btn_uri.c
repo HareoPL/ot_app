@@ -21,6 +21,8 @@
 
 #include "ad_btn_uri.h"
 
+#define TAG "ad_btn_uri "
+
 /**
  * @brief Static pointer to device driver structure
  * @note Set during ad_btn_uri_init(), used by URI handler
@@ -78,19 +80,19 @@ void ad_button_uri_btn_state_CoreHandle(void *aContext, otMessage *aMessage, con
     if(result > 0 || result == OAC_URI_OBS_ADDED_NEW_DEVICE || result == OAC_URI_OBS_NO_NEED_UPDATE)
     {
         // Observer mode processing (subscribe/update operations)
-        printf("@ DEVICE URI btn_state: observer - processed \n");
+        OTAPP_PRINTF(TAG, "@ DEVICE URI btn_state: observer - processed \n");
         ad_button_uri_printResult(result);
     }
     else if(result == OTAPP_COAP_OK)
     {
         // Direct request mode - handle button state query
-        printf("@ DEVICE URI btn_state payload: \n");
-        printf("  %s \n", (char*)coapBuffer);
+        OTAPP_PRINTF(TAG, "@ DEVICE URI btn_state payload: \n");
+        OTAPP_PRINTF(TAG, "  %s \n", (char*)coapBuffer);
     }
     else
     {
         // Error occurred
-        printf("@ DEVICE URI btn_state: error: %d \n", result);
+        OTAPP_PRINTF(TAG, "@ DEVICE URI btn_state: error: %d \n", result);
     }
 }
 
@@ -148,25 +150,25 @@ static void ad_button_uri_printResult(int8_t result)
     switch(result)
     {
         case 1: // OAC_URI_OBS_UPDATE_IP_ADDR_Msk
-            printf("  @--> update IP ADDR \n");
+            OTAPP_PRINTF(TAG, "  @--> update IP ADDR \n");
             break;
         case 2: // OAC_URI_OBS_UPDATE_URI_TOKEN_Msk
-            printf("  @--> update TOKEN uri \n");
+            OTAPP_PRINTF(TAG, "  @--> update TOKEN uri \n");
             break;
         case 3: // OAC_URI_OBS_UPDATE_IP_ADDR_Msk | OAC_URI_OBS_UPDATE_URI_TOKEN_Msk
-            printf("  @--> update IP ADDR and TOKEN uri \n");
+            OTAPP_PRINTF(TAG, "  @--> update IP ADDR and TOKEN uri \n");
             break;
         case 4: // OAC_URI_OBS_ADD_NEW_URI_Msk
-            printf("  @--> added new uri item \n");
+            OTAPP_PRINTF(TAG, "  @--> added new uri item \n");
             break;
         case 5: // OAC_URI_OBS_UPDATE_IP_ADDR_Msk | OAC_URI_OBS_ADD_NEW_URI_Msk
-            printf("  @--> update IP ADDR and added new uri item \n");
+            OTAPP_PRINTF(TAG, "  @--> update IP ADDR and added new uri item \n");
             break;
         case OAC_URI_OBS_ADDED_NEW_DEVICE:
-            printf("  @--> added new device to subscribe list \n");
+            OTAPP_PRINTF(TAG, "  @--> added new device to subscribe list \n");
             break;
         case OAC_URI_OBS_NO_NEED_UPDATE:
-            printf("  @--> no need update subscriber data \n");
+            OTAPP_PRINTF(TAG, "  @--> no need update subscriber data \n");
             break;
         default:
             break;

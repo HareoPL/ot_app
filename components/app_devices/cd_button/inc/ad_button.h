@@ -442,6 +442,9 @@
 
 #include "ot_app_drv.h"
 
+// #include "driver/gpio.h"
+#include "hal/gpio_types.h"
+
 /**
  * @defgroup def_factory_sec Defines for factory reset settings
  * @{
