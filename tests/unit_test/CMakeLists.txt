@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.17)
 project(unit_test C)
 
+enable_testing()
+
 set(PROJECT_TARGETS_LIST "" CACHE INTERNAL "Target list")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -23,4 +25,5 @@ foreach(list ${PROJECT_TARGETS_LIST})
 endforeach()
 message(STATUS " ")
 
+# include(ctest_list.cmake)       # Potem add_test z list
 

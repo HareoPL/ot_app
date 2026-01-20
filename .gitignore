@@ -1,6 +1,3 @@
 build/
-sdkconfig.old
-sdkconfig
-X_Config_*.txt
 tests/unit_test/HOST_test_test/
-.doc/doc/
+

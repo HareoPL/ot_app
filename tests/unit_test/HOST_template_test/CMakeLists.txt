@@ -11,8 +11,9 @@ set(INCLUDE_DIRS)
 
 list(APPEND INCLUDE_DIRS
 	# ADD your include dir here
-	# ../../../components/open_thread/ot_app/inc/
-	../../../utils
+	../../../app/ot_app/inc/
+	../../../app/ot_app/port/
+	../../../app/utils
 	# ../../../main
 )
 
@@ -22,8 +23,8 @@ file(GLOB_RECURSE SRCS
 
 list(APPEND SRCS
 	# ADD your source file here ex. ../test.c	
-	../../../utils/hro_utils.c
-	# ../../../components/open_thread/ot_app/src/ot_app_pair.c
+	../../../app/utils/hro_utils.c
+	# ../../../app/ot_app/src/ot_app_pair.c
 	# ../../../main/main.c
 
 )
@@ -107,6 +108,8 @@ target_link_libraries(${PROJECT_NAME} unity)
 
 target_compile_options(${PROJECT_NAME} PRIVATE -fprofile-arcs -ftest-coverage)
 target_link_options(${PROJECT_NAME} PRIVATE -fprofile-arcs)
+
+add_test(NAME ${PROJECT_NAME} COMMAND ${PROJECT_NAME})
 
 if(ENABLE_PRINT_SRCS_FILE)
 	message(STATUS " ")
