@@ -10,6 +10,9 @@
 ![Status](https://img.shields.io/badge/Status-Active_Development-brightgreen.svg?style=flat&logo=github&logoColor=white)
 ![](https://img.shields.io/badge/Roadmap-New_Devices_%26_Modules-blueviolet?style=flat&logo=gitbook&logoColor=white)
 
+
+<details><summary><b>🇵🇱 Wersja Polska</b></summary><br>
+
 > **Kompletna dokumentacja techniczna, diagramy oraz opis API dostępne online:**
 > 📚 [**https://hareo.pl/otapp/**](https://hareo.pl/otapp/)
 
@@ -18,6 +21,15 @@
 **OTApp** to kompleksowy framework middleware stworzony do budowy urządzeń IoT opartych na sieci **Thread**. Stanowi warstwę abstrakcji pomiędzy stosem OpenThread/CoAP a sprzętem, umożliwiając szybkie tworzenie inteligentnych urządzeń, takich jak przyciski, oświetlenie czy czujniki.
 
 Projekt rozwiązuje problem skomplikowanej konfiguracji sieci mesh, oferując gotowe mechanizmy **automatycznego parowania (discovery)**, grupowania urządzeń (Device Name Groups) oraz komunikacji asynchronicznej opartej na protokole **CoAP**.
+
+## 🔌 Dostępne Platformy
+
+| MCU            | Toolchain       | Repo         |
+|----------------|-----------------|--------------|
+| **ESP32-C6**   | ESP-IDF v5.x   | **[ github.com/HareoPL/ot_app_esp](https://github.com/HareoPL/ot_app_esp)** |
+| **STM32WBA65RI**| STM32CubeIDE  | **[github.com/HareoPL/ot_app_stm](https://github.com/HareoPL/ot_app_stm)** |
+| **STM32H7+ESP32** | **VSCode+ST HAL** | **[github.com/HareoPL/ot_app_cp](https://github.com/HareoPL/ot_app_cp)** |
+
 
 ## 🛠 Technologie
 
@@ -47,7 +59,7 @@ System w akcji: automatyczne parowanie urządzenia sterującego (Controller) z o
 ![OTApp Demo](https://via.placeholder.com/800x400?text=Place+Your+Demo+GIF+Here)
 *Przykład: Po lewej logi z konsoli, po prawej fizyczna reakcja diod LED na wciśnięcie przycisku.*
 
-### 📟 Logi z procesu parowania (ASCII Cinema)
+### 📟 Logi z procesu parowania (ASCII)
 Poniższy zrzut logów prezentuje moment automatycznego wykrycia urządzenia w grupie `device1` i wymianę kluczy:
 
 ```text
@@ -107,30 +119,30 @@ sequenceDiagram
 
 #### Szczegółowy opis procesu:
 
-1.  **Initialization & Assignment (Kroki 1-4):**
+1.  **Inicjalizacja i przypisanie (Kroki 1-4):**
     Użytkownik wprowadza kontroler (Button) w tryb przypisywania dla konkretnego slotu. Włączenie zasilania w nowym urządzeniu (Light) powoduje wysłanie pakietu Discovery/SRP, dzięki czemu kontroler wykrywa obecność nowego węzła w sieci Thread.
 
-2.  **Validation (Kroki 5-7):**
+2.  **Walidacja (Kroki 5-7):**
     Kontroler weryfikuje zgodność urządzenia z regułami (np. czy to na pewno lampa). Następnie wysyła zapytanie `GET /.well-known/core` (zgodnie z RFC 6690), aby pobrać listę dostępnych zasobów (URI) na urządzeniu.
 
-3.  **Subscription / Pairing (Kroki 8-11):**
+3.  **subskrypcja / parowanie (Kroki 8-11):**
     To kluczowy moment parowania.
       * Kontroler używa wewnętrznego API OpenThread do wygenerowania unikalnego, **4-bajtowego tokena**.
       * Wysyła żądanie `PUT` z opcją **Observe: 0** (Rejestracja).
       * Po otrzymaniu potwierdzenia (`ACK`), adres EUI-64 lampy oraz token są trwale zapisywane w pamięci **NVS**. Od teraz przycisk "pamięta" to urządzenie nawet po restarcie.
 
-4.  **Control & Notification (Kroki 12-15):**
+4.  **Kontrola i powiadamianie (Kroki 12-15):**
     Podczas normalnej pracy przycisk wysyła komendy sterujące (`PUT`). Co istotne, Lampa (Light Node) automatycznie informuje o zmianie stanu wszystkich *innych* obserwatorów (np. panel ścienny), wysyłając asynchroniczne powiadomienie na ich endpoint `/subscribed_uris`. Gwarantuje to synchronizację stanu interfejsów w całym domu.
 
 ## 🏗 Architektura i Wzorce Projektowe
 
-Projekt wyróżnia się inżynierskim podejściem do kodu w języku C, implementując paradygmaty **Object-Oriented C** oraz zaawansowane techniki RTOS. Szczegółowa analiza architektury znajduje się w [dokumentacji](https://hareo.pl/otapp/).
-### Zastosowane Wzorce Projektowe (GoF):
+Projekt wyróżnia się inżynierskim podejściem do kodu w języku C, implementując paradygmaty **Object-Oriented C** oraz techniki RTOS. Szczegółowa analiza architektury znajduje się w [dokumentacji](https://hareo.pl/otapp/).
+### Zastosowane Wzorce Projektowe:
   * **Strategy / Interface:** Wykorzystanie wskaźników na funkcje w strukturach sterowników (`ot_app_devDrv_t`) pozwala na wstrzykiwanie zależności (np. reguł parowania) bez modyfikacji rdzenia silnika.
   * **Observer:** Luźne powiązanie warstwy sieciowej z logiką aplikacji. Używany do notyfikacji o zmianach topologii sieci oraz obsługi subskrybentów CoAP.
   * **Singleton:** Centralizacja zarządzania instancją stosu OpenThread i sterownikami (`otapp_getOpenThreadInstancePtr`).
   * **Facade:** Moduł `ot_app_nvs` ukrywa skomplikowane operacje na pamięci Flash, wystawiając prosty interfejs API.
-  * **Command / Dispatcher:** Obsługa żądań CoAP oparta na tablicy asocjacyjnej (`otapp_coap_uriDefault`), co eliminuje skomplikowane instrukcje warunkowe.
+  * **Command / Dispatcher:** Obsługa żądań CoAP oparta na tablicy (`otapp_coap_uriDefault`), co eliminuje skomplikowane instrukcje warunkowe.
 
 ### Techniki Systemowe i RTOS (FreeRTOS):
   * **Model Producer-Consumer:** Oddzielenie kontekstu sieciowego od operacji blokujących. Callbacki sieciowe (Producent) wrzucają zdarzenia do kolejki, które są przetwarzane przez osobny wątek (Konsument - `otapp_pair_task`).
@@ -143,10 +155,9 @@ Projekt kładzie duży nacisk na niezawodność i testowalność kodu embedded. 
   * **Framework testowy:** [Unity](http://www.throwtheswitch.org/unity)
   * **Mockowanie:** [FFF (Fake Function Framework)](https://github.com/meekrosoft/fff) - symulacja warstwy sprzętowej i OpenThread API.
   * **Zakres testów:**
-      * `ot_app_pair_test.c` – kompleksowa weryfikacja logiki parowania urządzeń.
-      * `ot_app_pair_rtos_test.c` – testy integracji mechanizmu parowania z RTOS-em.
-      * `ot_app_coap_uri_obs_test.c` – testy mechanizmu obserwatorów CoAP i subskrypcji.
-      * `ot_app_deviceName_test.c` – walidacja parsowania nazw i grup urządzeń.
+      * `ot_app_pair_test.c` – kompleksowa weryfikacja logiki parowania urządzeń (77 Tests).
+      * `ot_app_coap_uri_obs_test.c` – testy mechanizmu obserwatorów CoAP i subskrypcji (109 Tests).
+      * `ot_app_deviceName_test.c` – walidacja parsowania nazw i grup urządzeń (41 Tests).
 
 ### **Aby uruchomić testy lokalnie:**
 #### Za pomoca CMD:
@@ -159,12 +170,16 @@ rm -rf build/unit_test && cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_
 cd build/unit_test && ninja -v
 ```
 3. Uruchomienie testów
+- ręcznie
 ```bash
-HOST_ot_app_coap_uri_obs_test/HOST_ot_app_coap_uri_obs_test.exe
-HOST_ot_app_deviceName_test/HOST_ot_app_deviceName_test.exe
-HOST_ot_app_pair_test/HOST_ot_app_pair_test.exe
+build/unit_test/HOST_ot_app_coap_uri_obs_test/HOST_ot_app_coap_uri_obs_test.exe
+build/unit_test/HOST_ot_app_deviceName_test/HOST_ot_app_deviceName_test.exe
+build/unit_test/HOST_ot_app_pair_test/HOST_ot_app_pair_test.exe
 ```
-
+- przy użyciu `CTEST - CMake`
+```bash
+cd build/unit_test && ctest --output-on-failure -V
+```
 #### Za pomoca VSC tasks:
 - ctr + shift + p -> Tasks: run Task -> project build
 - ctr + shift + p -> Tasks: run Task -> test Rebuild Cmake, run test
@@ -192,7 +207,7 @@ Projekt charakteryzuje się lekkim narzutem własnym frameworka (OTApp), przy cz
 
 ## 🧠 Świadomość Techniczna i Roadmapa Refaktoryzacji
 
-Projekt, choć funkcjonalny, posiada zidentyfikowane obszary, które w środowisku produkcyjnym wymagają optymalizacji. Poniższa lista stanowi plan długu technicznego (Technical Debt) i harmonogram prac naprawczych.
+Projekt, choć funkcjonalny, posiada zidentyfikowane obszary, które w środowisku produkcyjnym wymagają optymalizacji. Poniższa lista zawiera plan refaktringu i poprawek z harmonogramem prac.
 
 ### 1\. Architektura Danych (RAM Optimization)
   * **Problem:** Rozdzielenie logiki na dwie niezależne listy (`otapp_pair_DeviceList` i `oac_obsSubList`) powoduje redundancję danych i zużycie RAM.
@@ -290,15 +305,376 @@ Plany rozwoju projektu:
   * [x] Obsługa CoAP Observe (RFC 7641)
   * [x] Automatyczne parowanie (Discovery) i grupowanie
   * [ ] **Implementacja urządzenia "OpenThread UART Bridge" (Serial-to-CoAP/Thread)**
-  * [ ] Port na platformę STM32 (Nucleo/STM32WB)
-  * [ ] Implementacja "Control Panel" (STM32H7/ESP32-C6 + LCD + TouchGFX) jako centralny punkt sterowania.
+  * [x] Port na platformę STM32 (Nucleo/STM32WB) 
+  </BR> 👉 zrealizowane - STM32WBA65RI: **[github.com/HareoPL/ot_app_stm](https://github.com/HareoPL/ot_app_stm)**
+  * [ ] Implementacja "Control Panel" (STM32H7 + EXTERNAL RAM + EXTERNAL FLASH + ESP32-C6 + LCD + TouchGFX) jako centralny punkt sterowania. 
+  </BR> 🛠👉 w trakcie - Control Panel (STM32H7 + ESP32-C6 + LCD): **[github.com/HareoPL/ot_app_cp](https://github.com/HareoPL/ot_app_cp)**
   * [ ] Aplikacja PC do zarządzania siecią przez mostek UART.
 
 ## 👨‍💻 Autor i Kontakt
 
 **Jan Łukaszewicz**
 
-  * 📧 E-mail: pldevluk@gmail.com
-  * 🔗 Dokumentacja: [hareo.pl/otapp](https://hareo.pl/otapp/)
+  * 📧 E-mail: plhareo@gmail.com
+  * 🔗 www: [hareo.pl](https://hareo.pl/)
 
 Projekt udostępniany na licencji MIT.
+
+</details>
+
+
+## 🇺🇸 English
+
+> **Full technical documentation, diagrams, and API reference available online:**
+> 📚 **[https://hareo.pl/otapp/](https://hareo.pl/otapp/)**
+
+## 💡 About the Project
+
+**OTApp** is a comprehensive middleware framework designed for building IoT devices based on the **Thread** network. It serves as an abstraction layer between the OpenThread/CoAP stack and the hardware, enabling rapid development of smart devices such as buttons, lighting, or sensors.
+
+The project addresses the complexity of mesh network configuration by offering out-of-the-box mechanisms for **automatic pairing (discovery)**, device grouping (Device Name Groups), and asynchronous communication based on the **CoAP** protocol.
+
+## 🔌 Dostępne Platformy
+
+| MCU            | Toolchain       | Repo         |
+|----------------|-----------------|--------------|
+| **ESP32-C6**   | ESP-IDF v5.x   | **[ github.com/HareoPL/ot_app_esp](https://github.com/HareoPL/ot_app_esp)** |
+| **STM32WBA65RI**| STM32CubeIDE  | **[github.com/HareoPL/ot_app_stm](https://github.com/HareoPL/ot_app_stm)** |
+| **STM32H7+ESP32** | **VSCode+ST HAL** | **[github.com/HareoPL/ot_app_cp](https://github.com/HareoPL/ot_app_cp)** |
+
+
+## 🛠 Technologies
+
+* **Language:** Embedded C with object-oriented patterns.
+* **Platforms:** ESP32-C6 (RISC-V), STM32WBA65RI (Arm® Cortex®-M33).
+* **SDK:** ESP-IDF v5.4.1, HAL V1.8.0.
+* **Protocols:** OpenThread (Thread Mesh), CoAP, IPv6.
+* **OS:** FreeRTOS.
+* **Build System:** CMake / Ninja.
+* **Documentation:** Doxygen + Graphviz.
+
+### Key Features:
+
+* ✅ **Device Abstraction Layer:** Unified API for various device types (Button, Light, Sensor).
+* ✅ **Auto-Discovery & Pairing:** Automatic device detection and pairing without user intervention (Zero-Touch Provisioning).
+* ✅ **Pairing Rules & Logic Validation:** A rule-based system defining allowed interactions between device types (whitelist). The framework verifies device compatibility before pairing (e.g., blocking `Sensor` <-> `Sensor` connections), ensuring logical network topology.
+* ✅ **Device Grouping & Zoning:** Logical network segmentation into control zones (e.g., `kitchen`, `living-room`) based on device name prefixes.
+* ✅ **CoAP Observe:** Support for real-time state subscriptions and notifications (RFC 7641).
+* ✅ **Event-Driven Architecture:** System based on callbacks and asynchronous task processing (Producer-Consumer).
+* ✅ **State Persistence:** Automatic storage of network configuration and pairing tables in Non-Volatile Storage (NVS). Guarantees full functionality restoration immediately after reboot.
+* ✅ **Standard-compliant SRP:** Full implementation of the **Service Registration Protocol** client. Devices dynamically register their services (`_coap._udp`) within the Thread network, ensuring visibility to Border Routers.
+
+---
+
+## 📺 Demo & Operation
+
+System in action: automatic pairing of a Controller with a Light Node and real-time event response.
+
+*Example: Console logs on the left, physical LED reaction to a button press on the right.*
+
+### 📟 Pairing Process Logs (ASCII)
+
+The log snippet below demonstrates the moment of automatic device discovery in the `device1` group and the subsequent key exchange:
+
+```text
+I (4521) [OT-APP]: Device Discovery initiated... Group: "device1"
+I (4890) [OT-APP]: Found device: "Light-Node-01" (fe80::1234:5678)
+I (4910) [COAP]: Sending Pairing Request...
+I (5100) [COAP]: Received ACK. Status: PAIRED.
+I (5220) [NVS]: Saving pairing data to flash memory.
+> Button Press Detected (GPIO 3) -> Action: TOGGLE
+I (6500) [COAP-CLI]: Sending PUT /light/state payload: {on: true}
+
+```
+
+### 🔄 Communication Flow (Sequence Diagram)
+
+The following diagram illustrates the pairing process and the **CoAP Observe** mechanism. Steps 8-9 highlight the use of the native OpenThread API to generate a 4-byte token identifying the resource subscription.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant User
+    participant Btn as Button (Controller)
+    participant Light as Light Node
+    participant Obs as Observer (e.g. Panel)
+    
+    Note over User, Light: 1. Initialization & Assignment
+    User->>Btn: Short Click (Select Slot)
+    Btn->>Btn: Mode: Assign Device
+    User->>Light: Power On
+    Light->>Btn: Report Presence (Discovery)
+    
+    Note over Btn, Light: 2. Validation
+    Btn->>Btn: Check Pairing Rules
+    Btn->>Light: GET /.well-known/core (Multicast)
+    Light-->>Btn: 2.05 CONTENT (Resource List)
+    
+    Note over Btn, Light: 3. Subscription (Pairing)
+    Btn->>Btn: OT CoAP API: Generate 4B Token
+    Btn->>Light: PUT /... (Option: Observe=0, Token: 0xA1B2C3D4)
+    Light-->>Btn: 2.04 CHANGED (ACK)
+    Btn->>Btn: Save EUI-64 
+    
+    Note over User, Obs: 4. Control & Notification Loop
+    User->>Btn: Short Click (Action)
+    Btn->>Light: PUT /light/state {"on": true}
+    activate Light
+    Light-->>Btn: 2.04 CHANGED (ACK)
+    
+    Note right of Light: State Updated.<br/>Notify Subscribers.
+    
+    Light->>Obs: PUT /subscribed_uris {Token: 0xB2.., Data...}
+    activate Obs
+    Obs-->>Light: 2.04 CHANGED (ACK)
+    deactivate Obs
+    deactivate Light
+
+```
+
+#### Detailed Process Description:
+
+1. **Initialization & Assignment (Steps 1-4):**
+The user puts the controller (Button) into assignment mode for a specific slot. Powering on a new device (Light) triggers a Discovery/SRP packet, allowing the controller to detect the new node on the Thread network.
+2. **Validation (Steps 5-7):**
+The controller verifies device compatibility against rules (e.g., ensuring it is indeed a light). It then sends a `GET /.well-known/core` request (per RFC 6690) to retrieve the list of available resources (URIs) on the device.
+3. **Subscription / Pairing (Steps 8-11):**
+This is the critical pairing moment:
+* The controller uses the internal OpenThread API to generate a unique **4-byte token**.
+* It sends a `PUT` request with the **Observe: 0** option (Registration).
+* Upon receiving an acknowledgment (`ACK`), the light's EUI-64 address and the token are permanently stored in **NVS**. The button now "remembers" this device even after a reboot.
+
+
+4. **Control & Notification (Steps 12-15):**
+During normal operation, the button sends control commands (`PUT`). Crucially, the Light Node automatically informs all *other* observers (e.g., a wall panel) of state changes by sending an asynchronous notification to their `/subscribed_uris` endpoint. This ensures UI state synchronization across the entire home.
+
+## 🏗 Architecture & Design Patterns
+
+The project stands out for its engineering approach to C code, implementing **Object-Oriented C** paradigms and RTOS techniques. A detailed architectural analysis is available in the [documentation](https://hareo.pl/otapp/).
+
+### Applied Design Patterns:
+
+* **Strategy / Interface:** Function pointers in driver structures (`ot_app_devDrv_t`) allow dependency injection (e.g., pairing rules) without modifying the core engine.
+* **Observer:** Loose coupling between the network layer and application logic. Used for network topology notifications and CoAP subscriber handling.
+* **Singleton:** Centralized management of the OpenThread stack instance and drivers (`otapp_getOpenThreadInstancePtr`).
+* **Facade:** The `ot_app_nvs` module hides complex Flash memory operations, exposing a simplified API.
+* **Command / Dispatcher:** CoAP request handling based on an table (`otapp_coap_uriDefault`), eliminating complex conditional statements.
+
+### System Techniques & RTOS (FreeRTOS):
+
+* **Producer-Consumer Model:** Decoupling network context from blocking operations. Network callbacks (Producer) push events into a queue, processed by a dedicated thread (Consumer - `otapp_pair_task`).
+* **Resource Protection (Mutex):** Securing shared memory buffers against race conditions in a multi-threaded environment.
+
+## ✅ Code Quality & Testing (QA)
+
+The project emphasizes reliability and testability. Application logic (pairing, URI handling, name parsing) is verified via **unit tests running on the host machine**.
+
+* **Testing Framework:** [Unity](http://www.throwtheswitch.org/unity)
+* **Mocking:** [FFF (Fake Function Framework)](https://github.com/meekrosoft/fff) - simulating hardware and OpenThread API.
+* **Test Coverage:**
+* `ot_app_pair_test.c` – Comprehensive validation of device pairing logic (77 Tests).
+* `ot_app_coap_uri_obs_test.c` – Tests for CoAP observers and subscription mechanisms (109 Tests).
+* `ot_app_deviceName_test.c` – Validation of device name and group parsing (41 Tests).
+
+
+
+### **Running tests locally:**
+
+#### Via CMD:
+
+1. Clean and configure CMake:
+
+```bash
+rm -rf build/unit_test && cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=TRUE --no-warn-unused-cli -S./tests/unit_test -B./build/unit_test -G Ninja
+
+```
+
+2. Build tests:
+
+```bash
+cd build/unit_test && ninja -v
+
+```
+
+3. Execute tests:
+- manually
+```bash
+build/unit_test/HOST_ot_app_coap_uri_obs_test/HOST_ot_app_coap_uri_obs_test.exe
+build/unit_test/HOST_ot_app_deviceName_test/HOST_ot_app_deviceName_test.exe
+build/unit_test/HOST_ot_app_pair_test/HOST_ot_app_pair_test.exe
+```
+
+- using `CTEST - CMake`
+```bash
+cd build/unit_test && ctest --output-on-failure -V
+```
+#### Via VSC tasks:
+
+* `Ctrl + Shift + P` -> Tasks: Run Task -> `project build`
+* `Ctrl + Shift + P` -> Tasks: Run Task -> `test Rebuild Cmake, run test`
+
+## ⚡ Performance & Footprint
+
+The following table presents actual memory consumption for the ESP32-C6 platform, generated using the `idf.py size-components` tool.
+
+The framework itself (OTApp) maintains a lightweight overhead, while the bulk of resources is consumed by the OpenThread stack (Full Thread Device configuration) and the system kernel.
+
+| Component / Layer | Flash (Code + RO) | RAM (Static .bss + .data) | Notes |
+| --- | --- | --- | --- |
+| **OpenThread Core (FTD)** | **353 KB** | **~24 KB** | Router Role + CLI + Dataset Manager |
+| Network & Crypto (LwIP, MbedTLS) | ~250 KB | ~5 KB | TCP/IP Stack, DTLS, Encryption |
+| ESP-IDF Kernel (OS, Drivers, HAL) | ~280 KB | ~35 KB | FreeRTOS, PHY/Radio Drivers |
+| **OTApp Framework** | **~12 KB** | **~8 KB** | Middleware (Main RAM optimization target) |
+| User Implementation (e.g. Light) | ~2 KB | ~0.5 KB | Device business logic |
+| **TOTAL (Image)** | **~996 KB** | **~72 KB** |  |
+
+> **Analysis Insights:**
+> * The `libot_app.a` module occupies **~8 KB RAM** in the `.bss` section (static variables). This results from static buffer allocation (including a 1KB CoAP buffer and neighbor tables).
+> * Planned refactoring (see *Roadmap*) aims to reduce this overhead by approximately 50-60%.
+> 
+> 
+
+## 🧠 Technical Awareness & Refactoring Roadmap
+
+While functional, the project has identified areas requiring optimization for production environments. This list constitutes the Technical Debt and remediation schedule.
+
+### 1. Data Architecture (RAM Optimization)
+
+* **Problem:** Logic split across two independent lists (`otapp_pair_DeviceList` and `oac_obsSubList`) causes data redundancy and RAM waste.
+* **Remediation:**
+* [ ] **Unified Neighbor Table:** Replace independent arrays with a single `otapp_neighbor_t` structure containing role flags (e.g., `isPaired`, `isObserver`).
+* [ ] **Bit-flag Optimization:** Replace `uint8_t` arrays with bitmasks for faster iteration.
+
+
+
+### 2. Persistent Storage (NVS & Storage)
+
+* **Problem:** Configuration is saved as strings (`nvs_set_str`), which is inefficient and requires parsing.
+* **Remediation:**
+* [ ] **Migration to Binary Blobs:** Use `nvs_set_blob` to write raw C structures directly to Flash. This will accelerate I/O and reduce memory footprint.
+
+
+
+### 3. Performance & Core Logic
+
+* **Problem:** Device identification relies on string operations (`strtok`, `atoi`) and JSON/Text payloads.
+* **Remediation:**
+* [ ] **EUI-64 Identification:** Use the 8-byte MAC address as the unique key in business logic (instead of name parsing).
+* [ ] **CBOR Implementation (RFC 8949):** Migrate CoAP payloads to binary format (TinyCBOR) to reduce packet fragmentation.
+
+
+
+### 4. RAM Management (Buffer Management)
+
+* **Problem:** Static allocation of large buffers (e.g., 1KB in `ot_app_coap_uri.c`).
+* **Remediation:**
+* [ ] **Zero-Copy Implementation:** Implement direct reading from `otMessage` into target structures or dynamic allocation of small stack buffers.
+
+
+
+### 5. Stack Configuration Optimization (Kconfig Tuning)
+
+* **Problem:** `libopenthread.a` takes up ~353 KB (35% of firmware).
+* **Remediation:**
+* [ ] **OpenThread Size Reduction:** Prepare a `RELEASE` profile in `sdkconfig` that disables CLI, extensive logging, and Joiner functions to reclaim 50-100 KB of Flash.
+
+
+
+### 6. Logging & IO
+
+* **Problem:** Logs mix with data on UART and consume `.rodata` space.
+* **Remediation:**
+* [ ] **Log Stripping:** Add a `Kconfig` option to pre-process out `ESP_LOG` in production builds.
+* [ ] **Channel Separation:** Redirect logs to USB-JTAG to dedicate the main UART for the OpenThread Bridge.
+
+
+
+## 🚀 Installation & Setup
+
+A full setup guide is available in the [Getting Started Guide](https://hareo.pl/otapp/getting_started.html).
+
+### Hardware Requirements
+
+* Minimum 2x ESP32-C6 (e.g., one as a controller/button, one as light/RGB).
+* ESP-IDF v5.4.1 environment.
+* A Border Router is recommended.
+
+### Quick Start
+
+1. **Clone the repository:**
+```bash
+git clone https://github.com/your-username/otapp.git
+cd otapp
+
+```
+
+
+2. **Initialize the device in `main/main.c` (Light or Button):**
+```c
+void app_main(void)
+{
+  // /////////////////////
+  // add device init here
+
+  // ad_button_Init("device1");
+  ad_light_init("device1");
+
+  // DO NOT EDIT BELOW //
+  // ///////////////////
+}
+
+```
+
+
+3. **Configure Device Role:**
+The project uses Kconfig fragments for different roles.
+*For Controller/Actuator (button/light):*
+```powershell
+# In ESP-IDF terminal
+cp components/app_devices/kconfigs/kconfig.controllerORSensor sdkconfig
+idf.py reconfigure
+
+```
+
+
+4. **Build and Flash:**
+#### CMD:
+
+
+```bash
+idf.py build
+idf.py -p COMx flash monitor
+
+```
+
+
+#### VSC tasks:
+
+
+* `Ctrl + Shift + P` -> Tasks: Run Task -> `project build`
+* `Ctrl + Shift + P` -> Tasks: Run Task -> `project flash` (ensure correct COM port)
+
+
+
+## 🗺 Roadmap
+
+Development plans:
+
+* [x] Core framework implementation on ESP32-C6 (ESP-IDF)
+* [x] CoAP Observe support (RFC 7641)
+* [x] Automatic Pairing (Discovery) and Grouping
+* [ ] **"OpenThread UART Bridge" (Serial-to-CoAP/Thread) implementation**
+* [x] Port to STM32 platform (Nucleo/STM32WB)
+ </BR> 👉 completed - STM32WBA65RI: **[github.com/HareoPL/ot_app_stm](https://github.com/HareoPL/ot_app_stm)**
+* [ ] "Control Panel" implementation (STM32H7 + EXTERNAL RAM + EXTERNAL FLASH + ESP32-C6 + LCD + TouchGFX) as a central hub.
+ </BR> 🛠👉 in progress - Control Panel (STM32H7 + ESP32-C6 + LCD): **[github.com/HareoPL/ot_app_cp](https://github.com/HareoPL/ot_app_cp)**
+* [ ] PC Application for network management via UART bridge.
+
+## 👨‍💻 Author & Contact
+
+**Jan Łukaszewicz**
+
+  * 📧 E-mail: plhareo@gmail.com
+  * 🔗 www: [hareo.pl](https://hareo.pl/)
+
+This project is licensed under the MIT License.
