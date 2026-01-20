@@ -170,11 +170,11 @@
         {
             "label": "test run",
             "type": "shell",
-            "command": "ctest --output-on-failure -V",
+            "command": "cd build/unit_test && ctest --output-on-failure -V",
             "args": [],
-            "options": {
-                "cwd": "${workspaceFolder}/build/"
-            },
+            // "options": {
+            //     "cwd": "${workspaceFolder}/build/"
+            // },
             "group": "test"
         },
         {
@@ -194,6 +194,7 @@
         {
             "label": "CMake update config of unit_test",
             "type": "shell",
+            // "command": "cmake -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE --no-warn-unused-cli -S./tests/unit_test -B./build/unit_test -G Ninja",
             "command": "cmake -DCMAKE_BUILD_TYPE:STRING=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE --no-warn-unused-cli -S./tests/unit_test -B./build/unit_test -G Ninja",
             "group": {
                 "kind": "build"
