@@ -17,6 +17,7 @@ add_subdirectory(../external/fff fff)
 add_subdirectory(HOST_ot_app_pair_test)
 add_subdirectory(HOST_ot_app_deviceName_test)
 add_subdirectory(HOST_ot_app_coap_uri_obs_test)
+add_subdirectory(HOST_ot_app_msg_tlv)
 
 
 message(STATUS "------------------------------------------------ Project targets list: ")
