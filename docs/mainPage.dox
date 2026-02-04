@@ -277,11 +277,14 @@
  * 
  * @section modules_sec Framework Modules
  * 
- * ### Core Framework Components
- * - **Device Management** - Discovery, pairing, device lifecycle
- * - **CoAP Application Layer** - URI handlers, observers, resource management
- * - **Device Driver Interface** - Callback system, task management
- * 
+* @section modules_sec Framework Modules
+ * * ### Core Framework Components
+ * - @ref ot_app_msg_tlv "TLV Message Buffer" – Serialization and deserialization of Type-Length-Value data structures for constrained CoAP payloads.
+ * - @ref ot_app_buffer "Shared Buffer Management" – Thread-safe global buffer pool for transient data processing and resource saving.
+ * - **Device Management** – Automated discovery, rule-based pairing, and device lifecycle management.
+ * - **CoAP Application Layer** – URI endpoint registration, Observe pattern (subscriptions), and request routing.
+ * - **Device Driver Interface** – Unified callback-based API and periodic task management for hardware abstraction.
+ 
  * ### Device Implementations
  * - @ref device_button "Button Device" - Three-button control device
  * - @ref device_btn_assign "Button Assignment" - Device pairing and button mapping
@@ -401,6 +404,55 @@
  * 
  * Concrete device implementations built on top of the OpenThread Application Framework.
  */
+
+/**
+ * @defgroup ot_app OTApp modules
+ * @brief Comprehensive middleware for Thread IoT devices on STM32/ESP32: TLV messaging, secure pairing, CoAP services, and device management.
+ *
+ * @details
+ * The framework provides a high-level abstraction layer that simplifies development by separating 
+ * OpenThread/CoAP protocols from hardware-specific implementations. 
+ * It is optimized for constrained environments, utilizing fixed buffers and static allocation 
+ * to ensure reliability and performance on embedded platforms.
+ *
+ * @{
+ * @page ot_app_overview Overview
+ *
+ * The OpenThread Application Framework provides modular components for building robust Thread network devices 
+ * with secure communication and automated resource management.
+ *
+ * ### Core Modules
+ * - @ref ot_app_msg_tlv "TLV Message Buffer" (`ot_app_msg_tlv.h`) – Fixed-buffer serialization/deserialization for CoAP payloads using packed structures.
+ * - @ref ot_app_pair "Device Pairing" (`ot_app_pair.h`) – Rule-based discovery and pairing with device list management.
+ * - **CoAP & URI Management** (`ot_app_coap.h`, `ot_app_coap_uri.h`, `ot_app_coap_uri_obs.h`) – Implementation of CoAP client/server roles and Observer patterns.
+ * - @ref ot_app_deviceName "Device Naming" (`ot_app_deviceName.h`) – EUI-64 extraction, group matching, and hostname generation.
+ * - @ref ot_app_device_api "Device Driver API" (`ot_app_drv.h`) – Unified singleton interface integrating pairing and hardware callbacks.
+ * - **Buffer & Core** (`ot_app.h`, @ref ot_app_buffer "ot_app_buffer.h") – Global instance management and thread-safe shared buffer pool protected by mutex.
+ *
+ * ### Discovery & Network
+ * - **Service Discovery** (`ot_app_srp_client.h`, `ot_app_dns.h`) – SRP client and DNS utilities for service registration and browsing.
+ * - **Dataset Management** (`ot_app_dataset_tlv.h`) – Handling of operational network datasets.
+ *
+ * ### Platform Porting Layer
+ * Modules located in the `port/` directory provide platform-specific implementations:
+ * - **NVS Storage** (`ot_app_port_nvs.h`) – Non-volatile storage interface for persistent data.
+ * - **RTOS & Stack** (`ot_app_port_rtos.h`, `ot_app_port_openthead.h`) – Integration with underlying OS and OpenThread stack.
+ *
+ * ---
+ *
+ * ### Key Features
+ * - **Efficiency**: Supports constrained environments with no dynamic allocation, using fixed buffers.
+ * - **Centralized Control**: The `ot_app_drv` singleton manages pairing rules (`pairRuleGetList_clb`) and discovery events.
+ * - **Logical Segmentation**: Device grouping via `deviceName` ensures pairing only between authorized groups.
+ * - **Advanced Communication**: Supports CoAP Observe subscriptions for real-time state updates.
+ *
+ * @see @ref ot_app_device_api for the main driver interface.
+ * @see @ref ot_app_msg_tlv for data serialization details.
+ * @see @ref ot_app_buffer for shared buffer management.
+ * @}
+ */
+
+
 
 /**
  * @defgroup libs Utility Libraries
