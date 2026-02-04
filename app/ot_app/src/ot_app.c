@@ -26,6 +26,7 @@
 #include "ot_app_deviceName.h"
 #include "ot_app_srp_client.h"
 #include "ot_app_drv.h"
+#include "ot_app_buffer.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -259,6 +260,7 @@ int8_t otapp_init() //app init
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
     otapp_mutexBuf = xSemaphoreCreateMutex();
     otapp_pair_init(otapp_devDrv);
-    
+    otapp_buffer_init();
+
     return OTAPP_OK;
 }

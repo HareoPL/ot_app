@@ -27,6 +27,10 @@
 #include <stdio.h>
 #include "stdint.h"
 
+#ifdef ESP_PLATFORM		
+    #include "esp_attr.h"
+#endif
+
 #ifdef STM_PLATFORM		
     #include "stm32_adv_trace.h"
 #endif
@@ -47,13 +51,19 @@
 #define HRO_TOOL_PACKED_END     __attribute__((packed))
 #define HRO_TOOL_WEAK           __attribute__((weak))
 
-#define HRO_ALIGN_16            __attribute__ ((aligned (16)))
+#ifdef STM_PLATFORM	
+    #define HRO_ALIGN_16            __attribute__ ((aligned (16)))
 
-#define HRO_SEC_NVM             __attribute__ ((section (".nvm_keys")))
-#define HRO_SEC_NOINIT          __attribute__ ((section (".noinit")))
+    #define HRO_SEC_NVM             __attribute__ ((section (".nvm_keys")))
+    #define HRO_SEC_NOINIT          __attribute__ ((section (".noinit")))
 
-#define HRO_SEC_NVM_AL16        __attribute__ ((section (".nvm_keys"))) HRO_ALIGN_16
-#define HRO_SEC_NOINIT_AL16     __attribute__ ((section (".noinit"))) HRO_ALIGN_16
+    #define HRO_SEC_NVM_AL16        __attribute__ ((section (".nvm_keys"))) HRO_ALIGN_16
+    #define HRO_SEC_NOINIT_AL16     __attribute__ ((section (".noinit"))) HRO_ALIGN_16
+#endif
+
+#ifdef ESP_PLATFORM		
+    #define HRO_SEC_NOINIT __NOINIT_ATTR
+#endif
 
 #ifndef NULL
     #define NULL ((void *)0)
