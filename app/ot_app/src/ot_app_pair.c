@@ -23,7 +23,10 @@
  #include "ot_app_pair.h"
 
  #include "ot_app_drv.h"
- 
+ #include "ot_app_msg_tlv.h"
+//  #include "ot_app_buffer.h"
+#include "string.h"
+
  #ifdef UNIT_TEST
     #include "mock_freertos_queue.h"
     #include "mock_freertos_task.h"
@@ -495,41 +498,34 @@ static inline int8_t otapp_pair_uriCheckString(const char* uri)
     return OTAPP_PAIR_OK;
 }
 
-otapp_pair_resUrisBuffer_t *otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, int8_t *result, uint16_t *outBufSize)
+int8_t otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, uint8_t *bufferOut, uint16_t *bufferSizeInOut)
 {   
-    uint8_t *uriBuff = (uint8_t*)resUrisBuffer;
-
-    if(result == NULL) return NULL;
-    if(otapp_pair_uriCheckArgs(uri, outBufSize) == OTAPP_PAIR_ERROR || uriSize == 0 || uriSize > OTAPP_PAIR_URI_MAX)
+    if(uri == NULL || bufferOut == NULL || bufferSizeInOut == NULL || uriSize == 0 || uriSize > OTAPP_PAIR_URI_MAX)
     {
-        *result = OTAPP_PAIR_ERROR;
-        return NULL;
+        return OTAPP_PAIR_ERROR;
+    }
+    const uint16_t patternKey = 0xAA00;
+
+    // Add TLV block containing the number of available URIs
+    otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, patternKey, sizeof(uriSize), &uriSize);
+
+    // Iterate through the list and append device types and URI paths as TLV blocks
+    for (size_t i = 0; i < uriSize; i++) // create tokens in tokensTab={quantity_of_uris, uri1, uri2, uri3 ...}
+    {   
+        // Add device type using an incremented key
+        otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, patternKey + i + 1, sizeof(uri->devType), &uri->devType);
+
+        // Add URI path string as the subsequent TLV block
+        otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, patternKey + i + 1, strlen(uri->resource.mUriPath), uri->resource.mUriPath);
+    }
+
+    // Retrieve the final count of written bytes from the buffer header
+    if(otapp_msg_tlv_writenBytesGet(bufferOut, *bufferSizeInOut, bufferSizeInOut) == OT_APP_MSG_TLV_ERROR) 
+    {
+        return OTAPP_PAIR_ERROR;
     }
     
-    memset(uriBuff, 0, sizeof(resUrisBuffer)); // clear buffer
-
-    for (uint8_t i = 0; i < uriSize; i++)
-    {
-        if(otapp_pair_uriCheckString(uri[i].resource.mUriPath) == OTAPP_PAIR_ERROR)
-        {
-            *result = OTAPP_PAIR_ERROR;
-            return NULL;
-        }
-        // serialize from uri to bytes buffer
-        strcpy((char*)uriBuff, uri[i].resource.mUriPath);   // char uri name
-        
-        uriBuff += OTAPP_URI_MAX_NAME_LENGHT;
-        *uriBuff = uri[i].devType;                           // devTypeUriFn from otapp_deviceType_t
-        
-        uriBuff +=  sizeof(otapp_deviceType_t);
-        *uriBuff = 1;                                        // uint8_t
-        
-        uriBuff += sizeof(uint8_t);
-    }
-    
-    *outBufSize = (OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE * uriSize);
-    *result = OTAPP_PAIR_OK;
-    return resUrisBuffer;
+    return OTAPP_PAIR_OK;
 }
 
 otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(const uint8_t *inBuffer, uint16_t inBufferSize, int8_t *result, uint16_t *outParsedDataSize)

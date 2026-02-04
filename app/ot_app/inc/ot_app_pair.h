@@ -260,7 +260,30 @@ otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(const uint8_t *inBuffe
  */
 int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUrisList, const otapp_pair_resUrisParseData_t *uriData, const oacu_token_t *token);
 
-otapp_pair_resUrisBuffer_t *otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, int8_t *result, uint16_t *outBufSize);
+/**
+ * @brief Serializes a list of device URI resources into a TLV-encoded byte buffer.
+ * * @details This function takes an array of CoAP resources and packs them into a 
+ * user-provided buffer using the @ref ot_app_msg_tlv module. It is primarily used 
+ * during the device discovery and pairing phase to inform other nodes about 
+ * available endpoints.
+ * * **Encoding Logic:**
+ * - The function starts with a base key `0xAA00`.
+ * - First block (Key `0xAA00`): Contains the total number of URIs (`uriSize`).
+ * - Subsequent blocks (Key `0xAA00 + i + 1`): Alternating blocks containing 
+ * device types and URI path strings.
+ * @param[in] uri               Pointer to the array of URI resource structures.
+ * @param[in] uriSize           Number of URIs to serialize (max @ref OTAPP_PAIR_URI_MAX).
+ * @param[out] bufferOut        Pointer to the destination buffer (usually acquired via @ref otapp_buffer_get_withMutex).
+ * @param[in,out] bufferSizeInOut [in] Total capacity of the buffer; [out] Actual number of bytes written.
+ * * @return int8_t 
+ * - @ref OTAPP_PAIR_OK on success.
+ * - @ref OTAPP_PAIR_ERROR if parameters are invalid or buffer space is insufficient.
+ * * @note This function automatically updates @p bufferSizeInOut by calling 
+ * @ref otapp_msg_tlv_writenBytesGet at the end of the process.
+ * * @see otapp_msg_tlv_keyAdd
+ * @see ad_temp_uri_well_knownCoreHandle
+ */
+int8_t otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, uint8_t *bufferOut, uint16_t *bufferSizeInOut);
 
 /**
  * @brief set uri state on the pair device list. Max data per uri = uint32_t 
