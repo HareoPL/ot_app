@@ -27,6 +27,7 @@
 #include "ot_app_deviceName.h"
 #include "ot_app_pair.h"
 #include "ot_app_drv.h"
+#include "ot_app_buffer.h"
 
 #include <openthread/coap.h>
 #include <openthread/instance.h>
@@ -88,25 +89,32 @@ void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, con
 void ad_temp_uri_well_knownCoreHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {
     ot_app_devDrv_t *devDrv_ = otapp_getDevDrvInstance();
-    ot_app_size_t uriSize = 0;
-    otapp_coap_uri_t *urisList = NULL;
-    otapp_pair_resUrisBuffer_t *uriBuf = NULL;
-    uint16_t uriBufSize = 0;
+    otapp_coap_uri_t *urisList = NULL;    
+    uint8_t *buffer;
+    uint16_t bufferSize;
+    int8_t result;
 
-    int8_t result = 0;
-
-    if (request)
+    if (request && devDrv_)
     {
-        if(devDrv_ == NULL) return;
-
-        uriSize = devDrv_->uriGetListSize;
+        // 1. Retrieve the URI list defined in the device driver
         urisList = devDrv_->uriGetList_clb();
         if(urisList == NULL) return;
 
-        uriBuf = otapp_pair_uriResourcesCreate(urisList, uriSize, &result, &uriBufSize);
-        if(result == OTAPP_PAIR_ERROR || uriBuf == NULL) return;
+        // 2. Acquire access to the thread-safe global buffer
+        buffer = otapp_buffer_get_withMutex();
+        otapp_buffer_clear();
+        bufferSize = otapp_buffer_getSize();
 
-        otapp_coap_sendResponse(request, aMessageInfo, (uint8_t*)uriBuf, uriBufSize);
+        // 3. Serialize URI data into TLV format
+        result = otapp_pair_uriResourcesCreate(urisList, devDrv_->uriGetListSize, buffer, &bufferSize);
+        if(result == OTAPP_PAIR_OK)
+        {
+            // 4. Send the populated TLV buffer as a CoAP response
+            otapp_coap_sendResponse(request, aMessageInfo, buffer, bufferSize);
+        }
+
+        // 5. Release the buffer mutex
+        otapp_buffer_releaseMutex();
     }
 }
 
