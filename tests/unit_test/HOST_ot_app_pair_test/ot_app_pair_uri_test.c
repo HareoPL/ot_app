@@ -1,5 +1,9 @@
 #include "unity_fixture.h"
 #include "ot_app_pair.h"
+#include "ot_app_msg_tlv.h"
+#define TEST_P_MSG_TLV_ONE_KEY_LENGTH_BYTES 4
+#define TEST_P_MSG_TLV_RESERVED_BYTES 2
+#define TEST_P_MSG_TLV_RESERVED_BYTES_FOR_1_KEY_INFO (TEST_MSG_TLV_ONE_KEY_LENGTH_BYTES + TEST_MSG_TLV_RESERVED_BYTES)
 
 #define UT_OAP_DEVICE_INDEX_0 (0)
 #define UT_OAP_DEVICE_INDEX_1 (1)
@@ -16,6 +20,14 @@
 #define UT_OAP_URI_TABLE_20     (OTAPP_URI_MOCK_20)
 
 #define EXPECTED_URI_RETURN(devIndex, uriIndex) ((devIndex << 8) | (uriIndex)) 
+
+#define TEST_PAIR_TLV_FIRST_BYTES (TEST_P_MSG_TLV_RESERVED_BYTES + TEST_P_MSG_TLV_ONE_KEY_LENGTH_BYTES + 1 )
+#define TEST_PAIR_TLV_URI_QTY(x)  (TEST_PAIR_TLV_FIRST_BYTES + ((x) * 2 * TEST_P_MSG_TLV_ONE_KEY_LENGTH_BYTES))
+#define TEST_PAIR_TLV_URI_DATA_SIZE(uriPath, devType)  (strlen(uriPath) + sizeof(devType))
+
+#define TEST_PAIR_BUFFER_SIZE 1024
+static uint8_t buffer[TEST_PAIR_BUFFER_SIZE];
+
 
 static char *deviceNameFull_0 = {"device1_1_588c81fffe301ea1"};
 static char *deviceNameFull_1 = {"device1_1_588c81fffe301ea2"};
@@ -96,6 +108,7 @@ TEST_SETUP(ot_app_pair_UriIndex)
     otapp_pair_DeviceDeleteAll(otapp_pair_getHandle());
     
     ut_oap_deviceAddFullFill();
+    memset(buffer, 0, TEST_PAIR_BUFFER_SIZE);
 }
 
 TEST_TEAR_DOWN(ot_app_pair_UriIndex)
@@ -107,10 +120,8 @@ TEST(ot_app_pair_UriIndex, GivenNullArg_WhenCallingUriResourcesCreate_ThenReturn
 {
     int8_t result;
     uint16_t bufferSize = 0; 
-    otapp_pair_resUrisBuffer_t *buffer;
 
-    buffer = otapp_pair_uriResourcesCreate(NULL, UT_OAP_URI_SIZE, &result, &bufferSize);
-    TEST_ASSERT_EQUAL(NULL, buffer);
+    result = otapp_pair_uriResourcesCreate(NULL, UT_OAP_URI_SIZE, buffer, &bufferSize);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
 }
 
@@ -118,91 +129,79 @@ TEST(ot_app_pair_UriIndex, GivenZeroUriSize_WhenCallingUriResourcesCreate_ThenRe
 {
     int8_t result;   
     uint16_t bufferSize = 0; 
-    otapp_pair_resUrisBuffer_t *buffer;
 
-    buffer = otapp_pair_uriResourcesCreate(coap_uri, 0, &result, &bufferSize);
-    TEST_ASSERT_EQUAL(NULL, buffer);
+    result = otapp_pair_uriResourcesCreate(coap_uri, 0, buffer, &bufferSize);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);    
 }
 
 TEST(ot_app_pair_UriIndex, GivenNullBufferSize_WhenCallingUriResourcesCreate_ThenReturnError)
 {
     int8_t result;   
-    otapp_pair_resUrisBuffer_t *buffer;
 
-    buffer = otapp_pair_uriResourcesCreate(coap_uri, UT_OAP_URI_SIZE, &result, NULL);
-    TEST_ASSERT_EQUAL(NULL, buffer);
+    result = otapp_pair_uriResourcesCreate(coap_uri, UT_OAP_URI_SIZE, buffer, NULL);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);    
 }
 
 TEST(ot_app_pair_UriIndex, GivenTruArgsSize1_WhenCallingUriResourcesCreate_ThenReturnOK)
 {
     int8_t result;   
-    uint8_t uriSize = 1; 
-    uint16_t bufferSize = 0;
-    uint16_t bufferSize_expected = (OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE * uriSize); 
-    otapp_pair_resUrisBuffer_t *buffer;
-    otapp_pair_resUrisBuffer_t *bufferFilled = fillResUrisBuffer();
+    uint8_t uriQty = 1; 
+    uint16_t bufferSize = TEST_PAIR_BUFFER_SIZE;
+    uint16_t bufferSize_expected = TEST_PAIR_TLV_URI_QTY(uriQty) + TEST_PAIR_TLV_URI_DATA_SIZE(coap_uri->resource.mUriPath, coap_uri->devType);
 
-    buffer = otapp_pair_uriResourcesCreate(coap_uri, uriSize, &result, &bufferSize);
-    TEST_ASSERT_NOT_EQUAL(NULL, buffer);
-    TEST_ASSERT_EQUAL(bufferSize_expected, bufferSize);
+    result = otapp_pair_uriResourcesCreate(coap_uri, uriQty, buffer, &bufferSize);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_OK, result);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(bufferFilled, buffer, bufferSize);
+    TEST_ASSERT_EQUAL(bufferSize_expected, bufferSize);
 }
 
 TEST(ot_app_pair_UriIndex, GivenTruArgsSize3_WhenCallingUriResourcesCreate_ThenReturnOK)
 {
     int8_t result;   
-    uint8_t uriSize = 3; 
-    uint16_t bufferSize = 0;
-    uint16_t bufferSize_expected = (OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE * uriSize); 
-    otapp_pair_resUrisBuffer_t *buffer;
-    otapp_pair_resUrisBuffer_t *bufferFilled = fillResUrisBuffer();
+    uint8_t uriQty = 3; 
+    uint16_t bufferSize = TEST_PAIR_BUFFER_SIZE;
+    uint16_t bufferSize_expected = TEST_PAIR_TLV_URI_QTY(uriQty) ;
 
-    buffer = otapp_pair_uriResourcesCreate(coap_uri, uriSize, &result, &bufferSize);
-    TEST_ASSERT_NOT_EQUAL(NULL, buffer);
-    TEST_ASSERT_EQUAL(bufferSize_expected, bufferSize);
+    for (uint8_t i = 0; i < uriQty; i++)
+    {
+        bufferSize_expected += TEST_PAIR_TLV_URI_DATA_SIZE(coap_uri[i].resource.mUriPath, coap_uri[i].devType);
+    }
+    
+    result = otapp_pair_uriResourcesCreate(coap_uri, uriQty, buffer, &bufferSize);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_OK, result);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(bufferFilled, buffer, bufferSize);
+    TEST_ASSERT_EQUAL(bufferSize_expected, bufferSize);
 }
 
-TEST(ot_app_pair_UriIndex, GivenTruArgsSizeMax_WhenCallingUriResourcesCreate_ThenReturnOK)
+TEST(ot_app_pair_UriIndex, GivenTruArgsPerfectBufSize_WhenCallingUriResourcesCreate_ThenReturnOK)
 {
     int8_t result;   
-    uint8_t uriSize = OTAPP_PAIR_URI_MAX; 
-    uint16_t bufferSize = 0;
-    uint16_t bufferSize_expected = (OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE * uriSize); 
-    otapp_pair_resUrisBuffer_t *buffer;
-    otapp_pair_resUrisBuffer_t *bufferFilled = fillResUrisBuffer();
+    uint8_t uriQty = 3; 
+    uint16_t bufferSize_expected = TEST_PAIR_TLV_URI_QTY(uriQty) ;
+    uint16_t bufferSize;
 
-    buffer = otapp_pair_uriResourcesCreate(coap_uri, uriSize, &result, &bufferSize);
-    TEST_ASSERT_NOT_EQUAL(NULL, buffer);
-    TEST_ASSERT_EQUAL(bufferSize_expected, bufferSize);
+    for (uint8_t i = 0; i < uriQty; i++)
+    {
+        bufferSize_expected += TEST_PAIR_TLV_URI_DATA_SIZE(coap_uri[i].resource.mUriPath, coap_uri[i].devType);
+    }
+    bufferSize = bufferSize_expected;
+    result = otapp_pair_uriResourcesCreate(coap_uri, uriQty, buffer, &bufferSize);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_OK, result);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(bufferFilled, buffer, bufferSize);
+    TEST_ASSERT_EQUAL(bufferSize_expected, bufferSize);
 }
 
 TEST(ot_app_pair_UriIndex, GivenOvervflowSize_WhenCallingUriResourcesCreate_ThenReturnError)
 {
     int8_t result;   
-    uint8_t uriSize = OTAPP_PAIR_URI_MAX + 1; 
-    uint16_t bufferSize = 0;
-    otapp_pair_resUrisBuffer_t *buffer;
+    uint8_t uriQty = 3; 
+    uint16_t bufferSize_expected = TEST_PAIR_TLV_URI_QTY(uriQty) ;
+    uint16_t bufferSize;
 
-    buffer = otapp_pair_uriResourcesCreate(coap_uri, uriSize, &result, &bufferSize);
-    TEST_ASSERT_EQUAL(NULL, buffer);
+    for (uint8_t i = 0; i < uriQty; i++)
+    {
+        bufferSize_expected += TEST_PAIR_TLV_URI_DATA_SIZE(coap_uri[i].resource.mUriPath, coap_uri[i].devType);
+    }
+    bufferSize = bufferSize_expected;
+    result = otapp_pair_uriResourcesCreate(coap_uri, uriQty, buffer, &bufferSize - 1);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
-}
-
-TEST(ot_app_pair_UriIndex, GivenNullResultArg_WhenCallingUriResourcesCreate_ThenReturnError)
-{
-    uint8_t uriSize = OTAPP_PAIR_URI_MAX + 1; 
-    uint16_t bufferSize = 0;
-    otapp_pair_resUrisBuffer_t *buffer;
-
-    buffer = otapp_pair_uriResourcesCreate(coap_uri, uriSize, NULL, &bufferSize);
-    TEST_ASSERT_EQUAL(NULL, buffer);
 }
 
 // otapp_pair_uriParseMessage
@@ -211,7 +210,7 @@ TEST(ot_app_pair_UriIndex, GivenNullInBuffer_WhenCallinguriParseMessage_ThenRetu
     int8_t result;
     otapp_pair_resUrisParseData_t *parseData;
     uint16_t parsedDataSize = 0;
-    
+
     parseData = otapp_pair_uriParseMessage(NULL, 1, &result, &parsedDataSize);
     TEST_ASSERT_EQUAL(NULL, parseData);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
@@ -222,9 +221,8 @@ TEST(ot_app_pair_UriIndex, GivenZeroBufSize_WhenCallinguriParseMessage_ThenRetur
     int8_t result;
     otapp_pair_resUrisParseData_t *parseData;
     uint16_t parsedDataSize = 0;
-    otapp_pair_resUrisBuffer_t *bufferFilled = fillResUrisBuffer();
 
-    parseData = otapp_pair_uriParseMessage((uint8_t*)bufferFilled, 0, &result, &parsedDataSize);
+    parseData = otapp_pair_uriParseMessage(buffer, 0, &result, &parsedDataSize);
     TEST_ASSERT_EQUAL(NULL, parseData);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
 }
@@ -233,9 +231,8 @@ TEST(ot_app_pair_UriIndex, GivenNullOutParsedDataSize_WhenCallinguriParseMessage
 {
     int8_t result;
     otapp_pair_resUrisParseData_t *parseData;
-    otapp_pair_resUrisBuffer_t *bufferFilled = fillResUrisBuffer();
 
-    parseData = otapp_pair_uriParseMessage((uint8_t*)bufferFilled, 1, &result, NULL);
+    parseData = otapp_pair_uriParseMessage(buffer, 1, &result, NULL);
     TEST_ASSERT_EQUAL(NULL, parseData);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
 }
@@ -244,62 +241,82 @@ TEST(ot_app_pair_UriIndex, GivenNullOutParsedDataSize_WhenCallinguriParseMessage
 TEST(ot_app_pair_UriIndex, GivenTrueArgsSize1_WhenCallinguriParseMessage_ThenReturnOK)
 {
     int8_t result;   
-    uint16_t uriSize = 1 * OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE; 
-    otapp_pair_resUrisParseData_t *parseData;
+    uint8_t uriQty = 1; 
+    uint16_t bufferSize = TEST_PAIR_BUFFER_SIZE;
     uint16_t parsedDataSize = 0;
-    uint16_t parsedDataSize_expected = (uriSize / sizeof(otapp_pair_resUrisParseData_t));
-    otapp_pair_resUrisBuffer_t *bufferFilled = fillResUrisBuffer();
+    otapp_pair_resUrisParseData_t *parsedData = NULL;
 
-    parseData = otapp_pair_uriParseMessage((uint8_t*)bufferFilled, uriSize, &result, &parsedDataSize);
-    TEST_ASSERT_NOT_EQUAL(NULL, parseData);
-    TEST_ASSERT_EQUAL(parsedDataSize_expected, parsedDataSize);
+    result = otapp_pair_uriResourcesCreate(coap_uri, uriQty, buffer, &bufferSize);
+
+    parsedData = otapp_pair_uriParseMessage(buffer, TEST_PAIR_BUFFER_SIZE, &result, &parsedDataSize);
+    TEST_ASSERT_NOT_EQUAL(NULL, parsedData);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_OK, result);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY((uint8_t*)bufferFilled, (uint8_t*)parseData, uriSize);
+    TEST_ASSERT_EQUAL(uriQty, parsedDataSize);
 }
 
 TEST(ot_app_pair_UriIndex, GivenTrueArgsSize3_WhenCallinguriParseMessage_ThenReturnOK)
 {
     int8_t result;   
-    uint8_t uriSize = 3 * OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE; 
-    otapp_pair_resUrisParseData_t *parseData;
+    uint8_t uriQty = 3; 
+    uint16_t bufferSize = TEST_PAIR_BUFFER_SIZE;
     uint16_t parsedDataSize = 0;
-    uint16_t parsedDataSize_expected = (uriSize / sizeof(otapp_pair_resUrisParseData_t));
-    otapp_pair_resUrisBuffer_t *bufferFilled = fillResUrisBuffer();
+    otapp_pair_resUrisParseData_t *parsedData = NULL;  
+    
+    result = otapp_pair_uriResourcesCreate(coap_uri, uriQty, buffer, &bufferSize);
 
-    parseData = otapp_pair_uriParseMessage((uint8_t*)bufferFilled, uriSize, &result, &parsedDataSize);
-    TEST_ASSERT_NOT_EQUAL(NULL, parseData);
-    TEST_ASSERT_EQUAL(parsedDataSize_expected, parsedDataSize);
+    parsedData = otapp_pair_uriParseMessage(buffer, TEST_PAIR_BUFFER_SIZE, &result, &parsedDataSize);
+    TEST_ASSERT_NOT_EQUAL(NULL, parsedData);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_OK, result);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(bufferFilled, parseData, uriSize);
+    TEST_ASSERT_EQUAL(uriQty, parsedDataSize);
 }
 
 TEST(ot_app_pair_UriIndex, GivenTrueArgsSizeMax_WhenCallinguriParseMessage_ThenReturnOK)
 {
     int8_t result;   
-    uint8_t uriSize = OTAPP_PAIR_URI_MAX * OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE; 
-    otapp_pair_resUrisParseData_t *parseData;
+    uint8_t uriQty = 3; 
+    uint16_t bufferSize = TEST_PAIR_BUFFER_SIZE;
+    uint16_t bufferSize_expected = TEST_PAIR_TLV_URI_QTY(uriQty);
+    uint16_t bufferMinimalSize;
     uint16_t parsedDataSize = 0;
-    uint16_t parsedDataSize_expected = (uriSize / sizeof(otapp_pair_resUrisParseData_t));
-    otapp_pair_resUrisBuffer_t *bufferFilled = fillResUrisBuffer();
+    otapp_pair_resUrisParseData_t *parsedData = NULL;
 
-    parseData = otapp_pair_uriParseMessage((uint8_t*)bufferFilled, uriSize, &result, &parsedDataSize);
-    TEST_ASSERT_NOT_EQUAL(NULL, parseData);
-    TEST_ASSERT_EQUAL(parsedDataSize_expected, parsedDataSize);
+    for (uint8_t i = 0; i < uriQty; i++)
+    {
+        bufferSize_expected += TEST_PAIR_TLV_URI_DATA_SIZE(coap_uri[i].resource.mUriPath, coap_uri[i].devType);
+    }
+    
+    result = otapp_pair_uriResourcesCreate(coap_uri, uriQty, buffer, &bufferSize);
+
+    bufferMinimalSize = bufferSize_expected + (uriQty * sizeof(otapp_pair_resUrisParseData_t));
+
+    parsedData = otapp_pair_uriParseMessage(buffer, bufferMinimalSize, &result, &parsedDataSize);
+    TEST_ASSERT_NOT_EQUAL(NULL, parsedData);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_OK, result);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(bufferFilled, parseData, uriSize);
+    TEST_ASSERT_EQUAL(uriQty, parsedDataSize);
 }
 
 TEST(ot_app_pair_UriIndex, GivenOverflowSize_WhenCallinguriParseMessage_ThenReturnError)
 {
     int8_t result;   
-    uint8_t uriSize = (OTAPP_PAIR_URI_MAX + 1) * OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE; 
-    otapp_pair_resUrisParseData_t *parseData;
+    uint8_t uriQty = 3; 
+    uint16_t bufferSize = TEST_PAIR_BUFFER_SIZE;
+    uint16_t bufferSize_expected = TEST_PAIR_TLV_URI_QTY(uriQty);
+    uint16_t bufferMinimalSize;
     uint16_t parsedDataSize = 0;
-    otapp_pair_resUrisBuffer_t *bufferFilled = fillResUrisBuffer();
+    otapp_pair_resUrisParseData_t *parsedData = NULL;
 
-    parseData = otapp_pair_uriParseMessage((uint8_t*)bufferFilled, uriSize, &result, &parsedDataSize);
-    TEST_ASSERT_EQUAL(NULL, parseData);
+    for (uint8_t i = 0; i < uriQty; i++)
+    {
+        bufferSize_expected += TEST_PAIR_TLV_URI_DATA_SIZE(coap_uri[i].resource.mUriPath, coap_uri[i].devType);
+    }
+    
+    result = otapp_pair_uriResourcesCreate(coap_uri, uriQty, buffer, &bufferSize);
+
+    bufferMinimalSize = bufferSize_expected + (uriQty * sizeof(otapp_pair_resUrisParseData_t));
+
+    parsedData = otapp_pair_uriParseMessage(buffer, bufferMinimalSize - 1, &result, &parsedDataSize);
     TEST_ASSERT_EQUAL(OTAPP_PAIR_ERROR, result);
+    TEST_ASSERT_EQUAL(NULL, parsedData);
 }
 
 //otapp_pair_uriAdd

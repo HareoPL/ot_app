@@ -70,7 +70,7 @@
 
 #define OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE 10
 
-typedef struct __attribute__((packed)){
+typedef struct {
     char uri[OTAPP_URI_MAX_NAME_LENGHT];     
     otapp_deviceType_t devTypeUriFn;    // It tell you what functions this uri has
     uint8_t obs;                        // is this uri has observer support 
@@ -248,7 +248,7 @@ int8_t otapp_pair_addToQueue(otapp_pair_queueItem_t *queueItem);
  * @param result 
  * @return otapp_pair_resUrisParseData_t* 
  */
-otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(const uint8_t *inBuffer, uint16_t inBufferSize, int8_t *result, uint16_t *outParsedDataSize);
+otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(uint8_t *inBuffer, uint16_t inBufferSize, int8_t *result, uint16_t *outParsedDataSize);
 
 /**
  * @brief 
@@ -260,7 +260,54 @@ otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(const uint8_t *inBuffe
  */
 int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUrisList, const otapp_pair_resUrisParseData_t *uriData, const oacu_token_t *token);
 
-otapp_pair_resUrisBuffer_t *otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, int8_t *result, uint16_t *outBufSize);
+/**
+ * @brief Serializes a list of device URI resources into a TLV-encoded byte buffer.
+ * @details This function takes an array of CoAP resources and packs them into a 
+ * user-provided buffer using the @ref ot_app_msg_tlv module. It is primarily used 
+ * during the device discovery and pairing phase to inform other nodes about 
+ * available endpoints.
+ * 
+ * **TLV Memory Layout:**
+ * ```
+ * ┌───────────────────────────────────────────────────────────────────────────────┐
+ * │                             TLV MESSAGE BUFFER                                │
+ * ├─────────────┬──────┬─────┬─────┬──────┬─────┬───────┬──────┬──────┬───────┬───│
+ * │ 2B          │Key0  │Len0 │Val0 │Key1  │Len1 │Val1   │Key2  │Len2  │Val2   │   │
+ * │writtenBytes │0xAA00│1B   │URIs │0xAA01│ 4B  │devType│0xAA02│strlen│UriPath│...│
+ * └─────────────┴──────┴─────┴─────┴──────┴─────┴───────┴──────┴──────┴───────┴───┘
+ * 
+ * Key 0xAA00: uriSize (uint8_t)
+ * Key 0xAA01: uri_1.devType (uint32_t, 4B)  
+ * Key 0xAA02: uri_1.mUriPath (char[], variable)
+ * Key 0xAA03: uri_2.devType (uint32_t, 4B)[1]
+ * Key 0xAA04: uri_2.mUriPath (char[], variable)[1]
+ * Key 0xAA05: uri_3.devType (uint32_t, 4B)[2]
+ * Key 0xAA06: uri_3.mUriPath (char[], variable)[2]
+ * ...
+ * ```
+ * 
+ * **Encoding Logic:**
+ * - Base key: `0xAA00` 
+ * - Key `0xAA00`: Total number of URIs (`uriSize`)
+ * - For each URI `i` (0 to `uriSize-1`):
+ *   - Key `0xAA00 + 2*i + 1`: `uri[i].devType` (4 bytes)
+ *   - Key `0xAA00 + 2*i + 2`: `uri[i].resource.mUriPath` (string length)
+ * 
+ * @param[in] uri               Pointer to the array of URI resource structures.
+ * @param[in] uriSize           Number of URIs to serialize (max @ref OTAPP_PAIR_URI_MAX).
+ * @param[out] bufferOut        Pointer to the destination buffer (usually acquired via @ref otapp_buffer_get_withMutex).
+ * @param[in,out] bufferSizeInOut [in] Total capacity of the buffer; [out] Actual number of bytes written.
+ * 
+ * @return int8_t 
+ * - @ref OTAPP_PAIR_OK on success.
+ * - @ref OTAPP_PAIR_ERROR if parameters are invalid or buffer space is insufficient.
+ * 
+ * @note This function automatically updates @p bufferSizeInOut by calling 
+ * @ref otapp_msg_tlv_writenBytesGet at the end of the process.
+ * @see otapp_msg_tlv_keyAdd
+ * @see ad_temp_uri_well_knownCoreHandle
+ */
+int8_t otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, uint8_t *bufferOut, uint16_t *bufferSizeInOut);
 
 /**
  * @brief set uri state on the pair device list. Max data per uri = uint32_t 
