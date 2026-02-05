@@ -49,7 +49,7 @@
  * **Typical lifecycle:**
  * - Allocate fixed buffer (e.g. noinit/heap/stack)
  * - Append keys: `otapp_msg_tlv_keyAdd(buffer, size, key, len, value)`
- * - Query: `otapp_msg_tlv_freeBufSpaceGet(buffer, size, &free)`
+ * - Query: `otapp_msg_tlv_getBufferTotalFreeSpace(buffer, size, &free)`
  * - Extract: `otapp_msg_tlv_keyGet(buffer, size, key, &len, value)`
  *
  * **Integration:**
@@ -57,7 +57,6 @@
  * - Portable: ESP32/STM32 (little-endian, packed structs)
  * - Thread-safe with external mutex (user-provided buffer)
  *
-/**
  * @section msg_tlv_example Usage Example
  *
  * This example demonstrates how to gather device URI resources, serialize them into 
@@ -192,19 +191,9 @@ int8_t otapp_msg_tlv_keyGet(uint8_t *buffer, const uint16_t bufferSize, const ui
  *
  * @return OT_APP_MSG_TLV_OK or error.
  */
-int8_t otapp_msg_tlv_freeBufSpaceGet(uint8_t *buffer, const uint16_t bufferSize, uint16_t *freeBufSpaceOut);
+int8_t otapp_msg_tlv_getBufferTotalFreeSpace(const uint8_t *buffer, const uint16_t bufferSize, uint16_t *freeBufSpaceOut);
 
-/**
- * @brief Get current written bytes count from buffer header.
- *
- * Reads 2-byte reserved header (little-endian u16).
- *
- * @param buffer Pointer to TLV buffer.
- * @param bufferSize Total size (>= 2B reserved).
- * @param writtenBytesOut OUT: Bytes used by TLV data.
- *
- * @return OT_APP_MSG_TLV_OK or error.
- */
-int8_t otapp_msg_tlv_writenBytesGet(uint8_t *buffer, const uint16_t bufferSize, uint16_t *writtenBytesOut);
+
+int8_t otapp_msg_tlv_getBufferTotalUsedSpace(const uint8_t *buffer, const uint16_t bufferSize, uint16_t *writtenBufSpaceOut);
 
 #endif  /* OT_APP_MSG_TLV_H_ */

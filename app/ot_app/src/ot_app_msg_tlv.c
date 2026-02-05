@@ -32,7 +32,7 @@ typedef struct {
     uint16_t length;
 } HRO_TOOL_PACKED_FIELD otapp_msg_tlv_t;
 
-int8_t otapp_msg_tlv_writenBytesGet(uint8_t *buffer, const uint16_t bufferSize, uint16_t *writtenBytesOut)
+int8_t otapp_msg_tlv_writenBytesGet(const uint8_t *buffer, const uint16_t bufferSize, uint16_t *writtenBytesOut)
 {
     if(buffer == NULL || writtenBytesOut == NULL || bufferSize < (OT_APP_MSG_TLV_SIZE + OT_APP_MSG_TLV_RESERVED_BYTES))
     {
@@ -120,7 +120,7 @@ int8_t otapp_msg_tlv_keyGet(uint8_t *buffer, const uint16_t bufferSize, const ui
 
     const uint16_t usableBufferSize = bufferSize - OT_APP_MSG_TLV_RESERVED_BYTES; 
     otapp_msg_tlv_t *currentBlock = (otapp_msg_tlv_t*)(buffer + OT_APP_MSG_TLV_RESERVED_BYTES);
-
+    uint16_t keyValueLen;
     uint16_t usedBytes;
 
     if(otapp_msg_tlv_writenBytesGet(buffer, bufferSize, &usedBytes) == OT_APP_MSG_TLV_ERROR)
@@ -149,27 +149,34 @@ int8_t otapp_msg_tlv_keyGet(uint8_t *buffer, const uint16_t bufferSize, const ui
                 return OT_APP_MSG_TLV_ERROR;
             }
             
-            if(valueOut == NULL || valueLengthOut == NULL)
+            if(valueOut == NULL)
             {
                 return OT_APP_MSG_TLV_KEY_EXIST;
             }else
             {
                 memcpy(valueOut, currentBlock + 1, currentBlock->length); // (currentBlock + 1) --> pointer arithmetic will point to the beginning of key value 
-                *valueLengthOut = currentBlock->length;
 
+                if(valueLengthOut != NULL)
+                {
+                    *valueLengthOut = currentBlock->length;
+                }
+                
                 return OT_APP_MSG_TLV_KEY_EXIST;
             }            
         }else
         {
-            currentBytes += currentBlock->length;                                                   // first, add length of key to currendBytes
-            currentBlock = (otapp_msg_tlv_t *)((uint8_t *)currentBlock + currentBlock->length);     // next, increase ptr to next key data
+            keyValueLen = currentBlock->length;
+
+            currentBytes += keyValueLen + OT_APP_MSG_TLV_SIZE;                             // first, increase bytes by length of key and key struct
+            currentBlock = (otapp_msg_tlv_t *)((uint8_t *)currentBlock + keyValueLen);     // second, increase ptr by the size of previous keyValue length
+            currentBlock ++;                                                               // next, increase ptr to next key struct
         }
     }
     
     return OT_APP_MSG_TLV_KEY_NO_EXIST;
 }
 
-int8_t otapp_msg_tlv_freeBufSpaceGet(uint8_t *buffer, const uint16_t bufferSize, uint16_t *freeBufSpaceOut)
+int8_t otapp_msg_tlv_getBufferTotalFreeSpace(const uint8_t *buffer, const uint16_t bufferSize, uint16_t *freeBufSpaceOut)
 {
     if(buffer == NULL || freeBufSpaceOut == NULL || bufferSize < (OT_APP_MSG_TLV_SIZE + OT_APP_MSG_TLV_RESERVED_BYTES))
     {
@@ -186,6 +193,20 @@ int8_t otapp_msg_tlv_freeBufSpaceGet(uint8_t *buffer, const uint16_t bufferSize,
     
     freeBufSpace = bufferSize - OT_APP_MSG_TLV_RESERVED_BYTES - writtenBytes;
     *freeBufSpaceOut = freeBufSpace;
+
+    return OT_APP_MSG_TLV_OK;
+}
+
+int8_t otapp_msg_tlv_getBufferTotalUsedSpace(const uint8_t *buffer, const uint16_t bufferSize, uint16_t *writtenBufSpaceOut)
+{
+    uint16_t writtenBytes = 0;
+
+    if(otapp_msg_tlv_writenBytesGet(buffer, bufferSize, &writtenBytes) == OT_APP_MSG_TLV_ERROR)
+    {
+        return OT_APP_MSG_TLV_ERROR;
+    }
+
+    *writtenBufSpaceOut = writtenBytes + OT_APP_MSG_TLV_RESERVED_BYTES;
 
     return OT_APP_MSG_TLV_OK;
 }
