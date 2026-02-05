@@ -21,9 +21,16 @@
  */
 
 #include "ot_app_buffer.h"
-#include "ot_app_port_rtos.h"
 #include "hro_utils.h"
 #include "string.h"
+
+#ifdef UNIT_TEST
+    #include "mock_freertos_queue.h"
+    #include "mock_freertos_task.h"
+    #include "mock_freertos_semaphore.h"
+ #else
+    #include "ot_app_port_rtos.h"
+#endif
 
 static HRO_SEC_NOINIT uint8_t otapp_buffer[OT_APP_BUFFER_SIZE];
 static SemaphoreHandle_t otapp_buffer_mutex = NULL;
@@ -34,6 +41,7 @@ uint8_t *otapp_buffer_get_withMutex(void)
     {
         return otapp_buffer;
     }
+    return NULL;
 }
 
 void otapp_buffer_releaseMutex(void)
