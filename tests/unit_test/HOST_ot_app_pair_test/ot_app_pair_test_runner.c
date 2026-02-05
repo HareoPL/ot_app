@@ -73,8 +73,8 @@ TEST_GROUP_RUNNER(ot_app_pair_UriIndex)
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullBufferSize_WhenCallingUriResourcesCreate_ThenReturnError);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTruArgsSize1_WhenCallingUriResourcesCreate_ThenReturnOK);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTruArgsSize3_WhenCallingUriResourcesCreate_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTruArgsPerfectBufSize_WhenCallingUriResourcesCreate_ThenReturnOK);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenOvervflowSize_WhenCallingUriResourcesCreate_ThenReturnError);
-   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullResultArg_WhenCallingUriResourcesCreate_ThenReturnError);
 
    // otapp_pair_uriParseMessage
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenNullInBuffer_WhenCallinguriParseMessage_ThenReturnError);

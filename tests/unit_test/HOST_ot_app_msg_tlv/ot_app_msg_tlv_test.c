@@ -91,7 +91,7 @@ TEST(ot_app_msg_tlv, GivenBufSizeForTwoDiffrentKeys_WhenCallKeyAddTwice_ThenRetu
     result = otapp_msg_tlv_keyAdd(buffer, bufferSize, TEST_MSG_TLV_KEY_2, valueLength, value); 
     TEST_ASSERT_EQUAL(OT_APP_MSG_TLV_OK, result);
 
-    result = otapp_msg_tlv_freeBufSpaceGet(buffer, bufferSize, &freeBufSpace);
+    result = otapp_msg_tlv_getBufferTotalFreeSpace(buffer, bufferSize, &freeBufSpace);
     TEST_ASSERT_EQUAL(OT_APP_MSG_TLV_OK, result);
     TEST_ASSERT_EQUAL(0, freeBufSpace);
 }
@@ -120,7 +120,7 @@ TEST(ot_app_msg_tlv, GivenBufSizeFor10DiffrentKeys_WhenCallKeyAddTwice_ThenRetur
         TEST_ASSERT_EQUAL(OT_APP_MSG_TLV_OK, result);
     }    
 
-    result = otapp_msg_tlv_freeBufSpaceGet(buffer, bufferSize, &freeBufSpace);
+    result = otapp_msg_tlv_getBufferTotalFreeSpace(buffer, bufferSize, &freeBufSpace);
     TEST_ASSERT_EQUAL(OT_APP_MSG_TLV_OK, result);
     TEST_ASSERT_EQUAL(0, freeBufSpace);
 }
