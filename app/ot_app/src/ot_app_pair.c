@@ -24,7 +24,8 @@
 
  #include "ot_app_drv.h"
  #include "ot_app_msg_tlv.h"
-//  #include "ot_app_buffer.h"
+ #include "ot_app_buffer.h"
+
 #include "string.h"
 
  #ifdef UNIT_TEST
@@ -51,8 +52,6 @@ static otapp_pair_DeviceList_t otapp_pair_DeviceList;
 static QueueHandle_t otapp_pair_queueHandle;
 static otapp_pair_queueItem_t otapp_pair_queueIteam;
 
-static otapp_pair_resUrisParseData_t resUrisParseData[OTAPP_PAIR_URI_MAX];
-static otapp_pair_resUrisBuffer_t resUrisBuffer[OTAPP_PAIR_URI_MAX];
 //////////////////
 // observer
 static otapp_pair_observerCallback_t otapp_pair_observerPairedDeviceCallback[OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE] = {NULL};
@@ -498,80 +497,88 @@ static inline int8_t otapp_pair_uriCheckString(const char* uri)
     return OTAPP_PAIR_OK;
 }
 
+#define OTAPP_PAIR_KEY_PATTERN      0xAA00
+#define OTAPP_PAIR_KEY_URIS_COUNT   OTAPP_PAIR_KEY_PATTERN
+
+
 int8_t otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, uint8_t *bufferOut, uint16_t *bufferSizeInOut)
 {   
     if(uri == NULL || bufferOut == NULL || bufferSizeInOut == NULL || uriSize == 0 || uriSize > OTAPP_PAIR_URI_MAX)
     {
         return OTAPP_PAIR_ERROR;
     }
-    const uint16_t patternKey = 0xAA00;
-
+    uint16_t writtenBufSpace;
     // Add TLV block containing the number of available URIs
-    otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, patternKey, sizeof(uriSize), &uriSize);
+    otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, OTAPP_PAIR_KEY_URIS_COUNT, sizeof(uriSize), &uriSize);
 
     // Iterate through the list and append device types and URI paths as TLV blocks
-    for (size_t i = 0; i < uriSize; i++) // create tokens in tokensTab={quantity_of_uris, uri1, uri2, uri3 ...}
+    for (size_t i = 0; i < uriSize; i++) // quantity_of_uris | uri1_dt | uri1_path | uri2_dt | uri2_path | uri3_dt | uri3_path | ...
     {   
         // Add device type using an incremented key
-        otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, patternKey + i + 1, sizeof(uri->devType), &uri->devType);
+        otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, OTAPP_PAIR_KEY_PATTERN + 2*i + 1, sizeof(uri[i].devType), (uint8_t *)&uri[i].devType);
 
         // Add URI path string as the subsequent TLV block
-        otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, patternKey + i + 1, strlen(uri->resource.mUriPath), uri->resource.mUriPath);
+        otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, OTAPP_PAIR_KEY_PATTERN + 2*i + 2, strlen(uri[i].resource.mUriPath), (uint8_t *)uri[i].resource.mUriPath);
     }
 
     // Retrieve the final count of written bytes from the buffer header
-    if(otapp_msg_tlv_writenBytesGet(bufferOut, *bufferSizeInOut, bufferSizeInOut) == OT_APP_MSG_TLV_ERROR) 
+    if(otapp_msg_tlv_getBufferTotalUsedSpace(bufferOut, *bufferSizeInOut, &writtenBufSpace) == OT_APP_MSG_TLV_ERROR) 
     {
         return OTAPP_PAIR_ERROR;
     }
     
+    *bufferSizeInOut = writtenBufSpace;
+
     return OTAPP_PAIR_OK;
 }
 
-otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(const uint8_t *inBuffer, uint16_t inBufferSize, int8_t *result, uint16_t *outParsedDataSize)
-{
-    const uint8_t *inBuffer_tmp = inBuffer;
-    uint16_t numOfDataToParse = 0;
+otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(uint8_t *buffer, const uint16_t bufferSize, int8_t *resultOut, uint16_t *dataSizeOut)
+{  
+    int8_t result;
+    uint16_t usedBufSpace = 0;    
+    uint8_t urisCount; 
+    uint16_t keyLength;
+    otapp_pair_resUrisParseData_t *urisData;
+    const uint16_t structSize = sizeof(otapp_pair_resUrisParseData_t);
 
-    if(result == NULL) return NULL;
+    result = otapp_msg_tlv_keyGet(buffer, bufferSize, OTAPP_PAIR_KEY_URIS_COUNT, NULL, &urisCount);
+    otapp_msg_tlv_getBufferTotalUsedSpace(buffer, bufferSize, &usedBufSpace); 
 
-    if(otapp_pair_uriCheckArgs(inBuffer, outParsedDataSize) == OTAPP_PAIR_ERROR || inBufferSize == 0 || inBufferSize > (OTAPP_PAIR_URI_RESOURCE_BUFFER_MAX_SIZE))
+    if(usedBufSpace == 0 || result != OT_APP_MSG_TLV_KEY_EXIST)
     {
-        *result = OTAPP_PAIR_ERROR;
+        *resultOut = OTAPP_PAIR_ERROR;
         return NULL;
     }
-  
-    memset(resUrisParseData, 0, sizeof(resUrisParseData)); // clear buffer
 
-    numOfDataToParse = inBufferSize / OTAPP_PAIR_URI_RESOURCE_BUFFER_SIZE;
-    if(numOfDataToParse > OTAPP_PAIR_URI_MAX)
+    if((structSize * urisCount) > (bufferSize - usedBufSpace)) // sprawdzenie czy dostarczony buffer pomiesci dodatkowo sparsowane dane uris
     {
-       *result = OTAPP_PAIR_ERROR;
-        return NULL; 
+        *resultOut = OTAPP_PAIR_ERROR;
+        return NULL;
     }
 
-    for (uint8_t i = 0; i < numOfDataToParse; i++)
+    urisData = (otapp_pair_resUrisParseData_t*)(buffer + usedBufSpace);
+
+    for (uint8_t i = 0; i < urisCount; i++)
     {
-        if(otapp_pair_uriCheckString((char*)inBuffer_tmp) == OTAPP_PAIR_ERROR)
+        result = otapp_msg_tlv_keyGet(buffer, bufferSize, OTAPP_PAIR_KEY_PATTERN + 2*i + 1, &keyLength, (uint8_t*)&urisData[i].devTypeUriFn);
+        if(result != OT_APP_MSG_TLV_KEY_EXIST || keyLength != sizeof(urisData->devTypeUriFn)) 
         {
-            *result = OTAPP_PAIR_ERROR;
+            *resultOut = OTAPP_PAIR_ERROR;
             return NULL;
         }
-        // deserialize from bytes buffer to struct
-        strcpy(resUrisParseData[i].uri, (char*)inBuffer_tmp);
 
-        inBuffer_tmp += OTAPP_URI_MAX_NAME_LENGHT; 
-        resUrisParseData[i].devTypeUriFn = *inBuffer_tmp;
-
-        inBuffer_tmp += sizeof(otapp_deviceType_t);
-        resUrisParseData[i].obs = *inBuffer_tmp;
-
-        inBuffer_tmp += sizeof(uint8_t);
-    }      
+        result = otapp_msg_tlv_keyGet(buffer, bufferSize, OTAPP_PAIR_KEY_PATTERN + 2*i + 2, &keyLength, (uint8_t*)&urisData[i].uri);
+        if(result != OT_APP_MSG_TLV_KEY_EXIST || keyLength > sizeof(urisData->uri))
+        {
+            *resultOut = OTAPP_PAIR_ERROR;
+            return NULL;
+        }
+        urisData[i].obs = 1;       
+    }
     
-    *outParsedDataSize = numOfDataToParse;
-    *result =  OTAPP_PAIR_OK;
-    return resUrisParseData;
+    *dataSizeOut = urisCount;
+    *resultOut = OTAPP_PAIR_OK;
+    return urisData;
 }
 
 PRIVATE int8_t otapp_pair_uriTokenIsValid(const oacu_token_t *token)
@@ -752,24 +759,38 @@ void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMess
 
     if(pairedDevice == NULL) return;
 
-    static uint8_t urisBuffer[OTAPP_PAIR_URI_RESOURCE_BUFFER_MAX_SIZE];
     static oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
     int8_t result = 0;
-    uint16_t msgLen = 0;
+    // uint16_t msgLen = 0;
     uint16_t readBytes = 0;
     otapp_pair_resUrisParseData_t *parsedData = NULL;
     uint16_t parsedDataSize = 0; // number of uri structures to add to the list
-
+    uint8_t *urisBuffer = otapp_buffer_get_withMutex(); // przechodzimy na glowny buffer aplikacji ot_app_buffer.h
     otapp_pair_Device_t *device = (otapp_pair_Device_t*)pairedDevice;
+
+     if(urisBuffer == NULL)
+     {
+        return;
+     } 
 
     if (aMessage)
     {
-        msgLen = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-        readBytes = otMessageRead(aMessage, otMessageGetOffset(aMessage), urisBuffer, msgLen);
-        if(readBytes != msgLen) return;
-
-        parsedData = otapp_pair_uriParseMessage(urisBuffer, readBytes, &result, &parsedDataSize);
-        if(parsedData == NULL || result == OTAPP_PAIR_ERROR) return;
+       
+        // msgLen = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+        readBytes = otMessageRead(aMessage, otMessageGetOffset(aMessage), urisBuffer, (otMessageGetLength(aMessage) - otMessageGetOffset(aMessage)));
+        OTAPP_PRINTF(TAG, "readBytes: %d\n", readBytes);
+        // if(readBytes != msgLen) 
+        // {
+        //     otapp_buffer_releaseMutex();
+        //     return;
+        // }
+        
+        parsedData = otapp_pair_uriParseMessage(urisBuffer, otapp_buffer_getSize(), &result, &parsedDataSize);
+        if(parsedData == NULL || result != OTAPP_PAIR_OK)
+        {
+            otapp_buffer_releaseMutex();
+            return;
+        }
 
         for (uint8_t i = 0; i < parsedDataSize; i++)
         {            
@@ -786,8 +807,53 @@ void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMess
             }
         }
         otapp_pair_observerPairedDeviceNotify(device); 
+        otapp_buffer_releaseMutex();
     }
 }
+// void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
+// {
+//     UNUSED(aMessageInfo);
+//     UNUSED(aResult);
+
+//     if(pairedDevice == NULL) return;
+
+//     static uint8_t urisBuffer[OTAPP_PAIR_URI_RESOURCE_BUFFER_MAX_SIZE];
+//     static oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
+//     int8_t result = 0;
+//     uint16_t msgLen = 0;
+//     uint16_t readBytes = 0;
+//     otapp_pair_resUrisParseData_t *parsedData = NULL;
+//     uint16_t parsedDataSize = 0; // number of uri structures to add to the list
+
+//     otapp_pair_Device_t *device = (otapp_pair_Device_t*)pairedDevice;
+
+//     if (aMessage)
+//     {
+//         msgLen = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
+//         readBytes = otMessageRead(aMessage, otMessageGetOffset(aMessage), urisBuffer, msgLen);
+//         if(readBytes != msgLen) return;
+
+//         parsedData = otapp_pair_uriParseMessage(urisBuffer, readBytes, &result, &parsedDataSize);
+//         if(parsedData == NULL || result == OTAPP_PAIR_ERROR) return;
+
+//         for (uint8_t i = 0; i < parsedDataSize; i++)
+//         {            
+//             if(parsedData[i].obs)
+//             {                
+//                 oac_uri_obs_sendSubscribeRequest(&device->ipAddr, parsedData[i].uri, token);
+//                 // todo w odpowiedzi powinienem otrzymac aktualny stan uri ta odpowiedz powinana pojawic sie w 
+//                 // void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
+//                 // trzeba zmodyfikowac fn sendsubReq aby przyjmowala callbacka response (powyzszego).
+//                 otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], token);
+//             }else
+//             {
+//                 otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], NULL);
+//             }
+//         }
+//         otapp_pair_observerPairedDeviceNotify(device); 
+//     }
+// }
+
 
 void otapp_pair_task(void *params) 
 {
