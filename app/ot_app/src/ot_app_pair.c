@@ -538,6 +538,7 @@ otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(uint8_t *buffer, const
     uint16_t usedBufSpace = 0;    
     uint8_t urisCount; 
     uint16_t keyLength;
+    uint16_t keyLengthCmp;
     otapp_pair_resUrisParseData_t *urisData;
     const uint16_t structSize = sizeof(otapp_pair_resUrisParseData_t);
 
@@ -561,14 +562,16 @@ otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(uint8_t *buffer, const
     for (uint8_t i = 0; i < urisCount; i++)
     {
         result = otapp_msg_tlv_keyGet(buffer, bufferSize, OTAPP_PAIR_KEY_PATTERN + 2*i + 1, &keyLength, (uint8_t*)&urisData[i].devTypeUriFn);
-        if(result != OT_APP_MSG_TLV_KEY_EXIST || keyLength != sizeof(urisData->devTypeUriFn)) 
+        keyLengthCmp = sizeof(urisData->devTypeUriFn);
+        if(result != OT_APP_MSG_TLV_KEY_EXIST || keyLength > keyLengthCmp)
         {
             *resultOut = OTAPP_PAIR_ERROR;
             return NULL;
         }
 
         result = otapp_msg_tlv_keyGet(buffer, bufferSize, OTAPP_PAIR_KEY_PATTERN + 2*i + 2, &keyLength, (uint8_t*)&urisData[i].uri);
-        if(result != OT_APP_MSG_TLV_KEY_EXIST || keyLength > sizeof(urisData->uri))
+        keyLengthCmp = sizeof(urisData->uri);
+        if(result != OT_APP_MSG_TLV_KEY_EXIST || keyLength > keyLengthCmp)
         {
             *resultOut = OTAPP_PAIR_ERROR;
             return NULL;
@@ -775,7 +778,7 @@ void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMess
 
     if (aMessage)
     {
-       
+    	otapp_buffer_clear();
         // msgLen = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
         readBytes = otMessageRead(aMessage, otMessageGetOffset(aMessage), urisBuffer, (otMessageGetLength(aMessage) - otMessageGetOffset(aMessage)));
         OTAPP_PRINTF(TAG, "readBytes: %d\n", readBytes);

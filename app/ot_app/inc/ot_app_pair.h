@@ -71,8 +71,9 @@
 #define OTAPP_PAIR_OBSERVER_PAIRE_DDEVICE_CALLBACK_SIZE 10
 
 typedef struct {
-    char uri[OTAPP_URI_MAX_NAME_LENGHT];     
-    otapp_deviceType_t devTypeUriFn;    // It tell you what functions this uri has
+    char uri[OTAPP_URI_MAX_NAME_LENGHT];
+//    otapp_deviceType_t devTypeUriFn;    // It tell you what functions this uri has
+    uint32_t devTypeUriFn;    // It tell you what functions this uri has
     uint8_t obs;                        // is this uri has observer support 
 }otapp_pair_resUrisParseData_t;
 
