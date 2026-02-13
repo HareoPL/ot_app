@@ -211,6 +211,18 @@ int8_t otapp_msg_tlv_getBufferTotalUsedSpace(const uint8_t *buffer, const uint16
     return OT_APP_MSG_TLV_OK;
 }
 
+uint16_t otapp_msg_tlv_calcualeBuffer(uint8_t keyDataLength, uint8_t cnt)
+{
+    static uint16_t counter;
+    if(cnt == 0)
+    {
+        counter = OT_APP_MSG_TLV_RESERVED_BYTES;
+    } 
+
+    counter += (OT_APP_MSG_TLV_SIZE + keyDataLength);
+    
+    return counter;
+}
 // todo feature
 // int8_t otapp_msg_tlv_keyDelete(uint8_t *buffer, const uint16_t bufferSize, const uint16_t key)
 // {

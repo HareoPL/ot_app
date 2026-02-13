@@ -196,4 +196,6 @@ int8_t otapp_msg_tlv_getBufferTotalFreeSpace(const uint8_t *buffer, const uint16
 
 int8_t otapp_msg_tlv_getBufferTotalUsedSpace(const uint8_t *buffer, const uint16_t bufferSize, uint16_t *writtenBufSpaceOut);
 
+uint16_t otapp_msg_tlv_calcualeBuffer(uint8_t keyDataLength, uint8_t cnt);
+
 #endif  /* OT_APP_MSG_TLV_H_ */
