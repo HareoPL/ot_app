@@ -193,3 +193,47 @@ TEST(ot_app_msg_tlv, GivenEmptyBuffer_WhenCallKeyGet_ThenReturn)
     result = otapp_msg_tlv_keyGet(buffer, TEST_MSG_TLV_BUF_SIZE, TEST_MSG_TLV_KEY_1, NULL, NULL);
     TEST_ASSERT_EQUAL(OT_APP_MSG_TLV_EMPTY_BUFFER, result);
 }
+
+// otapp_msg_tlv_calcualeBuffer
+TEST(ot_app_msg_tlv, GivenKeyDataLen_WhenCallalCualeBuffer_ThenReturnOK)
+{
+    const uint8_t keysQty = 3;
+    const uint16_t valueLengthStart = 5;
+    uint16_t bufferSizExpected = TEST_MSG_TLV_RESERVED_BYTES;
+    uint16_t  bufferSizCalculated = 0;
+
+    for (uint8_t i = 0; i < keysQty; i++)
+    {
+        bufferSizExpected += (TEST_MSG_TLV_ONE_KEY_LENGTH_BYTES + (valueLengthStart * i + 1));
+
+        bufferSizCalculated = otapp_msg_tlv_calcualeBuffer((valueLengthStart * i + 1), i);
+    }
+    
+    TEST_ASSERT_EQUAL(bufferSizExpected, bufferSizCalculated);
+}
+
+TEST(ot_app_msg_tlv, GivenKeyDataLenDouble_WhenCallalCualeBuffer_ThenReturnOK)
+{
+    uint8_t keysQty = 3;
+    const int16_t valueLengthStart = 5;
+    uint16_t bufferSizExpected = TEST_MSG_TLV_RESERVED_BYTES;
+    uint16_t  bufferSizCalculated = 0;
+
+    for (uint8_t i = 0; i < keysQty; i++)
+    {
+        bufferSizExpected += (TEST_MSG_TLV_ONE_KEY_LENGTH_BYTES + (valueLengthStart * i + 1));
+
+        bufferSizCalculated = otapp_msg_tlv_calcualeBuffer((valueLengthStart * i + 1), i);
+    }    
+    TEST_ASSERT_EQUAL(bufferSizExpected, bufferSizCalculated);
+
+    keysQty = 5;
+    bufferSizExpected = TEST_MSG_TLV_RESERVED_BYTES;
+    for (uint8_t i = 0; i < keysQty; i++)
+    {
+        bufferSizExpected += (TEST_MSG_TLV_ONE_KEY_LENGTH_BYTES + (valueLengthStart * i + 1));
+
+        bufferSizCalculated = otapp_msg_tlv_calcualeBuffer((valueLengthStart * i + 1), i);
+    }    
+    TEST_ASSERT_EQUAL(bufferSizExpected, bufferSizCalculated);
+}

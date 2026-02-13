@@ -18,6 +18,9 @@ TEST_GROUP_RUNNER(ot_app_msg_tlv)
    RUN_TEST_CASE(ot_app_msg_tlv, GivenTrueKeyAndReadNotExistKey_WhenCallKeyGet_ThenReturnKeyNoExist);
    RUN_TEST_CASE(ot_app_msg_tlv, GivenTrueKeyAndReadExistKeyWithoutReadValueAndValSize_WhenCallKeyGet_ThenReturnKeyExist);
    RUN_TEST_CASE(ot_app_msg_tlv, GivenEmptyBuffer_WhenCallKeyGet_ThenReturn);
+
+   RUN_TEST_CASE(ot_app_msg_tlv, GivenKeyDataLen_WhenCallalCualeBuffer_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_msg_tlv, GivenKeyDataLenDouble_WhenCallalCualeBuffer_ThenReturnOK);
 }
 
 
