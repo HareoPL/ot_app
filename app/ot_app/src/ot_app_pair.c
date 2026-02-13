@@ -500,6 +500,21 @@ static inline int8_t otapp_pair_uriCheckString(const char* uri)
 #define OTAPP_PAIR_KEY_PATTERN      0xAA00
 #define OTAPP_PAIR_KEY_URIS_COUNT   OTAPP_PAIR_KEY_PATTERN
 
+uint16_t otapp_pair_uriResourcesCalculateBufSize(otapp_coap_uri_t *uri, uint8_t uriSize)
+{
+    if(uri == NULL) return 0;
+    uint16_t count = 0;
+
+    otapp_msg_tlv_calcualeBuffer(sizeof(uint8_t), 0);
+
+    for (uint8_t i = 0; i < uriSize; i++)
+    {
+        otapp_msg_tlv_calcualeBuffer(sizeof(uri->devType), 1);
+        count = otapp_msg_tlv_calcualeBuffer(strlen(uri[i].resource.mUriPath), 1);
+    }
+    
+    return count;
+}
 
 int8_t otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, uint8_t *bufferOut, uint16_t *bufferSizeInOut)
 {   
@@ -530,6 +545,17 @@ int8_t otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, uin
     *bufferSizeInOut = writtenBufSpace;
 
     return OTAPP_PAIR_OK;
+}
+
+uint16_t otapp_pair_uriParseMessageCalculateBufSize(uint8_t aMessagePayloadSize)
+{
+    uint16_t count = 0;
+    const uint16_t structSize = sizeof(otapp_pair_resUrisParseData_t);
+
+    if(aMessagePayloadSize > OTAPP_PAIRED_URI_MAX * structSize) return 0;
+
+    count = aMessagePayloadSize + ( OTAPP_PAIRED_URI_MAX * structSize);
+    return count;
 }
 
 otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(uint8_t *buffer, const uint16_t bufferSize, int8_t *resultOut, uint16_t *dataSizeOut)
@@ -755,6 +781,35 @@ int8_t otapp_pair_subSendUpdateIP(otapp_pair_DeviceList_t *pairDeviceList)
     return countUpdatedDev;
 }
 
+int8_t otapp_pair_subSendRequest(otapp_pair_Device_t *device)
+{
+    int8_t subReqSentCnt = 0 ;
+
+    otIp6Address *ipAddr = NULL;
+    oacu_token_t *token = NULL;
+    char *uri = NULL;
+
+    if(device == NULL)
+    {
+        return OTAPP_PAIR_ERROR;
+    }
+   
+    for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++) // check uri token is saved
+    {
+        if(otapp_pair_uriTokenIsValid(device->urisList[i].token) == OTAPP_PAIR_IS)
+        {
+            ipAddr = &device->ipAddr;
+            uri     = device->urisList[i].uri;
+            token   = device->urisList[i].token;
+
+            oac_uri_obs_sendSubscribeRequestUpdate(ipAddr, uri, token); // todo w odpowierzi powinienem dostac aktualne nastawy uris (np stan on_off )
+            // praz w tej wn oac_uri_obs_sendSubscribeRequest();
+            subReqSentCnt++;
+        }            
+    }
+
+    return subReqSentCnt;
+}
 void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
 {
     UNUSED(aMessageInfo);

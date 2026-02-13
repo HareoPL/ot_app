@@ -251,6 +251,8 @@ int8_t otapp_pair_addToQueue(otapp_pair_queueItem_t *queueItem);
  */
 otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(uint8_t *inBuffer, uint16_t inBufferSize, int8_t *result, uint16_t *outParsedDataSize);
 
+uint16_t otapp_pair_uriParseMessageCalculateBufSize(uint8_t aMessagePayloadSize);
+
 /**
  * @brief 
  * 
@@ -310,6 +312,7 @@ int8_t otapp_pair_uriAdd(otapp_pair_uris_t *deviceUrisList, const otapp_pair_res
  */
 int8_t otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, uint8_t *bufferOut, uint16_t *bufferSizeInOut);
 
+uint16_t otapp_pair_uriResourcesCalculateBufSize(otapp_coap_uri_t *uri, uint8_t uriSize);
 /**
  * @brief set uri state on the pair device list. Max data per uri = uint32_t 
  * 
