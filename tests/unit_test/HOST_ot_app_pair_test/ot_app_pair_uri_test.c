@@ -382,3 +382,34 @@ TEST(ot_app_pair_UriIndex, GivenTrueArgFillDeviceList_WhenCallingSubUpdateIP_The
     result = otapp_pair_subSendUpdateIP(otapp_pair_getHandle());
     TEST_ASSERT_EQUAL(1, result);
 }
+
+// otapp_pair_uriResourcesCalculateBufSize
+TEST(ot_app_pair_UriIndex, GivenUriQty3_WhenCallingResourcesCalculateBufSize_ThenReturnOK)
+{
+    uint8_t uriQty = 3; 
+    uint16_t bufferSize_expected = TEST_PAIR_TLV_FIRST_BYTES; // 1 -> uint8_t uriSize 
+    uint16_t bufferSize;
+
+    for (uint8_t i = 0; i < uriQty; i++)
+    {
+        bufferSize_expected += TEST_PAIR_TLV_URI_DATA_SIZE(coap_uri[i].resource.mUriPath, coap_uri[i].devType) + (2 * TEST_P_MSG_TLV_ONE_KEY_LENGTH_BYTES);        
+    }
+    bufferSize = otapp_pair_uriResourcesCalculateBufSize(coap_uri, uriQty);
+
+    TEST_ASSERT_EQUAL(bufferSize_expected, bufferSize);
+}
+
+TEST(ot_app_pair_UriIndex, GivenUriQty5_WhenCallingResourcesCalculateBufSize_ThenReturnOK)
+{
+    uint8_t uriQty = 5; 
+    uint16_t bufferSize_expected = TEST_PAIR_TLV_FIRST_BYTES; // 1 -> uint8_t uriSize 
+    uint16_t bufferSize;
+
+    for (uint8_t i = 0; i < uriQty; i++)
+    {
+        bufferSize_expected += TEST_PAIR_TLV_URI_DATA_SIZE(coap_uri[i].resource.mUriPath, coap_uri[i].devType) + (2 * TEST_P_MSG_TLV_ONE_KEY_LENGTH_BYTES);        
+    }
+    bufferSize = otapp_pair_uriResourcesCalculateBufSize(coap_uri, uriQty);
+
+    TEST_ASSERT_EQUAL(bufferSize_expected, bufferSize);
+}

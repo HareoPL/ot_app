@@ -95,6 +95,10 @@ TEST_GROUP_RUNNER(ot_app_pair_UriIndex)
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueArgEmptyDeviceList_WhenCallingSubUpdateIP_ThenReturn_0);
    RUN_TEST_CASE(ot_app_pair_UriIndex, GivenTrueArgFillDeviceList_WhenCallingSubUpdateIP_ThenReturn_1);
 
+   // otapp_pair_uriResourcesCalculateBufSize
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenUriQty3_WhenCallingResourcesCalculateBufSize_ThenReturnOK);
+   RUN_TEST_CASE(ot_app_pair_UriIndex, GivenUriQty5_WhenCallingResourcesCalculateBufSize_ThenReturnOK);
+
 }
 
 TEST_GROUP_RUNNER(ot_app_pair_rtos)
