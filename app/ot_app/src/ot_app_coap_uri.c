@@ -59,7 +59,7 @@ void otapp_coap_uri_ledControlHandle(void *aContext, otMessage *request, const o
     {
         if(otapp_coapReadPayload(request, (uint8_t*)charBuffer, 1024, &readBytes) == OTAPP_COAP_ERROR) return; 
         
-        otapp_coap_sendResponse(request, aMessageInfo, NULL, 0);        
+        otapp_coap_sendResponseOK(request, aMessageInfo);      
         OTAPP_PRINTF(TAG, "Sender data: %s bytes: %d \n", charBuffer, readBytes);
     }
 }
@@ -74,7 +74,7 @@ void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, con
         OTAPP_PRINTF(TAG, "from uri: paring_services \n");
         if(otapp_coapReadPayload(request, (uint8_t*)queueItem.deviceNameFull, OTAPP_PAIR_NAME_FULL_SIZE, &readBytes) == OTAPP_COAP_ERROR) return; 
         
-        otapp_coap_sendResponse(request, aMessageInfo, NULL, 0);
+        otapp_coap_sendResponseOK(request, aMessageInfo);        
 
         queueItem.type = OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST;
         memcpy(&queueItem.ipAddress, &aMessageInfo->mPeerAddr, sizeof(otIp6Address));
@@ -131,7 +131,7 @@ void otapp_coap_uri_subscribedHandle(void *aContext, otMessage *request, const o
     {
         if(otapp_coapReadPayload(request, buffer, OTAPP_COA_URI_BUFFER, &readBytes) != OTAPP_COAP_OK) return;         
         
-        otapp_coap_sendResponse(request, aMessageInfo, NULL, 0);
+        otapp_coap_sendResponseOK(request, aMessageInfo);
 
         drv = otapp_getDevDrvInstance();
 

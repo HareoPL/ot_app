@@ -84,6 +84,11 @@ int8_t otapp_coap_init(ot_app_devDrv_t *devDriver);
  * @param responceLength    [in] size of response data
  */
 void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const uint8_t *responseContent, uint16_t responseLength);
+
+void otapp_coap_sendResponseOK(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+void otapp_coap_sendResponseERROR(otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo);
 
 // void otapp_coap_clientSendPut(const otIp6Address *peer_addr, const char *aUriPath, const char *payloadMsg);

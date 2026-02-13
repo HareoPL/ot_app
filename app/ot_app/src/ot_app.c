@@ -212,12 +212,16 @@ static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context
 
     if (flags & OT_CHANGED_THREAD_RLOC_ADDED) 
     {
-        otapp_coapSendDeviceNamePut();
         otapp_srpClientUpdateHostAddress(otapp_getOpenThreadInstancePtr());
         
         result = otapp_pair_subSendUpdateIP(otapp_pair_getHandle());
         if(result != OTAPP_PAIR_ERROR)
         {
+            if(result == 0)
+            {
+                otapp_coapSendDeviceNamePut();
+            }
+            
             OTAPP_PRINTF(TAG, "Num of updated sub: %d\n", result);
         }
 

@@ -40,10 +40,11 @@
 #ifndef UNIT_TEST    
     // #define UTILS_ENABLE_CHECK_RTOS_FREE_STACK_ON_TASKS
     #define PRIVATE static
-    #define BREAK_U_TEST
+    #define BREAK_U_TEST    
 #else
     #define PRIVATE
     #define BREAK_U_TEST break;
+    #define HRO_SEC_NOINIT_AL4
 #endif
 
 #define HRO_TOOL_PACKED_BEGIN
@@ -51,18 +52,21 @@
 #define HRO_TOOL_PACKED_END     __attribute__((packed))
 #define HRO_TOOL_WEAK           __attribute__((weak))
 
-#ifdef STM_PLATFORM	
-    #define HRO_ALIGN_16            __attribute__ ((aligned (16)))
+#define HRO_ALIGN_16            __attribute__ ((aligned (16)))
+#define HRO_ALIGN_4            __attribute__ ((aligned (4)))
 
+#ifdef STM_PLATFORM	
     #define HRO_SEC_NVM             __attribute__ ((section (".nvm_keys")))
     #define HRO_SEC_NOINIT          __attribute__ ((section (".noinit")))
 
     #define HRO_SEC_NVM_AL16        __attribute__ ((section (".nvm_keys"))) HRO_ALIGN_16
-    #define HRO_SEC_NOINIT_AL16     __attribute__ ((section (".noinit"))) HRO_ALIGN_16
+    #define HRO_SEC_NOINIT_AL16     HRO_SEC_NOINIT HRO_ALIGN_16
+    #define HRO_SEC_NOINIT_AL4      HRO_SEC_NOINIT HRO_ALIGN_4
 #endif
 
 #ifdef ESP_PLATFORM		
     #define HRO_SEC_NOINIT __NOINIT_ATTR
+    #define HRO_SEC_NOINIT_AL4 HRO_SEC_NOINIT HRO_ALIGN_4
 #endif
 
 #ifndef NULL
