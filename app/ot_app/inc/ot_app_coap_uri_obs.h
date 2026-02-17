@@ -38,7 +38,7 @@
 #define OAC_URI_OBS_DEVICENAME_FULL_SIZE    OTAPP_DNS_SRV_LABEL_SIZE // 32 host name: "device1_1_588c81fffe301ea4"
 #define OAC_URI_OBS_PAIRED_URI_MAX          OTAPP_PAIRED_URI_MAX 
 
-#define OAC_URI_OBS_BUFFER_SIZE             256
+#define OAC_URI_OBS_BUFFER_SIZE             (8 * 4)
 #define OAC_URI_OBS_TX_BUFFER_SIZE         (OAC_URI_OBS_TOKEN_LENGTH + OAC_URI_OBS_BUFFER_SIZE)
 
 #define OAC_URI_OBS_UPDATE_IP_ADDR_Msk         (0x1UL << 0U) // 1
@@ -144,10 +144,11 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, const otIp6Address 
  * @brief parse incomming message from notify
  * 
  * @param inBuffer 
+ * @param dataSize 
  * @param out 
  * @return uint8_t 
  */
-int8_t oac_uri_obs_parseMessageFromNotify(const uint8_t *inBuffer, oac_uri_dataPacket_t *out);
+int8_t oac_uri_obs_parseMessageFromNotify(const uint8_t *inBuffer, const uint16_t dataSize, oac_uri_dataPacket_t *out);
 
 /**
  * @brief 
