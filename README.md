@@ -94,14 +94,14 @@ sequenceDiagram
     
     Note over Btn, Light: 2. Validation
     Btn->>Btn: Check Pairing Rules
-    Btn->>Light: GET /.well-known/core (Multicast)
+    Btn->>Light: GET /.well-known/core
     Light-->>Btn: 2.05 CONTENT (Resource List)
     
     Note over Btn, Light: 3. Subscription (Pairing)
     Btn->>Btn: OT CoAP API: Generate 4B Token
     Btn->>Light: PUT /... (Option: Observe=0, Token: 0xA1B2C3D4)
     Light-->>Btn: 2.04 CHANGED (ACK)
-    Btn->>Btn: Save EUI-64 
+    Btn->>Btn: Save EUI-64 (saved assigned device)
     
     Note over User, Obs: 4. Control & Notification Loop
     User->>Btn: Short Click (Action)
@@ -137,7 +137,7 @@ sequenceDiagram
 
 ## 🏗 Architektura i Wzorce Projektowe
 
-Projekt wyróżnia się inżynierskim podejściem do kodu w języku C, implementując paradygmaty **Object-Oriented C** oraz techniki RTOS. Szczegółowa analiza architektury znajduje się w [dokumentacji](https://hareo.pl/otapp/).
+Projekt wyróżnia się inżynierskim podejściem do kodu w języku C, implementując paradygmaty **Object-Oriented C** oraz techniki RTOS. Szczegółowa analiza architektury znajduje się w dokumentacji: [Architecture and Design Patterns](https://hareo.pl/otapp/architecture_and_design_patterns.html).
 ### Zastosowane Wzorce Projektowe:
   * **Strategy / Interface:** Wykorzystanie wskaźników na funkcje w strukturach sterowników (`ot_app_devDrv_t`) pozwala na wstrzykiwanie zależności (np. reguł parowania) bez modyfikacji rdzenia silnika.
   * **Observer:** Luźne powiązanie warstwy sieciowej z logiką aplikacji. Używany do notyfikacji o zmianach topologii sieci oraz obsługi subskrybentów CoAP.
@@ -149,17 +149,21 @@ Projekt wyróżnia się inżynierskim podejściem do kodu w języku C, implement
   * **Model Producer-Consumer:** Oddzielenie kontekstu sieciowego od operacji blokujących. Callbacki sieciowe (Producent) wrzucają zdarzenia do kolejki, które są przetwarzane przez osobny wątek (Konsument - `otapp_pair_task`).
   * **Ochrona zasobów (Mutex):** Zabezpieczenie współdzielonych buforów pamięci przed wyścigami (race conditions) w środowisku wielowątkowym.
 
-## ✅ Jakość Kodu i Testy (QA)
+## ✅ Jakość Kodu i Testy
 
 Projekt kładzie duży nacisk na niezawodność i testowalność kodu embedded. Logika aplikacji (parowanie, obsługa URI, parsowanie nazw) jest weryfikowana przez **testy jednostkowe uruchamiane na maszynie hosta**.
 
   * **Framework testowy:** [Unity](http://www.throwtheswitch.org/unity)
   * **Mockowanie:** [FFF (Fake Function Framework)](https://github.com/meekrosoft/fff) - symulacja warstwy sprzętowej i OpenThread API.
   * **Zakres testów:**
-      * `ot_app_pair_test.c` – kompleksowa weryfikacja logiki parowania urządzeń (77 Tests).
-      * `ot_app_coap_uri_obs_test.c` – testy mechanizmu obserwatorów CoAP i subskrypcji (109 Tests).
-      * `ot_app_deviceName_test.c` – walidacja parsowania nazw i grup urządzeń (41 Tests).
-
+      * `ot_app_pair_test.c` – kompleksowa weryfikacja logiki parowania urządzeń.
+      * `ot_app_coap_uri_obs_test.c` – testy mechanizmu obserwatorów CoAP i subskrypcji.
+      * `ot_app_deviceName_test.c` – walidacja parsowania nazw i grup urządzeń.
+      * `ot_app_pair_uri_test.c` – testuje parowanie URI, wyszukiwanie i mapowanie identyfikatora URI .
+      * `ot_app_pair_rtos_test.c` – testuje zachowanie parowania i wywołania zwrotne w środowisku RTOS/zadaniowym.
+      * `ot_app_buffer_test.c` – weryfikuje bezpieczne dla wątków operacje na współdzielonym buforze, mechanikę blokowania muteksów, ochronę granic i odporność na warunki wyścigu.
+      * `ot_app_msg_tlv_test.c` – sprawdza logikę serializacji TLV, obsługę spakowanej struktury i wymuszanie granic buforów.
+      * suma wszystkich testów: 263
 ### **Aby uruchomić testy lokalnie:**
 #### Za pomoca CMD:
 1. Czyszczenie i konfiguracja CMake
@@ -173,9 +177,7 @@ cd build/unit_test && ninja -v
 3. Uruchomienie testów
 - ręcznie
 ```bash
-build/unit_test/HOST_ot_app_coap_uri_obs_test/HOST_ot_app_coap_uri_obs_test.exe
-build/unit_test/HOST_ot_app_deviceName_test/HOST_ot_app_deviceName_test.exe
-build/unit_test/HOST_ot_app_pair_test/HOST_ot_app_pair_test.exe
+build/unit_test/<NAME_TEST>/<NAME_TEST>.exe
 ```
 - przy użyciu `CTEST - CMake`
 ```bash
@@ -197,14 +199,13 @@ Projekt charakteryzuje się lekkim narzutem własnym frameworka (OTApp), przy cz
 | **OpenThread Core (FTD)**         | **353 KB**        | **\~24 KB**               | Rola Routera + CLI + Dataset Manager      |
 | Network & Crypto (LwIP, MbedTLS)  | \~250 KB          | \~5 KB                    | Stos TCP/IP, DTLS, Szyfrowanie            |
 | ESP-IDF Kernel (OS, Drivers, HAL) | \~280 KB          | \~35 KB                   | FreeRTOS, Sterowniki PHY/Radio            |
-| **OTApp Framework**               | **\~12 KB**       | **\~8 KB**                | Middleware (Główny cel optymalizacji RAM) |
+| **OTApp Framework**               | **\~19 KB**       | **\~5 KB**                | Middleware (Główny cel optymalizacji RAM) |
 | User Implementation (e.g. Light)  | \~2 KB            | \~0.5 KB                  | Logika biznesowa urządzenia               |
 | **SUMA (Total Image)**            | **\~996 KB**      | **\~72 KB**               |                                           |
 
 > **Wnioski z analizy:**
 >
->   * Moduł `libot_app.a` zajmuje **\~8 KB RAM** w sekcji `.bss` (zmienne statyczne). Jest to wynik statycznej alokacji buforów (m.in. bufor CoAP 1KB oraz tablice sąsiadów).
->   * Planowana refaktoryzacja (patrz sekcja *Roadmap*) ma na celu redukcję tego narzutu o ok. 50-60%.
+>   * Moduł `libot_app.a` zajmuje **\~8 KB RAM** w sekcji `.bss`. Jest to wynik statycznej alokacji buforów.
 
 ## 🧠 Świadomość Techniczna i Roadmapa Refaktoryzacji
 
@@ -227,10 +228,18 @@ Projekt, choć funkcjonalny, posiada zidentyfikowane obszary, które w środowis
       - [ ] **Wdrożenie identyfikacji EUI-64:** Wykorzystanie 8-bajtowego adresu MAC jako unikalnego klucza w logice biznesowej (zamiast parsowania nazw).
       - [ ] **Implementacja CBOR (RFC 8949):** Migracja payloadu CoAP na format binarny (TinyCBOR), co zmniejszy fragmentację pakietów.
 
-### 4\. Pamięć RAM (Buffer Management)
-  * **Problem:** Statyczna alokacja dużych buforów (np. 1KB w `ot_app_coap_uri.c`).
+### 4. Pamięć RAM (Buffer Management)
+  * **Problem:** Statyczna alokacja dużych buforów (np. 1KB w `ot_app_coap_uri.c`) powoduje marnowanie pamięci RAM i ryzyko przepełnienia stosu.
   * **Plan naprawczy:**
-      - [ ] **Eliminacja statycznych buforów (Zero-Copy):** Implementacja czytania danych z `otMessage` bezpośrednio do struktur docelowych lub dynamiczna alokacja małych buforów na stosie.
+      - [x] **Implementacja Zero-Copy:** Wdrożenie bezpośredniego odczytu/zapisu do współdzielonej pamięci zamiast kopiowania danych do lokalnych buforów.
+  * **✅ Status: Zrealizowane (`ot_app_buffer`)**
+      - **Implementacja:** Opracowano moduł zarządzania pamięcią oparty na **kluczach (Key-based slots)** umieszczony w sekcji `noinit`. Zastosowano mechanizm **Zero-Copy** poprzez API `getWriteOnly_ptr`, które zwraca wskaźnik do wewnętrznego bufora, eliminując zbędne `memcpy`.
+      - **Bezpieczeństwo wątkowe:** Dostęp do pamięci jest chroniony **Mutexami FreeRTOS**. Zaimplementowano logikę **"Write-Lock"**, która blokuje dostęp do slotu dla innych wątków do momentu zakończenia transakcji zapisu.
+      - **Weryfikacja:** Stabilność rozwiązania potwierdzono na maszynie hosta przy użyciu frameworka **Unity** oraz biblioteki **pthreads**. Stworzono test obciążeniowy ("Buffer Bomber"), który symuluje **wyścigi (Race Conditions)** poprzez jednoczesny dostęp wielu wątków do tego samego slotu pamięci.
+      - **Wdrożenie:** Nowy mechanizm zastąpił bufory lokalne w aplikacji ot_app: `responseHandlerUriWellKnown` (obsługa odpowiedzi), well_knownCoreHandle (obsługa żądań), subscribedHandle (obsługa aktualizacji zasubskrybowancy uri).
+      - **podsumowanie** przed optymalizacja zajetosc ramu była na poziomie ok 8KB, po optymalizacji ok 5KB. Buffer w module `ot_app_buffer` jest zaokrąglony w górę do potęgi 2.  
+      </br><a href="https://hareo.pl/otapp/group__ot__app__buffer.html">see more</a>
+
 
 ### 5\. Optymalizacja Konfiguracji Stosu (Kconfig Tuning)
   * **Problem:** `libopenthread.a` zajmuje \~353 KB (35% firmware'u).
@@ -409,14 +418,14 @@ sequenceDiagram
     
     Note over Btn, Light: 2. Validation
     Btn->>Btn: Check Pairing Rules
-    Btn->>Light: GET /.well-known/core (Multicast)
+    Btn->>Light: GET /.well-known/core
     Light-->>Btn: 2.05 CONTENT (Resource List)
     
     Note over Btn, Light: 3. Subscription (Pairing)
     Btn->>Btn: OT CoAP API: Generate 4B Token
     Btn->>Light: PUT /... (Option: Observe=0, Token: 0xA1B2C3D4)
     Light-->>Btn: 2.04 CHANGED (ACK)
-    Btn->>Btn: Save EUI-64 
+    Btn->>Btn: Save EUI-64 (saved assigned device) 
     
     Note over User, Obs: 4. Control & Notification Loop
     User->>Btn: Short Click (Action)
@@ -452,7 +461,7 @@ During normal operation, the button sends control commands (`PUT`). Crucially, t
 
 ## 🏗 Architecture & Design Patterns
 
-The project stands out for its engineering approach to C code, implementing **Object-Oriented C** paradigms and RTOS techniques. A detailed architectural analysis is available in the [documentation](https://hareo.pl/otapp/).
+The project stands out for its engineering approach to C code, implementing **Object-Oriented C** paradigms and RTOS techniques. A detailed architectural analysis is available in the documentation: [Architecture and Design Patterns](https://hareo.pl/otapp/architecture_and_design_patterns.html).
 
 ### Applied Design Patterns:
 
@@ -474,10 +483,14 @@ The project emphasizes reliability and testability. Application logic (pairing, 
 * **Testing Framework:** [Unity](http://www.throwtheswitch.org/unity)
 * **Mocking:** [FFF (Fake Function Framework)](https://github.com/meekrosoft/fff) - simulating hardware and OpenThread API.
 * **Test Coverage:**
-* `ot_app_pair_test.c` – Comprehensive validation of device pairing logic (77 Tests).
-* `ot_app_coap_uri_obs_test.c` – Tests for CoAP observers and subscription mechanisms (109 Tests).
-* `ot_app_deviceName_test.c` – Validation of device name and group parsing (41 Tests).
-
+      * `ot_app_pair_test.c` – Comprehensive validation of device pairing logic.
+      * `ot_app_coap_uri_obs_test.c` – Tests for CoAP observers and subscription mechanisms.
+      * `ot_app_deviceName_test.c` – Validation of device name and group parsing.
+      * `ot_app_pair_uri_test.c` – tests URI pairing, URI ID lookup and mappings
+      * `ot_app_pair_rtos_test.c` – tests pairing behavior and callbacks in an RTOS/task-based environment
+      * `ot_app_buffer_test.c` – verifies thread-safe shared buffer operations, mutex locking mechanics, boundary protection, and race condition resilience
+      * `ot_app_msg_tlv_test.c` – validates TLV serialization logic, packed structure handling, and buffer boundary enforcement
+      * summary of all tests: 263
 
 
 ### **Running tests locally:**
@@ -501,9 +514,7 @@ cd build/unit_test && ninja -v
 3. Execute tests:
 - manually
 ```bash
-build/unit_test/HOST_ot_app_coap_uri_obs_test/HOST_ot_app_coap_uri_obs_test.exe
-build/unit_test/HOST_ot_app_deviceName_test/HOST_ot_app_deviceName_test.exe
-build/unit_test/HOST_ot_app_pair_test/HOST_ot_app_pair_test.exe
+build/unit_test/<NAME_TEST>/<NAME_TEST>.exe
 ```
 
 - using `CTEST - CMake`
@@ -526,14 +537,12 @@ The framework itself (OTApp) maintains a lightweight overhead, while the bulk of
 | **OpenThread Core (FTD)** | **353 KB** | **~24 KB** | Router Role + CLI + Dataset Manager |
 | Network & Crypto (LwIP, MbedTLS) | ~250 KB | ~5 KB | TCP/IP Stack, DTLS, Encryption |
 | ESP-IDF Kernel (OS, Drivers, HAL) | ~280 KB | ~35 KB | FreeRTOS, PHY/Radio Drivers |
-| **OTApp Framework** | **~12 KB** | **~8 KB** | Middleware (Main RAM optimization target) |
+| **OTApp Framework** | **~12 KB** | **~5 KB** | Middleware (Main RAM optimization target) |
 | User Implementation (e.g. Light) | ~2 KB | ~0.5 KB | Device business logic |
 | **TOTAL (Image)** | **~996 KB** | **~72 KB** |  |
 
 > **Analysis Insights:**
-> * The `libot_app.a` module occupies **~8 KB RAM** in the `.bss` section (static variables). This results from static buffer allocation (including a 1KB CoAP buffer and neighbor tables).
-> * Planned refactoring (see *Roadmap*) aims to reduce this overhead by approximately 50-60%.
-> 
+> * The `libot_app.a` module occupies **~8 KB RAM** in the `.bss` section. This results from static buffer allocation.> 
 > 
 
 ## 🧠 Technical Awareness & Refactoring Roadmap
@@ -564,13 +573,19 @@ While functional, the project has identified areas requiring optimization for pr
 * [ ] **EUI-64 Identification:** Use the 8-byte MAC address as the unique key in business logic (instead of name parsing).
 * [ ] **CBOR Implementation (RFC 8949):** Migrate CoAP payloads to binary format (TinyCBOR) to reduce packet fragmentation.
 
-
-
 ### 4. RAM Management (Buffer Management)
+  * **Problem:** Static allocation of large buffers (e.g., 1KB in `ot_app_coap_uri.c`) leads to memory waste and stack overflow risks.
+  * **Remediation:**
+      - [x] **Zero-Copy Implementation:** Implement direct shared memory access to replace local stack buffer allocation.
+  * **✅ Status: Completed (`ot_app_buffer`)**
+      - **Implementation:** Developed a **Key-based** shared memory manager located in the `noinit` section. Implemented a **Zero-Copy** mechanism via the `getWriteOnly_ptr` API, enabling direct data manipulation without redundant `memcpy` operations.
+      - **Thread Safety:** Memory access is secured using **FreeRTOS Mutexes**. Introduced a **"Write-Lock"** logic that strictly locks the memory slot against concurrent writes until the transaction completes.
+      - **Verification (QA):** Validated on the host machine using **Unity** and **pthreads**. Designed a custom "Buffer Bomber" stress test to simulate **Race Conditions** and prove the robustness of the locking mechanism under heavy load.
+      - **Integration:** New mechanism replaced local buffers in ot_app: `responseHandlerUriWellKnown` (handling responses), well_knownCoreHandle (handling requests), subscribedHandle (handling updates to subscriber uri). 
+      - **summary** before optimization, the RAM occupancy was approximately 8KB, after optimization it was approximately 5KB. The buffer in the `ot_app_buffer` module is rounded up to the power of 2.
+</br><a href="https://hareo.pl/otapp/group__ot__app__buffer.html">see more</a>
 
-* **Problem:** Static allocation of large buffers (e.g., 1KB in `ot_app_coap_uri.c`).
-* **Remediation:**
-* [ ] **Zero-Copy Implementation:** Implement direct reading from `otMessage` into target structures or dynamic allocation of small stack buffers.
+
 
 
 

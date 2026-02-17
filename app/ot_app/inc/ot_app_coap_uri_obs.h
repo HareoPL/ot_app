@@ -1,23 +1,25 @@
 /**
- * @file ot_app_coap_uri_obs.h
- * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief observer pattern for uri 
+ * @file ot_app_coap_uri_obs.h 
+ * @brief Manages the list of remote subscribers (observers) for local resources.
+ * @details see more information in section: @ref ot_app_coap_obs 
+ * 
+ * @defgroup ot_app_coap_obs CoAP Observe Registry
+ * @ingroup ot_app
+ * @brief Manages the list of remote subscribers (observers) for local resources.
+ * @details
+ * @{
+ * This module implements the **Server-side** logic of the CoAP Observe extension (RFC 7641).
+ * It acts as a registry for remote devices (Clients) that have requested to be notified about changes in this device's state.
+ * **Workflow:**
+ * 1. **Subscription:** A remote client sends a GET request with the Observe option to a local URI (e.g. "light/on_off").
+ * 2. **Registration:** This module saves the Client's IP address, the Token they generated, and the URI they are interested in.
+ * 3. **Notification:** When the local resource changes (e.g. light turns ON), the application iterates through this registry.
+ * 4. **Delivery:** The application sends an asynchronous CoAP Response (Notification) to all registered IPs using the stored Tokens.
+ * 
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
  * @version 0.1
  * @date 16-09-2025
- * 
- * @copyright The MIT License (MIT) Copyright (c) 2025 
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
- * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
- * 
+ * @copyright © 2025 MIT @ref prj_license 
  */
 #ifndef OT_APP_COAP_URI_OBS_H_
 #define OT_APP_COAP_URI_OBS_H_
@@ -239,3 +241,7 @@ int8_t test_obs_fillListExampleData(oac_uri_observer_t *subListHandle);
 #endif /* UNIT_TEST */
 
 #endif  /* OT_APP_COAP_URI_OBS_H_ */
+
+/**
+ * @}
+ */

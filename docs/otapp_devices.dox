@@ -1,0 +1,52 @@
+/**
+ * @defgroup devices Device Implementations
+ * @brief Concrete hardware device implementations utilizing the OTApp framework.
+ *
+ * @details
+ * This section contains reference implementations of end devices built upon the 
+ * OpenThread Application framework. Each of the following devices demonstrates the use 
+ * of the driver API (@ref ot_app_device_api) and integration with the CoAP communication layer.
+ *
+ * The framework supports two main types of device roles:
+ * - **Controllers:** Input devices (e.g., Button Device) that send CoAP requests to other nodes.
+ * - **Actuators:** Execution devices (e.g., Light Device) that respond to incoming commands.
+ *
+ * ---
+ *
+ * ### 1. Button Device (Controller)
+ * An advanced control device based on three physical buttons. It serves as the primary 
+ * user interface in the Thread network, enabling interaction with lighting and other resources.
+ *
+ * **Key Features:**
+ * - **Multi-function Interactions:** Support for single click, double click, and long press (via OneButton).
+ * - **Dynamic Pairing:** Ability to assign buttons to specific devices on-the-fly via @ref device_btn_assign.
+ * - **Adaptive Dimming:** Built-in algorithm for smooth dimming and brightening (@ref ad_btn_dimControl).
+ * - **Group Management:** Support for pairing filtering based on device name groups.
+ *
+ * **Components:**
+ * - @ref device_button "ad_button" – Main device logic module.
+ * - @ref device_btn_assign "ad_btn_assign" – Mapping physical buttons to events.
+ * - @ref device_btn_uri "ad_btn_uri" – CoAP endpoint management for buttons.
+ *
+ * ---
+ *
+ * ### 2. Light Device (Actuator)
+ * An actuator device representing smart RGB lighting. It acts as a CoAP server, 
+ * listening for state change commands from controllers or control panels.
+ *
+ * **Key Features:**
+ * - **RGB Control:** Full support for color and brightness control of LEDs (e.g., WS2812B).
+ * - **CoAP Observe:** Implementation of the observer pattern, allowing controllers to receive 
+ * immediate notifications regarding light state changes.
+ * - **Resource Visibility:** Automatic broadcasting of resources such as `light/on_off`, `light/dimm`, or `light/rgb`.
+ * - **Reliability:** Integration with SRP and DNS-SD systems, ensuring constant availability within the mesh network.
+ *
+ * **Components:**
+ * - @ref device_light "ad_light" – Initialization and configuration of the lighting device.
+ * - @ref device_light_control "ad_light_control" – Control logic for LED drivers and effects.
+ *
+ * ---
+ *
+ * @see @ref architecture_and_design_patterns "Architecture and Design Patterns"
+ * @see @ref ot_app_pair "Pairing Management"
+ */

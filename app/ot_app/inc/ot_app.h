@@ -1,24 +1,23 @@
 /**
  * @file ot_app.h
- * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief 
+ * @brief Core types, global configuration macros, and framework initialization routines.
+ * @details see more information in section: @ref ot_app_core 
+ * 
+ * @defgroup ot_app_core Core Definitions & Init
+ * @ingroup ot_app
+ * @brief Core types, global configuration macros, and framework initialization routines.
+ * @details
+ * @{
+ * This module defines the fundamental structures used across the framework, 
+ * including the supported device types (@ref otapp_deviceType_t) and global 
+ * accessors for OpenThread instances and network addresses.
+ *
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
  * @version 0.1
  * @date 14-07-2025
- * 
- * @copyright The MIT License (MIT) Copyright (c) 2025 
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
- * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
- * 
+ * @copyright © 2025 MIT @ref prj_license 
  */
+
 #ifndef THREAD_OT_APP_H_
 #define THREAD_OT_APP_H_
 
@@ -32,6 +31,8 @@
     #include "openthread/dns_client.h"
 #endif
 
+/** @name Logging Configuration */
+///@{
 #define OTAPP_LOG_ENABLE
 
 #ifdef OTAPP_LOG_ENABLE
@@ -40,132 +41,141 @@
     // logs disable
     #define OTAPP_PRINTF(fmt, ...) ((void)0)
 #endif
+///@}
 
-#define OTAPP_CCA_THRESHOLD         (-70)
+/** @name Network Configuration */
+///@{
+#define OTAPP_CCA_THRESHOLD         (-70)   ///< Clear Channel Assessment threshold in dBm
+#define OTAPP_UDP_PORT              12345   ///< Default UDP port for application traffic
+///@}
 
-#define OTAPP_OK        (-1)
-#define OTAPP_ERROR     (-2)
+/** @name Return Codes */
+///@{
+#define OTAPP_OK        (-1) ///< Operation successful
+#define OTAPP_ERROR     (-2) ///< Generic error
+///@}
 
+/** @name Buffer & Limits definitions */
+///@{
+#define OTAPP_CHAR_BUFFER_SIZE      1024    ///< Size for temporary string buffers
+#define OTAPP_PAIRED_DEVICES_MAX    10      ///< Max number of devices to save from DNS query results
+#define OTAPP_PAIRED_URI_MAX        3       ///< Max number of URIs per paired device
+#define OTAPP_URI_MAX_NAME_LENGHT   24      ///< Max length of URI string name (e.g. "light/dimm")
 
-#define OTAPP_UDP_PORT 12345
-#define OTAPP_CHAR_BUFFER_SIZE 1024 
+#define OTAPP_DNS_SRV_NAME_SIZE     64      ///< OT_DNS_MAX_NAME_SIZE full service name: "_coap._udp.default.service.arpa." 
+#define OTAPP_DNS_SRV_LABEL_SIZE    32      ///< OT_DNS_MAX_LABEL_SIZE host name: "device1_1_588c81fffe301ea4"
+#define OTAPP_DNS_SRV_TXT_SIZE      512     ///< DNS TXT record buffer size
+#define OTAPP_DEVICE_NAME_FULL_SIZE OTAPP_DNS_SRV_LABEL_SIZE
+///@}
 
-#define OTAPP_PAIRED_DEVICES_MAX    10  // max number of devices to save them from DNS query
-#define OTAPP_PAIRED_URI_MAX        3   // max number of uris to save 
-#define OTAPP_URI_MAX_NAME_LENGHT   24  // max lenght of uri string name
-
-#define OTAPP_DNS_SRV_NAME_SIZE     64 // OT_DNS_MAX_NAME_SIZE full service name: "_coap._udp.default.service.arpa." 
-#define OTAPP_DNS_SRV_LABEL_SIZE    32 // OT_DNS_MAX_LABEL_SIZE host name: "device1_1_588c81fffe301ea4"
-#define OTAPP_DNS_SRV_TXT_SIZE      512
-
-#define OTAPP_DEVICE_NAME_FULL_SIZE      OTAPP_DNS_SRV_LABEL_SIZE
 typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
 
+/**
+ * @brief Supported Device Types.
+ * Identifies the functional role of the device within the OpenThread network.
+ * This enum is used during the discovery phase to filter devices (e.g., a Switch looking for Lights).
+ */
 typedef enum {
-    OTAPP_NO_DEVICE_TYPE = 0,
+    OTAPP_NO_DEVICE_TYPE = 0,   ///< Undefined device type
     
-    OTAPP_CONTROL_PANEL = 1 ,
-    OTAPP_SWITCH,
+    /* Controllers / Inputs */
+    OTAPP_CONTROL_PANEL = 1 ,   ///< Central control panel or gateway
+    OTAPP_SWITCH,               ///< Physical button or switch
 
-    OTAPP_LIGHTING,
-    OTAPP_LIGHTING_ON_OFF,
-    OTAPP_LIGHTING_DIMM,
-    OTAPP_LIGHTING_RGB,
+    /* Actuators / Outputs */
+    OTAPP_LIGHTING,             ///< Generic lighting device
+    OTAPP_LIGHTING_ON_OFF,      ///< Simple On/Off light
+    OTAPP_LIGHTING_DIMM,        ///< Dimmable light
+    OTAPP_LIGHTING_RGB,         ///< Color changing light (RGB)
     
-    OTAPP_THERMOSTAT,
-    OTAPP_THERMOSTAT_SET_TEMP,
-    OTAPP_THERMOSTAT_READ_SET_TEMP,
-    OTAPP_THERMOSTAT_READ_CURRENT_TEMP,
+    /* HVAC */
+    OTAPP_THERMOSTAT,                   ///< Generic thermostat
+    OTAPP_THERMOSTAT_SET_TEMP,          ///< Thermostat: Set point control
+    OTAPP_THERMOSTAT_READ_SET_TEMP,     ///< Thermostat: Read set point
+    OTAPP_THERMOSTAT_READ_CURRENT_TEMP, ///< Thermostat: Read ambient temp
     
-    OTAPP_SENSOR,               // only out data
-    OTAPP_DOOR_LOCK,            // only out data
-    OTAPP_MOTION_DETECTOR,      // only out data
-    OTAPP_REMOTE_CONTROL,
-    OTAPP_ENERGY_METER,
-    OTAPP_SMART_PLUG,
-    OTAPP_ENVIRONMENT_SENSOR,
-    OTAPP_DOOR_SENSOR,
-    OTAPP_ALARM,
+    /* Sensors & Security */
+    OTAPP_SENSOR,               ///< Generic sensor (output only)
+    OTAPP_DOOR_LOCK,            ///< Smart door lock
+    OTAPP_MOTION_DETECTOR,      ///< PIR or microwave motion sensor
+    OTAPP_REMOTE_CONTROL,       ///< Handheld remote
+    OTAPP_ENERGY_METER,         ///< Power consumption meter
+    OTAPP_SMART_PLUG,           ///< Smart socket/plug
+    OTAPP_ENVIRONMENT_SENSOR,   ///< Environmental sensor (Humidity, Air Quality, etc.)
+    OTAPP_DOOR_SENSOR,          ///< Reed switch / door open sensor
+    OTAPP_ALARM,                ///< Siren or alarm system
 
-    OTAPP_END_OF_DEVICE_TYPE
-}otapp_deviceType_t;
+    OTAPP_END_OF_DEVICE_TYPE    ///< Sentinel value
+} otapp_deviceType_t;
 
 /**
- * @brief todo
- * 
- * @return ot_app_devDrv_t* 
+ * @brief Retrieves the singleton instance of the Device Driver.
+ * @return ot_app_devDrv_t* Pointer to the driver instance containing hardware callbacks and config.
  */
 ot_app_devDrv_t *otapp_getDevDrvInstance(void);
 
 /**
- * @brief todo
- * 
- * @return otInstance* 
+ * @brief Retrieves the global OpenThread instance pointer.
+ * @return otInstance* Pointer to the OpenThread stack instance.
  */
 otInstance *otapp_getOpenThreadInstancePtr(void);
 
 /**
- * @brief todo
- * 
- * @return const otIp6Address* 
+ * @brief Gets the framework-defined multicast address.
+ * Used for group communication or discovery.
+ * @return const otIp6Address* Pointer to the multicast IPv6 address.
  */
 const otIp6Address *otapp_multicastAddressGet(void);
 
 /**
- * @brief todo
- * 
- * @return const otIp6Address* 
+ * @brief Gets the current Mesh-Local EID (IPv6 address) of this device.
+ * @return const otIp6Address* Pointer to the IPv6 address.
  */
 const otIp6Address *otapp_ip6AddressGet(void);
 
-/**
- * @brief get PTR char buffer address and take MUTEX * 
- * @return char* PTR to char buffer * 
- * @note remember to release mutex by otapp_charBufRelease()
- * 
- */
-char *otapp_charBufGet_withMutex(void);
 
 /**
- * @brief todo
- * 
- */
-void otapp_charBufRelease(void);
-
-/**
- * @brief todo
- * 
- * @param aAddress 
+ * @brief Prints an IPv6 address to the log output.
+ * @param aAddress Pointer to the IPv6 address to print.
  */
 void otapp_ip6AddressPrint(const otIp6Address *aAddress);
 
 /**
- * @brief todo
- * 
- * @return const otIp6Address* 
+ * @brief Refreshes and returns the current Mesh-Local EID.
+ * Updates the internal cache of the device's IP address from the OpenThread stack.
+ * @return const otIp6Address* Pointer to the refreshed IPv6 address.
  */
 const otIp6Address *otapp_ip6AddressRefresh(void);
 
 /**
- * @brief todo
- * 
- * @return const otExtAddress* 
+ * @brief Gets the Factory Assigned IEEE EUI-64 address.
+ * @return const otExtAddress* Pointer to the hardware MAC address.
  */
 const otExtAddress *otapp_macAddrGet(void);
 
 /**
- * @brief todo
- * 
+ * @brief Main initialization of the OpenThread Application Framework.
+ * Initializes the driver instance, OpenThread instance (port), 
+ * pairing module, and shared buffers.
+ * @return int8_t @ref OTAPP_OK on success.
  */
 int8_t otapp_init(void);
 
 /**
- * @brief todo
- * 
+ * @brief Initializes the network layer components.
+ * Sets up the operational dataset, device name, CoAP services, and SRP client.
+ * Typically called within the OpenThread task context.
  */
-void otapp_network_init();
+void otapp_network_init(void);
+
+/**
+ * @brief Applies the Operational Dataset TLV to the OpenThread stack.
+ * Configures network parameters like Channel, PANID, Network Key, etc.
+ */
 void otapp_setDataset_tlv(void);
 
 #endif  /* THREAD_OT_APP_H_ */
 
-
+/**
+ * @}
+ */

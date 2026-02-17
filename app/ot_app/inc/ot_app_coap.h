@@ -1,23 +1,25 @@
 /**
  * @file ot_app_coap.h
- * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief 
+ * @brief Core CoAP infrastructure for request handling, response generation, and resource management.
+ * @details see more information in section: @ref ot_app_coap
+ * 
+ * @defgroup ot_app_coap CoAP Server Core
+ * @ingroup ot_app
+ * @brief Core CoAP infrastructure for request handling, response generation, and resource management.
+ * @details
+ * @{
+ * This module wraps the OpenThread CoAP API to provide a simplified interface for application developers.
+ * It handles the low-level details of message buffer management, header parsing, and response code generation.
+ * **Key Functionalities:**
+ * - **Initialization:** Starts the CoAP service on the default UDP port.
+ * - **Resource Management:** Registers URI paths and their callback handlers.
+ * - **Response Helpers:** Provides ready-to-use functions for sending ACK (`2.04 Changed`), ERROR (`4.04 Not Found`), or Data payloads.
+ * - **Payload Extraction:** Safely copies data from OpenThread messages (Packet Buffers) to flat C buffers.
+ * 
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
  * @version 0.1
  * @date 21-07-2025
- * 
- * @copyright The MIT License (MIT) Copyright (c) 2025 
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
- * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
- * 
+ * @copyright © 2025 MIT @ref prj_license 
  */
 #ifndef OT_APP_COAP_H_
 #define OT_APP_COAP_H_
@@ -72,36 +74,112 @@ typedef enum {
     OTAPP_MESSAGE_TEST,
 }otapp_coap_messageId_t;
 
-
+/**
+ * @brief Initializes the CoAP service.
+ * @details Starts the CoAP engine on the default UDP port and sets up the internal driver reference.
+ * @param devDriver Pointer to the main device driver instance.
+ * @return int8_t     @ref OTAPP_COAP_OK on success.
+ */
 int8_t otapp_coap_init(ot_app_devDrv_t *devDriver);
 
 /**
- * @brief send coap response to device
- * 
- * @param requestMessage    [in] ptr to request message
- * @param aMessageInfo      [in] ptr to message info
- * @param responceContent   [in] ptr to response data
- * @param responceLength    [in] size of response data
+ * @brief Sends a generic CoAP response with a payload.
+ * @param request           [in] The original request message (used to match Token/Message ID).
+ * @param messageInfo       [in] Source address and port of the requester.
+ * @param payload           [in] Pointer to the data buffer to send.
+ * @param payload_len       [in] Length of the payload data.
+ * @param coapResponseCode  [in] CoAP status code (e.g., OT_COAP_CODE_CONTENT).
+ * @param coapType          [in] Message type (e.g., OT_COAP_TYPE_ACKNOWLEDGMENT).
  */
 void otapp_coap_sendResponse(otMessage *requestMessage, const otMessageInfo *aMessageInfo, const uint8_t *responseContent, uint16_t responseLength);
 
+/**
+ * @brief Sends a simple "OK" response (2.04 Changed).
+ * @details Typically used to acknowledge PUT/POST requests that don't require returning data.
+ * @param request       [in] The original request message.
+ * @param aMessageInfo  [in] Source address and port.
+ */
 void otapp_coap_sendResponseOK(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
+/**
+ * @brief Sends a "Not Found" error response (4.04).
+ * @details Used when the requested URI or resource does not exist.
+ * @param request       [in] The original request message.
+ * @param aMessageInfo  [in] Source address and port.
+ */
 void otapp_coap_sendResponseERROR(otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
+/**
+ * @brief Prints the sender's IP address from message metadata to the log.
+ * @param aMessageInfo [in] Pointer to the message info structure.
+ */
 void otapp_coap_printSenderIP(const otMessageInfo *aMessageInfo);
 
-// void otapp_coap_clientSendPut(const otIp6Address *peer_addr, const char *aUriPath, const char *payloadMsg);
-// void otapp_coap_clientSendGet(const otIp6Address *peer_addr, const char *aUriPath);
-
+/**
+ * @brief Converts an internal message ID/Type to a string representation.
+ * @param msgID [in] Internal message identifier.
+ * @return const char* String literal (e.g., "GET", "PUT", "ACK").
+ */
 const char *otapp_coap_getMessage(otapp_coap_messageId_t msgID);
 
+/**
+ * @brief Sends a test PUT message (Debug function).
+ * @details Hardcoded test routine for verifying transmission logic during development.
+ */
 void otapp_coapSendtoTestPut();
+
+/**
+ * @brief Sends a test GET message (Debug function).
+ * @details Hardcoded test routine for verifying transmission logic during development.
+ */
 void otapp_coapSendtoTestGet();
+
+/**
+ * @brief Sends a request to update the device name on the network.
+ * @details Constructs a CoAP PUT message containing the device's current name
+ * and sends it to the default service locator or parent.
+ * @return int8_t @ref OTAPP_COAP_OK on success.
+ */
 void otapp_coapSendDeviceNamePut();
+
+/**
+ * @brief Sends a GET request to the standard discovery URI `.well-known/core`.
+ * @details This function is used for Service Discovery. It queries a remote device 
+ * to list its available resources (URIs). The response is handled by the provided callback.
+ * @param ipAddr          [in] IPv6 address of the target device.
+ * @param responseHandler [in] Callback function to handle the list of resources returned.
+ * @param aContext        [in] User context to pass to the handler.
+ */
 void otapp_coapSendGetUri_Well_known(const otIp6Address *ipAddr, otCoapResponseHandler responseHandler, void *aContext);
+
+/**
+ * @brief Sends a PUT request to update a resource on a remote device.
+ * @details Sends a Confirmable PUT message with a payload. 
+ * Use this to control remote devices (e.g., turn on a light).
+ * @param ipAddr    [in] IPv6 address of the target device.
+ * @param data        [in] Pointer to the payload data (e.g., new state).
+ * @param dataSize    [in] Size of the payload.
+ */
 void otapp_coapSendPutUri_subscribed_uris(const otIp6Address *ipAddr, const uint8_t *data, uint16_t dataSize);
+
+/**
+ * @brief Initiates a CoAP Observe subscription (RFC 7641).
+ * @details Sends a GET request with the Observe option set to 0 (Register). 
+ * This tells the server to send notifications whenever the resource state changes.
+ * @param ipAddr    [in] IPv6 address of the target device.
+ * @param aUriPath    [in] URI path string to subscribe to (e.g., "light/on_off").
+ * @param tokenOut    [out] Buffer (min 8 bytes) where the generated subscription Token will be saved.
+ */
 void otapp_coapSendSubscribeRequest(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *tokenOut);
+
+/**
+ * @brief Refreshes or updates an existing subscription.
+ * @details Similar to `otapp_coapSendSubscribeRequest`, but uses an existing Token 
+ * instead of generating a new one. Useful for re-confirming interest without resetting state.
+ * @param ipAddr    [in] IPv6 address of the target device.
+ * @param aUriPath    [in] URI path string.
+ * @param tokenIn     [in] Existing token to reuse for this request.
+ */
 void otapp_coapSendSubscribeRequestUpdate(const otIp6Address *ipAddr, const char *aUriPath, uint8_t *tokenIn);
 
 /**
@@ -126,19 +204,24 @@ void otapp_coap_clientSendPutByte(const otIp6Address *peer_addr, const char *aUr
  */
 void otapp_coap_clientSendGetByte(const otIp6Address *peer_addr, const char *aUriPath, otCoapResponseHandler responseHandler, void *aContext);
 
+/**
+ * @brief Retrieves the string name of a default URI by its index.
+ * @details Helper to map integer IDs (e.g., from config) to actual URI strings.
+ * @param uriIndex [in] Index of the URI.
+ * @return const char* URI path string (e.g., "light/dimm") or NULL if invalid.
+ */
 const char *otapp_coap_getUriNameFromDefault(otapp_coap_uriIndex_t uriIndex);
 
 /**
- * @brief read incoming message and save them to in buffer
- * 
- * @param aMessage      [in] ptr to incoming message
- * @param bufferOut     [out] ptr to out buffer
- * @param bufferSize    [in] size of bufferOut
- * @param readBytesOut  [out] ptr to the uint16_t variable, where the size of the read bytes will be saved
- * @return int8_t       [out] OTAPP_COAP_OK or OTAPP_COAP_ERROR
+ * @brief Extracts the payload from an OpenThread CoAP message.
+ * @details Copies bytes from the opaque `otMessage` structure into a linear buffer.
+ * @param[in]  aMessage       Pointer to the incoming message.
+ * @param[out] bufferOut      Destination buffer.
+ * @param[in]  bufferSize     Max size of the destination buffer.
+ * @param[out] readBytesOut   Pointer to store the actual number of bytes read.
+ * @return int8_t             @ref OTAPP_COAP_OK on success, or @ref OTAPP_COAP_ERROR if buffer is too small.
  */
 int8_t otapp_coapReadPayload(otMessage *aMessage, uint8_t *bufferOut, uint16_t bufferSize, uint16_t *readBytesOut);
-
 
 /**
  * @brief main function for HARDWARE DEVICE URIS. This function processing incoming request. 
@@ -157,3 +240,7 @@ int8_t otapp_coapReadPayload(otMessage *aMessage, uint8_t *bufferOut, uint16_t b
 int8_t otapp_coap_processUriRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo, uint8_t uriId, uint8_t *bufOut, uint16_t bufSize);
 
 #endif  /* OT_APP_COAP_H_ */
+
+/**
+ * @}
+ */

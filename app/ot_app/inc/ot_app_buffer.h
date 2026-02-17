@@ -1,31 +1,37 @@
 /**
  * @file ot_app_buffer.h
- * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief Thread-safe shared buffer management for the OpenThread Application Framework.
- * @version 0.1
- * @date 03-02-2026
- * @addtogroup ot_app
- * @{
+ * @details see more information in section: @ref ot_app_buffer 
+ * 
  * @defgroup ot_app_buffer Shared Buffer Management
- * @brief Thread-safe global buffer pool for transient data processing.
+ * @ingroup ot_app
+ * @brief Thread-safe shared buffer management for the OpenThread Application Framework.
  * @details
+ * @{
  * This module manages a statically allocated memory pool divided into specific slots (Keys).
  * It provides thread-safe access using FreeRTOS mutexes to prevent race conditions during 
  * read/write operations.
- * * **Key Features:**
+ * **Key Features:**
  * - **Static Allocation:** No heap fragmentation (uses `HRO_SEC_NOINIT` section).
  * - **Thread Safety:** All API calls are protected by a mutex.
  * - **Zero-Copy Write:** `otapp_buf_getWriteOnly_ptr` allows direct memory access with a locking mechanism.
  * - **Key-Based Access:** Data is organized by predefined keys (e.g., `OTAPP_BUF_KEY_1`).
- *
+ * **Locking Mechanism (Zero-Copy):**
+ * When utilizing direct write access (@ref otapp_buf_getWriteOnly_ptr), the buffer slot is logically **LOCKED**.
+ * Any subsequent attempt to write to this key (from any thread) will return @ref OTAPP_BUF_ERROR_WRITE_LOCK
+ * untill @ref otapp_buf_writeUnlock is explicitly called.
  * @par Unit Test Verification
  * This module has been verified with a comprehensive suite of unit tests (`HOST_ot_app_buffer_test.c`) using the Unity framework:
- * - **Argument Validation:** Verified rejection of NULL pointers, zero-length requests, and invalid keys (Returns @ref OTAPP_BUF_ERROR).
+ * - **Argument Validation:** Verified rejection of NULL pointers, zero-length requests, and invalid keys.
  * - **Boundary Protection:** Confirmed `OTAPP_BUF_ERROR_OVERFLOW` is returned when attempting to write beyond the allocated slot size.
- * - **Locking Logic:** Verified that `otapp_buf_getWriteOnly_ptr` correctly locks the slot. Subsequent `otapp_buf_append` calls return @ref OTAPP_BUF_ERROR_WRITE_LOCK until the slot is explicitly unlocked via `otapp_buf_writeUnlock`.
+ * - **Locking Logic:** Verified that `otapp_buf_getWriteOnly_ptr` correctly locks the slot. 
  * - **Concurrency & Thread Safety:** Validated using a multi-threaded stress test ("Buffer Bomber"). 
- * The test simulates a Race Condition using `pthread` and confirms that the internal Mutex mechanism prevents data corruption when multiple threads write simultaneously.
- * @{
+ * The test simulates a Race Condition using `pthread` and confirms that the internal Mutex mechanism prevents data corruption.
+ * 
+ * @version 0.1
+ * @date 03-02-2026
+ @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license 
  */
 
 #ifndef OT_APP_BUFFER_H_
@@ -121,13 +127,16 @@ const uint8_t *otapp_buf_getReadOnly_ptr(uint16_t key, uint16_t *bufSize_out);
 
 /**
  * @brief Requests a write-only pointer for direct memory access (Zero-Copy).
- * @details This function locks the slot for writing. after correctly returning the ptr to the memory slot, subsequent calls to `otapp_buf_append` 
- * or `otapp_buf_getWriteOnly_ptr` for this key will fail/block until @ref otapp_buf_writeUnlock is called.
+ * @details This function locks the slot for writing. After correctly returning the ptr to the memory slot, 
+ * subsequent calls to `otapp_buf_append` or `otapp_buf_getWriteOnly_ptr` for this key will fail/block 
+ * until @ref otapp_buf_writeUnlock is called.
+ * This mechanism is intended for filling the buffer from a DMA source or complex parsing loops 
+ * where intermediate copies are undesirable.
  * @param[in] key           Buffer slot identifier.
- * @param[in] required_size Number of bytes intended to be written (sets `current_len`).
- * @return uint8_t* Pointer to the buffer slot, or NULL if locked/full.
+ * @param[in] required_size Number of bytes intended to be written (sets `current_len` immediately).
+ * @return uint8_t* Pointer to the buffer slot start, or NULL if locked/full.
  * @warning **Blocking Behavior:** If successful, this function explicitly **LOCKS** the slot. 
- * You **MUST** call @ref otapp_buf_writeUnlock(key) after finishing the write operation.
+ * You **MUST** call @ref otapp_buf_writeUnlock(key) immediately after finishing the write operation.
  */
 uint8_t* otapp_buf_getWriteOnly_ptr(uint16_t key, uint16_t required_size);
 

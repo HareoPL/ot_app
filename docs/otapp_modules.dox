@@ -1,0 +1,77 @@
+/**
+ * @defgroup ot_app OTApp Core Framework
+ * @brief Main OpenThread Application Framework integrating CoAP communication, service discovery, and hardware management.
+ *
+ * @details
+ * This module serves as a comprehensive middleware for IoT devices based on OpenThread.
+ * It aggregates all mechanisms necessary for Thread network operation, providing an abstraction layer
+ * over the raw OpenThread API and hardware drivers.
+ *
+ * Below is a complete breakdown of the modules comprising the framework.
+ *
+ * ---
+ *
+ * ### 1. Core & Infrastructure
+ * Fundamental modules responsible for initialization, data types, and memory management.
+ * - @ref ot_app_core "Application Core" (`ot_app.h`)
+    * - Main initialization loop (`otapp_init`).
+    * - Device type definitions (@ref otapp_deviceType_t).
+    * - Global configuration macros.
+ * - @ref ot_app_buffer "Shared Buffer Manager" (`ot_app_buffer.h`)
+    * - Statically allocated shared memory (Zero-Copy).
+    * - Mutex protection against Race Conditions.
+ * - @ref ot_app_msg_tlv "TLV Serializer" (`ot_app_msg_tlv.h`)
+    * - Lightweight data packing engine (Type-Length-Value) for binary payloads.
+ *
+ * ---
+ *
+ * ### 2. CoAP Communication Stack
+ * CoAP server implementation, request handling, and notifications.
+ * - @ref ot_app_coap "CoAP Server Engine" (`ot_app_coap.h`)
+    * - UDP/CoAP server initialization.
+    * - Response utilities (ACK, ERROR, DATA).
+ * - @ref ot_app_coap_handlers "Resource Handlers" (`ot_app_coap_uri.h`)
+    * - Device "Business Logic".
+    * - Handlers for specific paths (e.g., `light/on_off`, `pairing/service`).
+ * - @ref ot_app_coap_obs "Observe Registry" (`ot_app_coap_uri_obs.h`)
+    * - Subscriber Registry (Server-side).
+    * - Tracks remote clients listening for device state changes (e.g., light switch events).
+ *
+ * ---
+ *
+ * ### 3. Discovery & Network Identity
+ * Mechanisms allowing devices to find each other on the network and establish trust.
+ * - @ref ot_app_deviceName "Device Naming" (`ot_app_deviceName.h`)
+    * - Unique name generation in `Group_Type_EUI64` format.
+    * - Name parsing for group identification.
+ * - @ref ot_app_srp "SRP Client" (`ot_app_srp_client.h`)
+    * - **Advertising**: Broadcasting device presence (Registration with the Border Router).
+    * - Lease renewal management.
+ * - @ref ot_app_dns "DNS Client" (`ot_app_dns.h`)
+    * - **Browsing**: Actively searching for other services (`_coap._udp`) on the network.
+    * - Resolving hostnames to IPv6 addresses.
+ * - @ref ot_app_dataset "Network Credentials" (`ot_app_dataset_tlv.h`)
+    * - Storage for network keys (Master Key, PANID) required to join the mesh.
+ *
+ * ---
+ *
+ * ### 4. Pairing Logic
+ * Decision layer managing the list of trusted devices.
+ * - @ref ot_app_pair "Device Pairing" (`ot_app_pair.h`)
+    * - Storage of the paired devices list.
+    * - Rule verification (e.g., checking if a "Switch" is allowed to pair with a "Light").
+    * - Capabilities Exchange.
+ *
+ * ---
+ *
+ * ### 5. Hardware Abstraction
+ * Interface connecting network logic with physical hardware.
+ * - **Device Driver API** (`ot_app_drv.h`)
+    * - Singleton holding pointers to hardware functions (GPIO, PWM, etc.).
+    * - Decouples OpenThread code from HAL libraries (STM32/ESP32).
+ *
+ * ---
+ * @{
+ * @}
+ *
+ */

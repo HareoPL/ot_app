@@ -1,12 +1,12 @@
 /**
  * @file ad_light_control.h
- * @author Jan Łukaszewicz
  * @brief Low‑level RGB light control for WS2812B LEDs.
- * @version 0.1
- * @date 13-11-2025
+ * @details see more information in section: @ref device_light_control 
  *
  * @defgroup device_light_control Light Device Control
  * @ingroup device_light
+ * @brief Low‑level RGB light control for WS2812B LEDs.
+ * @details
  * @{
  *
  * This module encapsulates the **local light state** and the functions
@@ -26,6 +26,11 @@
  *
  * This module does **not** know anything about CoAP or pairing – it is
  * purely hardware‑facing and is used by URI handlers in @ref device_light_uri.
+ * 
+ * @version 0.1
+ * @date 13-11-2025
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license 
  */
 
 

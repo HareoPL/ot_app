@@ -1,14 +1,12 @@
 /**
  * @file ot_app_msg_tlv.h
- *
- * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief TLV (Type-Length-Value) message serialization/deserialization API.
- *
- * @version 0.1
- * @date 29-01-2026
- *
+ * @details see more information in section: @ref ot_app_msg_tlv
+ * 
  * @defgroup ot_app_msg_tlv TLV Message Buffer
  * @ingroup ot_app
+ * @brief TLV (Type-Length-Value) message serialization/deserialization API.
+ * @details
  * @{
  *
  * @section msg_tlv_description Overview
@@ -18,20 +16,20 @@
  * Designed for constrained environments like OpenThread/CoAP payloads where dynamic
  * allocation is avoided.
  *
- * **Key features:**
+ * *Key features:**
  * - Append unique TLV blocks (`keyAdd()`): key (u16) + length (u16) + value
  * - Extract value by key (`keyGet()`): linear search with optional value copy
  * - Query free space (`freeBufSpaceGet()`): remaining capacity calculation
  * - **2-byte reserved header** tracks total used bytes (writtenBytes counter)
  * - **Packed 4-byte TLV header** (no padding): `uint16_t key; uint16_t length;`
  *
- * **Buffer layout (exact byte-by-byte format):**
+ * *Buffer layout (exact byte-by-byte format):**
  * ```
  * [0:1] writtenBytes (u16) | [2:5] TLV1: [key u16][len u16][value[len]] | [N:] TLV2... | [free space]
  * ```
- * **Minimum size for 1 key: 2 + 4 + valueLength bytes**
+ * *Minimum size for 1 key: 2 + 4 + valueLength bytes**
  *
- * **Example for valueLength=4 (TOTAL: 10 bytes minimum):**
+ * *Example for valueLength=4 (TOTAL: 10 bytes minimum):**
  * 
  * | Bytes  | Content          | Size | Example       | Description              |
  * |--------|------------------|------|---------------|--------------------------|
@@ -41,18 +39,18 @@
  * | `[6:9]`| **value**        | 4B   | `[1,2,3,4]`   | Actual data              |
  * | **↓**  | **TOTAL**        | **10B**|             | **Minimum buffer size**  |
  *
- * **Error handling:**
+ * *Error handling:**
  * - Strict validation: null pointers, buffer overflow, invalid sizes
  * - Duplicate key detection during append
  * - Empty/invalid buffer states
  *
- * **Typical lifecycle:**
+ * *Typical lifecycle:**
  * - Allocate fixed buffer (e.g. noinit/heap/stack)
  * - Append keys: `otapp_msg_tlv_keyAdd(buffer, size, key, len, value)`
  * - Query: `otapp_msg_tlv_getBufferTotalFreeSpace(buffer, size, &free)`
  * - Extract: `otapp_msg_tlv_keyGet(buffer, size, key, &len, value)`
  *
- * **Integration:**
+ * *Integration:**
  * - CoAP options, OpenThread discovery payloads, device state serialization
  * - Portable: ESP32/STM32 (little-endian, packed structs)
  * - Thread-safe with external mutex (user-provided buffer)
@@ -70,66 +68,88 @@
  * // Example CoAP handler implementation that sends a TLV-encoded URI list as a response.
  * void ad_temp_uri_well_knownCoreHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
  * {
- *      ot_app_devDrv_t *devDrv_ = otapp_getDevDrvInstance();
- *      otapp_coap_uri_t *urisList = NULL;
- *      uint8_t *buffer;
- *      uint16_t bufferSize;
- *      int8_t result;
+ *  int8_t result = 0;
+ *   ot_app_devDrv_t *devDrv_ = otapp_getDevDrvInstance();
  *
- *      if (request && devDrv_)
- *      {
- *          // 1. Retrieve the URI list defined in the device driver
- *          urisList = devDrv_->uriGetList_clb();
- *          if(urisList == NULL) return;
+ *   otapp_coap_uri_t *urisList = NULL;    
+ *   ot_app_size_t uriListSize = 0;
  *
- *          // 2. Acquire access to the thread-safe global buffer
- *          buffer = otapp_buffer_get_withMutex();
- *          otapp_buffer_clear();
- *          bufferSize = otapp_buffer_getSize();
+ *   uint8_t *buffer = NULL;
+ *   uint16_t bufferSize = 0;
+ *   
+ *   if (request && devDrv_)
+ *   {
+ *       // Retrieve the URI list defined in the device driver
+ *       urisList = devDrv_->uriGetList_clb();
+ *       uriListSize = devDrv_->uriGetListSize;
+ *       if(urisList == NULL || uriListSize == 0) return;
  *
- *          // 3. Serialize URI data into TLV format
- *          result = otapp_pair_uriResourcesCreate(urisList, devDrv_->uriGetListSize, buffer, &bufferSize);
- *          if(result == OTAPP_PAIR_OK) 
- *          {
- *              // 4. Send the populated TLV buffer as a CoAP response
- *              otapp_coap_sendResponse(request, aMessageInfo, buffer, bufferSize);
- *          }
+ *       // Acquire access to the thread-safe global buffer
+ *       bufferSize = otapp_pair_uriResourcesCalculateBufSize(urisList, uriListSize);
+ *       buffer = otapp_buf_getWriteOnly_ptr(OTAPP_BUF_KEY_1, bufferSize);
+ *       if(buffer == NULL || bufferSize == 0) 
+ *       {
+ *           otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
+ *           OTAPP_PRINTF(TAG, "ERROR well-known/core: buffer = NULL"); 
+ *           return;
+ *       }         
  *
- *          // 5. Release the buffer mutex
- *          otapp_buffer_releaseMutex();
- *      }
+ *       // Serialize URI data into TLV format
+ *       result = otapp_pair_uriResourcesCreate(urisList, uriListSize, buffer, &bufferSize);
+ *       if(result == OTAPP_PAIR_OK)
+ *       {
+ *           // Send the populated TLV buffer as a CoAP response
+ *           otapp_coap_sendResponse(request, aMessageInfo, buffer, bufferSize);
+ *           OTAPP_PRINTF(TAG, "well-known/core: sent resources size: %d\n", bufferSize);
+ *       }else
+ *       {
+ *           OTAPP_PRINTF(TAG, "ERROR well-known/core: uriResourcesCreate \n");
+ *       }
+ *
+ *       // unlock the buffer
+ *       otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
+ *   }
  * }
  *
  * // Helper function to create a TLV structure from a URI list.
  * int8_t otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, uint8_t *bufferOut, uint16_t *bufferSizeInOut)
  * {   
- *      if(uri == NULL || bufferOut == NULL || bufferSizeInOut == NULL || uriSize == 0) return OTAPP_PAIR_ERROR;
+ *   if(uri == NULL || bufferOut == NULL || bufferSizeInOut == NULL || uriSize == 0 || uriSize > OTAPP_PAIR_URI_MAX)
+ *   {
+ *       return OTAPP_PAIR_ERROR;
+ *   }
+ *   uint16_t writtenBufSpace;
+ *   // Add TLV block containing the number of available URIs
+ *   otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, OTAPP_PAIR_KEY_URIS_COUNT, sizeof(uriSize), &uriSize);
  *
- *      const uint16_t patternKey = 0xAA00;
+ *   // Iterate through the list and append device types and URI paths as TLV blocks
+ *   for (size_t i = 0; i < uriSize; i++) // quantity_of_uris | uri1_dt | uri1_path | uri2_dt | uri2_path | uri3_dt | uri3_path | ...
+ *   {   
+ *       // Add device type using an incremented key
+ *       otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, OTAPP_PAIR_KEY_PATTERN + 2*i + 1, sizeof(uri[i].devType), (uint8_t *)&uri[i].devType);
  *
- *      // Add TLV block containing the number of available URIs
- *      otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, patternKey, sizeof(uriSize), &uriSize);
+ *       // Add URI path string as the subsequent TLV block
+ *       otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, OTAPP_PAIR_KEY_PATTERN + 2*i + 2, strlen(uri[i].resource.mUriPath), (uint8_t *)uri[i].resource.mUriPath);
+ *   }
  *
- *      // Iterate through the list and append device types and URI paths as TLV blocks
- *      for (size_t i = 0; i < uriSize; i++) 
- *      {
- *          // Add device type using an incremented key
- *          otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, patternKey + i + 1, sizeof(uri[i].devType), (uint8_t*)&uri[i].devType);
- *          
- *          // Add URI path string as the subsequent TLV block
- *          otapp_msg_tlv_keyAdd(bufferOut, *bufferSizeInOut, patternKey + i + 2, strlen(uri[i].resource.mUriPath), (uint8_t*)uri[i].resource.mUriPath);
- *      }
+ *   // Retrieve the final count of written bytes from the buffer header
+ *   if(otapp_msg_tlv_getBufferTotalUsedSpace(bufferOut, *bufferSizeInOut, &writtenBufSpace) == OT_APP_MSG_TLV_ERROR) 
+ *   {
+ *       return OTAPP_PAIR_ERROR;
+ *   }
+ *   
+ *   *bufferSizeInOut = writtenBufSpace;
  *
- *      // Retrieve the final count of written bytes from the buffer header
- *      if(otapp_msg_tlv_writenBytesGet(bufferOut, *bufferSizeInOut, bufferSizeInOut) == OT_APP_MSG_TLV_ERROR) 
- *      {
- *          return OTAPP_PAIR_ERROR;
- *      }
- *      return OTAPP_PAIR_OK;
+ *   return OTAPP_PAIR_OK;
  * }
  * @endcode
 
  * @include ot_app_msg_tlv_example.c
+ *
+ * @version 0.1
+ * @date 29-01-2026
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license 
  */
 
 #ifndef OT_APP_MSG_TLV_H_
@@ -199,3 +219,7 @@ int8_t otapp_msg_tlv_getBufferTotalUsedSpace(const uint8_t *buffer, const uint16
 uint16_t otapp_msg_tlv_calcualeBuffer(uint8_t keyDataLength, uint8_t cnt);
 
 #endif  /* OT_APP_MSG_TLV_H_ */
+
+/**
+ * @}
+ */

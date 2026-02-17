@@ -1,12 +1,12 @@
 /**
  * @file ad_light_uri.h
- * @author Jan Łukaszewicz
  * @brief CoAP URI definitions for the light device.
- * @version 0.1
- * @date 13-11-2025
+ * @details see more information in section: @ref device_light_uri 
  *
  * @defgroup device_light_uri Light Device URIs
  * @ingroup device_light
+ * @brief CoAP URI definitions for the light device.
+ * @details
  * @{
  *
  * This module defines the CoAP resources that expose the light device
@@ -22,6 +22,11 @@
  *
  * The URI table is registered in the OpenThread Application Framework
  * via the driver callbacks configured in @ref ad_light_init().
+ * 
+ * @version 0.1
+ * @date 13-11-2025
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license 
  */
 
 

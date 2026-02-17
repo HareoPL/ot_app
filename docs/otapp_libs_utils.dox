@@ -1,0 +1,6 @@
+/**
+ * @defgroup libs Utility Libraries
+ * @brief Reusable libraries and utilities
+ *
+ * Platform-portable libraries for hardware abstraction and common functionality.
+ */

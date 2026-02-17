@@ -1,12 +1,12 @@
 /**
  * @file ad_light.h
- * @author Jan Łukaszewicz
  * @brief High‑level OpenThread RGB light device implementation.
- * @version 0.1
- * @date 06-09-2025
+ * @details see more information in section: @ref device_light 
  *
  * @defgroup device_light Light Device
  * @ingroup devices
+ * @brief High‑level OpenThread RGB light device implementation.
+ * @details
  * @{
  *
  * @section device_light_description Overview
@@ -38,6 +38,11 @@
  * - CoAP/URI integration: @ref device_light_uri
  * - Hardware control: @ref device_light_control
  * - Pairing API and observers: @ref ot_app_pair.h, @ref ot_app_coap_uri_obs.h
+ * 
+ * @version 0.1
+ * @date 06-09-2025
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license 
  */
 
 

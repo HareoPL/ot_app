@@ -1,19 +1,13 @@
 /**
- * 
  * @file ot_app_drv.h
- * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @version 0.1
- * @date 08-09-2025
+ * @brief Main API for OpenThread hardware application device driver.
+ * @details see more information in section: @ref ot_app_device_api
  * 
  * @defgroup ot_app_device_api main API for OpenThread hardware application
- * @{
+ * @ingroup ot_app
  * @brief Main API for OpenThread hardware application device driver.
- * 
- * This file is part of the OpenThread Application Framework.
- * Licensed under the MIT License; see the LICENSE file for details.
- *
- * @see @ref author_sec "Author & License"
- *
+ * @details
+ * @{
  * @section description Description
  *
  * Main API for OpenThread hardware application device driver.
@@ -63,7 +57,12 @@
  *
  * @see ot_app_devDrv_t for complete driver structure
  * @see ot_app_drv_getInstance() for singleton access
- * @see ad_button_Init() for full example implementation [file:1]
+ * @see ad_button_Init() for full example implementation 
+ * 
+ * @version 0.1
+ * @date 08-09-2025
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license
  */
 
 #ifndef OT_APP_DRV_H_
