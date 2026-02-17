@@ -52,7 +52,7 @@
 #ifdef UNIT_TEST
     #define OTAPP_BUF_KEY_1_SIZE    30000 
 #else    
-    #define OTAPP_BUF_KEY_1_SIZE    144
+    #define OTAPP_BUF_KEY_1_SIZE    256
 #endif
 
 #define OTAPP_BUF_KEY_2         0x1002 ///< Auxiliary buffer slot 2

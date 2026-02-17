@@ -251,7 +251,7 @@ int8_t otapp_pair_addToQueue(otapp_pair_queueItem_t *queueItem);
  */
 otapp_pair_resUrisParseData_t *otapp_pair_uriParseMessage(uint8_t *inBuffer, uint16_t inBufferSize, int8_t *result, uint16_t *outParsedDataSize);
 
-uint16_t otapp_pair_uriParseMessageCalculateBufSize(uint8_t aMessagePayloadSize);
+uint16_t otapp_pair_uriParseMessageCalculateBufSize(uint16_t aMessagePayloadSize);
 
 /**
  * @brief 

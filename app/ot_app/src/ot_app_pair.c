@@ -547,14 +547,23 @@ int8_t otapp_pair_uriResourcesCreate(otapp_coap_uri_t *uri, uint8_t uriSize, uin
     return OTAPP_PAIR_OK;
 }
 
-uint16_t otapp_pair_uriParseMessageCalculateBufSize(uint8_t aMessagePayloadSize)
+uint16_t otapp_pair_uriParseMessageCalculateBufSize(uint16_t aMessagePayloadSize)
 {
     uint16_t count = 0;
+    uint16_t uriMaxSize = 0;
     const uint16_t structSize = sizeof(otapp_pair_resUrisParseData_t);
 
-    if(aMessagePayloadSize > OTAPP_PAIRED_URI_MAX * structSize) return 0;
+    otapp_msg_tlv_calcualeBuffer(sizeof(uint8_t), 0);
 
-    count = aMessagePayloadSize + ( OTAPP_PAIRED_URI_MAX * structSize);
+    for (uint8_t i = 0; i < OTAPP_PAIRED_URI_MAX; i++)
+    {
+        otapp_msg_tlv_calcualeBuffer(sizeof(uint32_t), 1);
+        uriMaxSize = otapp_msg_tlv_calcualeBuffer(OTAPP_URI_MAX_NAME_LENGHT, 1);
+    }
+    
+    if(aMessagePayloadSize > uriMaxSize) return 0;
+
+    count = aMessagePayloadSize + (OTAPP_PAIRED_URI_MAX * structSize);
     return count;
 }
 
@@ -810,43 +819,53 @@ int8_t otapp_pair_subSendRequest(otapp_pair_Device_t *device)
 
     return subReqSentCnt;
 }
+
 void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
 {
     UNUSED(aMessageInfo);
     UNUSED(aResult);
 
-    if(pairedDevice == NULL) return;
+    if(pairedDevice == NULL){ OTAPP_PRINTF(TAG, " ERROR HandlerUriWellKnown: \n"); return; } 
 
-    static oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
-    int8_t result = 0;
-    // uint16_t msgLen = 0;
-    uint16_t readBytes = 0;
-    otapp_pair_resUrisParseData_t *parsedData = NULL;
-    uint16_t parsedDataSize = 0; // number of uri structures to add to the list
-    uint8_t *urisBuffer = otapp_buffer_get_withMutex(); // przechodzimy na glowny buffer aplikacji ot_app_buffer.h
+    int8_t result = 0;    
+    uint8_t *buffer = NULL; 
+    uint16_t bufferSize = 0;
+    uint16_t readBytes = 0;    
+    uint16_t messageLength = 0;
+    uint16_t messageOffset = 0;
+    
     otapp_pair_Device_t *device = (otapp_pair_Device_t*)pairedDevice;
+    static oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
+    otapp_pair_resUrisParseData_t *parsedData = NULL;
+    uint16_t parsedDataSize = 0; // number of uri structures to add to the list 
 
-     if(urisBuffer == NULL)
-     {
-        return;
-     } 
-
+    
+    OTAPP_PRINTF(TAG, "responseHandlerUriWellKnown IN \n");
     if (aMessage)
     {
-    	otapp_buffer_clear();
-        // msgLen = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-        readBytes = otMessageRead(aMessage, otMessageGetOffset(aMessage), urisBuffer, (otMessageGetLength(aMessage) - otMessageGetOffset(aMessage)));
-        OTAPP_PRINTF(TAG, "readBytes: %d\n", readBytes);
-        // if(readBytes != msgLen) 
-        // {
-        //     otapp_buffer_releaseMutex();
-        //     return;
-        // }
+        messageOffset = otMessageGetOffset(aMessage);
+        messageLength = otMessageGetLength(aMessage) - messageOffset;
+
+        bufferSize = otapp_pair_uriParseMessageCalculateBufSize(messageLength);
+        if(bufferSize == 0){ OTAPP_PRINTF(TAG, " ERROR HandlerUriWellKnown: bufferSize = 0 \n"); return; }
+
+        buffer = otapp_buf_getWriteOnly_ptr(OTAPP_BUF_KEY_1, bufferSize);
+        if(buffer == NULL) { OTAPP_PRINTF(TAG, " ERROR HandlerUriWellKnown: NULL BUF \n"); return; } 
+
+        readBytes = otMessageRead(aMessage, messageOffset, buffer, messageLength);
+
+        if(readBytes == 0 || readBytes != messageLength) 
+        {
+            otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
+            OTAPP_PRINTF(TAG, " ERROR HandlerUriWellKnown: \n");
+            return;
+        }
         
-        parsedData = otapp_pair_uriParseMessage(urisBuffer, otapp_buffer_getSize(), &result, &parsedDataSize);
+        parsedData = otapp_pair_uriParseMessage(buffer, bufferSize, &result, &parsedDataSize);
         if(parsedData == NULL || result != OTAPP_PAIR_OK)
         {
-            otapp_buffer_releaseMutex();
+            otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
+            OTAPP_PRINTF(TAG, " ERROR HandlerUriWellKnown: \n");
             return;
         }
 
@@ -854,64 +873,21 @@ void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMess
         {            
             if(parsedData[i].obs)
             {                
-                oac_uri_obs_sendSubscribeRequest(&device->ipAddr, parsedData[i].uri, token);
-                // todo w odpowiedzi powinienem otrzymac aktualny stan uri ta odpowiedz powinana pojawic sie w 
-                // void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
-                // trzeba zmodyfikowac fn sendsubReq aby przyjmowala callbacka response (powyzszego).
+                oac_uri_obs_sendSubscribeRequest(&device->ipAddr, parsedData[i].uri, token); // todo w odpowierzi powinienem dostac aktualne nastawy uris (np stan on_off )
+                // oraz w tej fn oac_uri_obs_sendSubscribeRequestUpdate()
                 otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], token);
             }else
             {
                 otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], NULL);
             }
         }
+        otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
         otapp_pair_observerPairedDeviceNotify(device); 
-        otapp_buffer_releaseMutex();
+    }else
+    {
+        OTAPP_PRINTF(TAG, "responseHandlerUriWellKnown aMessage EMPTY  \n");
     }
 }
-// void otapp_pair_responseHandlerUriWellKnown(void *pairedDevice, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
-// {
-//     UNUSED(aMessageInfo);
-//     UNUSED(aResult);
-
-//     if(pairedDevice == NULL) return;
-
-//     static uint8_t urisBuffer[OTAPP_PAIR_URI_RESOURCE_BUFFER_MAX_SIZE];
-//     static oacu_token_t token[OAC_URI_OBS_TOKEN_LENGTH];
-//     int8_t result = 0;
-//     uint16_t msgLen = 0;
-//     uint16_t readBytes = 0;
-//     otapp_pair_resUrisParseData_t *parsedData = NULL;
-//     uint16_t parsedDataSize = 0; // number of uri structures to add to the list
-
-//     otapp_pair_Device_t *device = (otapp_pair_Device_t*)pairedDevice;
-
-//     if (aMessage)
-//     {
-//         msgLen = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-//         readBytes = otMessageRead(aMessage, otMessageGetOffset(aMessage), urisBuffer, msgLen);
-//         if(readBytes != msgLen) return;
-
-//         parsedData = otapp_pair_uriParseMessage(urisBuffer, readBytes, &result, &parsedDataSize);
-//         if(parsedData == NULL || result == OTAPP_PAIR_ERROR) return;
-
-//         for (uint8_t i = 0; i < parsedDataSize; i++)
-//         {            
-//             if(parsedData[i].obs)
-//             {                
-//                 oac_uri_obs_sendSubscribeRequest(&device->ipAddr, parsedData[i].uri, token);
-//                 // todo w odpowiedzi powinienem otrzymac aktualny stan uri ta odpowiedz powinana pojawic sie w 
-//                 // void otapp_coap_responseHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult)
-//                 // trzeba zmodyfikowac fn sendsubReq aby przyjmowala callbacka response (powyzszego).
-//                 otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], token);
-//             }else
-//             {
-//                 otapp_pair_uriAdd(&device->urisList[i], &parsedData[i], NULL);
-//             }
-//         }
-//         otapp_pair_observerPairedDeviceNotify(device); 
-//     }
-// }
-
 
 void otapp_pair_task(void *params) 
 {
@@ -919,7 +895,7 @@ void otapp_pair_task(void *params)
 
     int8_t result, devId;
     otapp_pair_DeviceList_t *deviceListHandle;
-    otapp_pair_Device_t *newDevice;
+    otapp_pair_Device_t *thisDevice;
     otIp6Address *ipAddr;
 
     while (1)
@@ -928,75 +904,71 @@ void otapp_pair_task(void *params)
         {
             if (otapp_pair_queueIteam.type == OTAPP_PAIR_CHECK_AND_ADD_TO_DEV_LIST)
             {
-                OTAPP_PRINTF(TAG, "Pairing new device: %s \n", otapp_pair_queueIteam.deviceNameFull);
+                OTAPP_PRINTF(TAG, "Pairing device: %s \n", otapp_pair_queueIteam.deviceNameFull);
 
                 if(otapp_pair_deviceIsMatchingFromQueue(&otapp_pair_queueIteam) == OTAPP_PAIR_IS)
                 {
                     deviceListHandle = otapp_pair_getHandle();
                     
                     result = otapp_pair_DeviceAdd(deviceListHandle, otapp_pair_queueIteam.deviceNameFull, &otapp_pair_queueIteam.ipAddress);
-                    /*
-                    sprawdzic czy po zresetowaniu urzadzenia typu light (ktory przyjmuje subskrybentow) button wysle ponownie subskrybcje.
-                    wydaje mi se ze nie poniewaz funkcja otapp_coapSendGetUri_Well_known jest wywolywana tylko dla nowych urzadzen 
-                    druga opcja to wysylanie pingow ? jesli nie odpowie x razy to usunac z listy pair ?
-                    */
+                    
                     switch (result)
                     {
-                    case OTAPP_PAIR_ERROR:                    
-                    case OTAPP_PAIR_DEVICE_NAME_TO_LONG:                    
-                    case OTAPP_PAIR_DEVICE_NO_SPACE:                    
-                        OTAPP_PRINTF(TAG, "has NOT been paired. Error: %d \n", result);
-                        break;
+                        case OTAPP_PAIR_ERROR:                    
+                        case OTAPP_PAIR_DEVICE_NAME_TO_LONG:                    
+                        case OTAPP_PAIR_DEVICE_NO_SPACE:
 
-                    case OTAPP_PAIR_UPDATED:                    
-                        otapp_ip6AddressPrint(&otapp_pair_queueIteam.ipAddress);
+                            OTAPP_PRINTF(TAG, "     NOT paired. Error: %d \n", result);
+                            break;
 
-                        devId = otapp_pair_DeviceIndexGet(deviceListHandle, otapp_pair_queueIteam.deviceNameFull);
-                        newDevice = &deviceListHandle->list[devId]; 
+                        case OTAPP_PAIR_UPDATED:
+                        case OTAPP_PAIR_NO_NEED_UPDATE:
 
-                        // tutaj powinno sie ponownie wyslac subskrybcje/odkrywanie zasowbow czyli to co po nizej 
-                        // ipAddr = otapp_pair_ipAddressGet(deviceListHandle, devId);
-                        // otapp_coapSendGetUri_Well_known(ipAddr, otapp_pair_responseHandlerUriWellKnown, (otapp_pair_Device_t*)newDevice); // .well-known/core
+                            devId = otapp_pair_DeviceIndexGet(deviceListHandle, otapp_pair_queueIteam.deviceNameFull);
+                            if(devId == OTAPP_PAIR_ERROR || devId == OTAPP_PAIR_NO_EXIST)
+                            {
+                                OTAPP_PRINTF(TAG, "     Error DeviceIndexGet: %d \n", devId);
+                                break;
+                            }
 
-                        otapp_pair_observerPairedDeviceNotify(newDevice);
+                            thisDevice = &deviceListHandle->list[devId]; 
+                            ipAddr = &thisDevice->ipAddr;
 
-                        OTAPP_PRINTF(TAG, "has been updated index: %d (ip Addr): \n", result);
-                        break;
+                            if(result == OTAPP_PAIR_UPDATED)
+                            {
+                                otapp_ip6AddressPrint(ipAddr);
+                                OTAPP_PRINTF(TAG, "     IP ADDR: updated \n");
+                            }else
+                            {
+                                OTAPP_PRINTF(TAG, "     IP ADDR: no need update \n");
+                            }
 
-                    case OTAPP_PAIR_NO_NEED_UPDATE:
-                        otapp_pair_subSendUpdateIP(otapp_pair_getHandle());
+                            result = otapp_pair_subSendRequest(thisDevice);
 
-                        devId = otapp_pair_DeviceIndexGet(deviceListHandle, otapp_pair_queueIteam.deviceNameFull);
-                        newDevice = &deviceListHandle->list[devId]; 
+                            if(result != OTAPP_PAIR_ERROR && result == 0)
+                            {
+                                otapp_coapSendGetUri_Well_known(ipAddr, otapp_pair_responseHandlerUriWellKnown, (otapp_pair_Device_t*)thisDevice);
+                            }                        
+                            break;
 
-                        // tutaj powinno sie ponownie wyslac subskrybcje/odkrywanie zasowbow czyli to co po nizej 
-                        // ipAddr = otapp_pair_ipAddressGet(deviceListHandle, devId);
-                        // otapp_coapSendGetUri_Well_known(ipAddr, otapp_pair_responseHandlerUriWellKnown, (otapp_pair_Device_t*)newDevice); // .well-known/core
+                        default:
+                            if(result >= 0)
+                            {                            
+                                thisDevice = &deviceListHandle->list[result];                            
+                                ipAddr = otapp_pair_ipAddressGet(deviceListHandle, result);
 
-                        otapp_pair_observerPairedDeviceNotify(newDevice);
-                        
-                        OTAPP_PRINTF(TAG, "no need IP update \n");
-                        break;                   
-                   
-                    default:
-                        if(result >= 0)
-                        {                            
-                            newDevice = &deviceListHandle->list[result];                            
-                            ipAddr = otapp_pair_ipAddressGet(deviceListHandle, result);
-
-                            otapp_coapSendGetUri_Well_known(ipAddr, otapp_pair_responseHandlerUriWellKnown, (otapp_pair_Device_t*)newDevice); // .well-known/core
-                         
-                            OTAPP_PRINTF(TAG, "has been success paired on index %d \n", result);
-                        }else
-                        {
-                            OTAPP_PRINTF(TAG, " Error: %d \n", result);
-                        }                        
-
-                        break;
+                                otapp_coapSendGetUri_Well_known(ipAddr, otapp_pair_responseHandlerUriWellKnown, (otapp_pair_Device_t*)thisDevice); // .well-known/core
+                            
+                                OTAPP_PRINTF(TAG, "     success paired on index %d \n", result);
+                            }else
+                            {
+                                OTAPP_PRINTF(TAG, "     Error: %d \n", result);
+                            } 
+                            break;
                     }
                 }else
                 {
-                    OTAPP_PRINTF(TAG, "= current device, or NOT allowed \n");
+                    OTAPP_PRINTF(TAG, "     = current device, or NOT allowed \n");
                 }
             }
 
