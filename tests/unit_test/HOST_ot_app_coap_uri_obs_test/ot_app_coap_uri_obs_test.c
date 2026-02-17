@@ -1149,23 +1149,25 @@ TEST(ot_app_coap_uri_obs, CheckNotify_GivenTrueArgs_WhenCallingNotify_ThenReturn
 {
     oacu_result_t result_;
     uint8_t data_ = 254;
-    uint8_t dataSize_ = 1;
+    uint16_t dataSize_ = 1;
 
     const otIp6Address *ipAddrFromNotify;
     const uint8_t *dataFromNotify;
 
     oac_uri_obs_subscribe(TEST_OBS_HANDLE, test_obs_obsTrue.uri->token, test_obs_obsTrue.uri->uriIndex, &test_obs_obsTrue.ipAddr, test_obs_obsTrue.deviceNameFull);
     result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, NULL, test_obs_obsTrue.uri->uriIndex, &data_, dataSize_);
+    TEST_ASSERT_EQUAL(1, result_); // one subscriber
 
     ipAddrFromNotify = otapp_coapSendPutUri_subscribed_uris_fake.arg0_val;
     dataFromNotify = otapp_coapSendPutUri_subscribed_uris_fake.arg1_val;
+    uint16_t readBytes = otapp_coapSendPutUri_subscribed_uris_fake.arg2_val;
 
-    oac_uri_obs_parseMessageFromNotify(dataFromNotify, &test_obs_dataPacketOut);
-
+    result_ = oac_uri_obs_parseMessageFromNotify(dataFromNotify, readBytes, &test_obs_dataPacketOut);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_OK, result_); 
     TEST_ASSERT_EQUAL_UINT8_ARRAY(&test_obs_obsTrue.ipAddr, ipAddrFromNotify, OT_IP6_ADDRESS_SIZE);
     
     TEST_ASSERT_EQUAL(data_, test_obs_dataPacketOut.buffer[0]);
-    TEST_ASSERT_EQUAL(1, result_); // one subscriber
+    
 
 }
 
@@ -1173,23 +1175,23 @@ TEST(ot_app_coap_uri_obs, CheckNotify_GivenTwoSubscribersOneWillExclude_WhenCall
 {
     oacu_result_t result_;
     uint8_t data_ = 254;
-    uint8_t dataSize_ = 1;
-
+    uint16_t dataSize_ = 1;
     const otIp6Address *ipAddrFromNotify;
     const uint8_t *dataFromNotify;
 
     oac_uri_obs_subscribe(TEST_OBS_HANDLE, test_obs_obsTrue.uri->token, test_obs_obsTrue.uri->uriIndex, &test_obs_obsTrue.ipAddr, test_obs_obsTrue.deviceNameFull);
     oac_uri_obs_subscribe(TEST_OBS_HANDLE, test_obs_obsTrue2.uri->token, test_obs_obsTrue.uri->uriIndex, &test_obs_obsTrue2.ipAddr, test_obs_obsTrue2.deviceNameFull);
     result_ = oac_uri_obs_notify(TEST_OBS_HANDLE, &test_obs_obsTrue2.ipAddr, test_obs_obsTrue.uri->uriIndex, &data_, dataSize_);
+    TEST_ASSERT_EQUAL(1, result_); // one subscriber
 
     ipAddrFromNotify = otapp_coapSendPutUri_subscribed_uris_fake.arg0_val;
     dataFromNotify = otapp_coapSendPutUri_subscribed_uris_fake.arg1_val;
+    uint16_t readBytes = otapp_coapSendPutUri_subscribed_uris_fake.arg2_val;
+
+    result_ = oac_uri_obs_parseMessageFromNotify(dataFromNotify, readBytes, &test_obs_dataPacketOut);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_OK, result_); 
     
-    oac_uri_obs_parseMessageFromNotify(dataFromNotify, &test_obs_dataPacketOut);
-    
-    TEST_ASSERT_EQUAL(1, result_); // one subscriber
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(&test_obs_obsTrue.ipAddr, ipAddrFromNotify, OT_IP6_ADDRESS_SIZE);
-    
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(&test_obs_obsTrue.ipAddr, ipAddrFromNotify, OT_IP6_ADDRESS_SIZE);    
     TEST_ASSERT_EQUAL(data_, test_obs_dataPacketOut.buffer[0]);
 }
 
@@ -1199,14 +1201,18 @@ TEST(ot_app_coap_uri_obs, GivenNullArgs_WhenParseMessage_ThenReturnError)
     oacu_result_t result_;
     oac_uri_dataPacket_t *dataPacketIn;
     uint8_t data_ = 255; 
-    uint8_t dataSize_ = 1; 
+    uint16_t dataSize_ = 1; 
+    uint16_t readBytes = 5;
 
     dataPacketIn = test_obs_createDataPacket(test_obs_token_4Byte, &data_, dataSize_);
 
-    result_ = oac_uri_obs_parseMessageFromNotify(NULL, &test_obs_dataPacketOut);
+    result_ = oac_uri_obs_parseMessageFromNotify(NULL, readBytes, &test_obs_dataPacketOut);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
 
-    result_ = oac_uri_obs_parseMessageFromNotify((uint8_t*)dataPacketIn, NULL);
+    result_ = oac_uri_obs_parseMessageFromNotify((uint8_t*)dataPacketIn, readBytes-1, &test_obs_dataPacketOut);
+    TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
+
+    result_ = oac_uri_obs_parseMessageFromNotify((uint8_t*)dataPacketIn, readBytes, NULL);
     TEST_ASSERT_EQUAL(OAC_URI_OBS_ERROR, result_);
 }
 
@@ -1215,10 +1221,11 @@ TEST(ot_app_coap_uri_obs, GivenTrueArg_WhenParseMessage_ThenReturnPtrToStract)
 {
     oac_uri_dataPacket_t *dataPacketIn;
     uint8_t data_ = 255; 
-    uint8_t dataSize_ = 1; 
+    uint16_t dataSize_ = 1; 
+    uint16_t readBytes = OAC_URI_OBS_TOKEN_LENGTH + 1; // 1 bytes of data_
 
     dataPacketIn = test_obs_createDataPacket(test_obs_token_4Byte, &data_, dataSize_);
-    oac_uri_obs_parseMessageFromNotify((uint8_t*)dataPacketIn,  &test_obs_dataPacketOut);
+    oac_uri_obs_parseMessageFromNotify((uint8_t*)dataPacketIn, readBytes, &test_obs_dataPacketOut);
 
      TEST_ASSERT_EQUAL_UINT8_ARRAY(dataPacketIn, &test_obs_dataPacketOut, sizeof(oac_uri_dataPacket_t));
 }
