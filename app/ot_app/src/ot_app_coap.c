@@ -398,7 +398,7 @@ int8_t otapp_coapReadPayload(otMessage *aMessage, uint8_t *bufferOut, uint16_t b
     memset(bufferOut, 0, bufferSize);
 
     len = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-    if(len >= bufferSize)
+    if(len > bufferSize)
     {
         OTAPP_PRINTF(TAG, "ERROR: coapReadPayload too small buf \n");
         return OTAPP_COAP_ERROR;
@@ -445,7 +445,7 @@ int8_t otapp_coap_processUriRequest(otMessage *aMessage, const otMessageInfo *aM
             otapp_coap_sendResponseOK(aMessage, aMessageInfo);            
            
             // notify subscribers about event
-            oac_uri_obs_notify(obsHandle, &aMessageInfo->mPeerAddr, uriId, bufOut, bufSize); 
+            oac_uri_obs_notify(obsHandle, &aMessageInfo->mPeerAddr, uriId, bufOut, payloadReadBytes); 
 
         }else // if request concerned observer. result > 0 
         {
