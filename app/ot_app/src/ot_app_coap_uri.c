@@ -86,63 +86,96 @@ void otapp_coap_uri_paringServicesHandle(void *aContext, otMessage *request, con
         otapp_pair_addToQueue(&queueItem);    
     }
 }
+
 void ad_temp_uri_well_knownCoreHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {
+    int8_t result = 0;
     ot_app_devDrv_t *devDrv_ = otapp_getDevDrvInstance();
-    otapp_coap_uri_t *urisList = NULL;    
-    uint8_t *buffer;
-    uint16_t bufferSize;
-    int8_t result;
 
+    otapp_coap_uri_t *urisList = NULL;    
+    ot_app_size_t uriListSize = 0;
+
+    uint8_t *buffer = NULL;
+    uint16_t bufferSize = 0;
+    
     if (request && devDrv_)
     {
-        // 1. Retrieve the URI list defined in the device driver
+        // Retrieve the URI list defined in the device driver
         urisList = devDrv_->uriGetList_clb();
-        if(urisList == NULL) return;
+        uriListSize = devDrv_->uriGetListSize;
+        if(urisList == NULL || uriListSize == 0) return;
 
-        // 2. Acquire access to the thread-safe global buffer
-        buffer = otapp_buffer_get_withMutex();
-        otapp_buffer_clear();
-        bufferSize = otapp_buffer_getSize();
+        // Acquire access to the thread-safe global buffer
+        bufferSize = otapp_pair_uriResourcesCalculateBufSize(urisList, uriListSize);
+        buffer = otapp_buf_getWriteOnly_ptr(OTAPP_BUF_KEY_1, bufferSize);
+        if(buffer == NULL || bufferSize == 0) 
+        {
+            otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
+            OTAPP_PRINTF(TAG, "ERROR well-known/core: buffer = NULL"); 
+            return;
+        }         
 
-        // 3. Serialize URI data into TLV format
-        result = otapp_pair_uriResourcesCreate(urisList, devDrv_->uriGetListSize, buffer, &bufferSize);
+        // Serialize URI data into TLV format
+        result = otapp_pair_uriResourcesCreate(urisList, uriListSize, buffer, &bufferSize);
         if(result == OTAPP_PAIR_OK)
         {
-            // 4. Send the populated TLV buffer as a CoAP response
+            // Send the populated TLV buffer as a CoAP response
             otapp_coap_sendResponse(request, aMessageInfo, buffer, bufferSize);
+            OTAPP_PRINTF(TAG, "well-known/core: sent resources size: %d\n", bufferSize);
+        }else
+        {
+            OTAPP_PRINTF(TAG, "ERROR well-known/core: uriResourcesCreate \n");
         }
 
-        // 5. Release the buffer mutex
-        otapp_buffer_releaseMutex();
+        // unlock the buffer
+        otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
     }
 }
 
 void otapp_coap_uri_subscribedHandle(void *aContext, otMessage *request, const otMessageInfo *aMessageInfo)
 {
+    int8_t result;
+
     ot_app_devDrv_t *drv;
     oac_uri_dataPacket_t *dataPacket;
     uint16_t readBytes = 0;
    
-    uint8_t buffer[OTAPP_COA_URI_BUFFER];
-    int8_t result;
+    uint8_t *buffer = NULL;
+    uint16_t bufferSize = 0;
+
 
     if (request)
     {
-        if(otapp_coapReadPayload(request, buffer, OTAPP_COA_URI_BUFFER, &readBytes) != OTAPP_COAP_OK) return;         
+        bufferSize = otMessageGetLength(request) - otMessageGetOffset(request);
+        buffer = otapp_buf_getWriteOnly_ptr(OTAPP_BUF_KEY_1, bufferSize);
+        if(buffer == NULL || bufferSize == 0) 
+        {
+            otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
+            OTAPP_PRINTF(TAG, "ERROR ubscribedHandle: buffer = NULL\n"); 
+            return;
+        }   
+        result = otapp_coapReadPayload(request, buffer, bufferSize, &readBytes);
+        if(result != OTAPP_COAP_OK || bufferSize != readBytes)
+        {
+            otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
+            OTAPP_PRINTF(TAG, "ERROR ubscribedHandle: readPayload\n");
+            return;
+        } 
         
         otapp_coap_sendResponseOK(request, aMessageInfo);
 
         drv = otapp_getDevDrvInstance();
 
         dataPacket = oac_uri_obs_getdataPacketHandle();
-        result = oac_uri_obs_parseMessageFromNotify(buffer, dataPacket); 
+        result = oac_uri_obs_parseMessageFromNotify(buffer, readBytes, dataPacket); 
         if(result == OAC_URI_OBS_ERROR)
         {
-            OTAPP_PRINTF(TAG, "ERROR: otapp_coap_uri_subscribedHandle\n");
+            otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
+            OTAPP_PRINTF(TAG, "ERROR: ubscribedHandle\n");
             return;
         }
 
+        otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
         drv->obs_subscribedUri_clb(dataPacket); // inform app device about new subscribed event.         
     }
 }
