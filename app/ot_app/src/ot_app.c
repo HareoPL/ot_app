@@ -53,11 +53,6 @@ const static otIp6Address *otapp_Ip6Address;
 
 static otExtAddress otapp_factoryEUI_64;
 
-static char otapp_charBuf[OTAPP_CHAR_BUFFER_SIZE];
-static SemaphoreHandle_t otapp_mutexBuf;
-
-
-
 static const otIp6Address ot_app_multicastAddr = {
     .mFields.m8 = {
         0xff, 0x03, 0x00, 0x00,
@@ -128,22 +123,6 @@ ot_app_devDrv_t *otapp_getDevDrvInstance(void)
     return otapp_devDrv;
 }
 
-/////////////////////////
-// char buffer
-//
-char *otapp_charBufGet_withMutex()
-{
-    if(xSemaphoreTake(otapp_mutexBuf, portMAX_DELAY) == pdTRUE)
-    {
-        return otapp_charBuf;
-    }
-    return NULL; // it should never come here
-}
-
-void otapp_charBufRelease()
-{
-    xSemaphoreGive(otapp_mutexBuf);
-}
 
 #ifdef ESP_PLATFORM
 	void otapp_cli_init(void)
@@ -262,7 +241,7 @@ int8_t otapp_init() //app init
 	#endif
 
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
-    otapp_mutexBuf = xSemaphoreCreateMutex();
+
     otapp_pair_init(otapp_devDrv);
     otapp_buffer_init();
 

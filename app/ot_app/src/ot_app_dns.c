@@ -24,6 +24,7 @@
 #include "ot_app.h"
 #include "ot_app_pair.h"
 #include "ot_app_deviceName.h"
+#include "ot_app_buffer.h"
 
 #define TAG "ot_app_dns "
 
@@ -31,7 +32,7 @@ PRIVATE otapp_pair_queueItem_t queueItem;
 
 PRIVATE int8_t otapp_dnsPairDevice(const otDnsAddressResponse *aResponse)
 {
-    char *charBuff = otapp_charBufGet_withMutex();
+    char *charBuff = (char*)otapp_buf_getWriteOnly_ptr(OTAPP_BUF_KEY_1, OTAPP_BUF_KEY_1_SIZE);
 
     if(charBuff == NULL)
     {
@@ -40,7 +41,7 @@ PRIVATE int8_t otapp_dnsPairDevice(const otDnsAddressResponse *aResponse)
     
     if(otDnsAddressResponseGetAddress(aResponse, 0, &queueItem.ipAddress, NULL) != OT_ERROR_NONE)
     {
-        otapp_charBufRelease();
+        otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
         return OTAPP_DNS_ERROR;
     }
     
@@ -48,7 +49,7 @@ PRIVATE int8_t otapp_dnsPairDevice(const otDnsAddressResponse *aResponse)
     
     if(otapp_hostNameToDeviceNameFull(charBuff) != OTAPP_DEVICENAME_OK)
     {
-        otapp_charBufRelease();
+        otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
         return OTAPP_DNS_ERROR;
     }
     
@@ -58,7 +59,7 @@ PRIVATE int8_t otapp_dnsPairDevice(const otDnsAddressResponse *aResponse)
     OTAPP_PRINTF(TAG, "DNS: Add item to queue\n");
     otapp_pair_addToQueue(&queueItem);
    
-    otapp_charBufRelease();
+    otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
 
     return OTAPP_DNS_OK;
 }
@@ -101,11 +102,11 @@ void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResp
     if (aError == OT_ERROR_NONE)
     {        
         uint16_t index = 0;
-        char *buffer = otapp_charBufGet_withMutex();
+        char *buffer = (char*)otapp_buf_getWriteOnly_ptr(OTAPP_BUF_KEY_1, OTAPP_BUF_KEY_1_SIZE);
 
         if(buffer == NULL)
         {
-            OTAPP_PRINTF(TAG, "ERROR NULL PTR FROM otapp_charBufGet_withMutex()");
+            OTAPP_PRINTF(TAG, "ERROR NULL PTR FROM getWriteOnly_ptr()");
             return;
         }
         
@@ -117,7 +118,7 @@ void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResp
             if(index == OTAPP_PAIRED_DEVICES_MAX)
             {
                 OTAPP_PRINTF(TAG, "OTAPP_PAIRED_DEVICES_MAX has been reached");
-                otapp_charBufRelease();
+                otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
                 return;
             }
 
@@ -125,7 +126,7 @@ void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResp
 
             if(otapp_deviceNameFullAddDomain(buffer, OTAPP_CHAR_BUFFER_SIZE) != OTAPP_DEVICENAME_OK)
             {
-                otapp_charBufRelease();
+                otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
                 return ;
             }
             otapp_dnsClientResolve(otapp_getOpenThreadInstancePtr(), buffer);
@@ -133,7 +134,7 @@ void otapp_dnsClientBrowseResponseCallback(otError aError, const otDnsBrowseResp
             OTAPP_PRINTF(TAG, "\n");
             index++;
         }
-        otapp_charBufRelease();
+        otapp_buf_writeUnlock(OTAPP_BUF_KEY_1);
     }
 }
 
