@@ -269,6 +269,9 @@ uint8_t* otapp_buf_getWriteOnly_ptr(uint16_t key, uint16_t required_size)
         // write will be locked for next call until call writeUnlock()
         otapp_buf_writeLock(key);
 
+        // clear buffer         
+        memset(&buf.data[entry->offset], 0, required_size);
+
         // update length (reservation)
         entry->current_len = required_size; 
     otapp_buf_mutex_unlock();
