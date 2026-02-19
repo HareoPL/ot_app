@@ -1,12 +1,12 @@
 /**
  * @file OneButton.h
- * @author Jan Łukaszewicz
  * @brief Platform-portable button detection library with multi-click and long-press support
- * @version 1.0
- * @date Nov 19, 2022
+ * @details see more information in section: @ref onebutton_libs 
  * 
  * @defgroup onebutton_libs OneButton library
  * @ingroup libs
+ * @brief Platform-portable button detection library with multi-click and long-press support
+ * @details
  * @{
  * @section onebutton_overview Overview
  * 
@@ -178,6 +178,11 @@
  * 
  * @see OneButton.c for implementation details
  * @see ad_button.h for integration with OpenThread application
+ * 
+ * @version 1.0
+ * @date Nov 19, 2022
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license
  */
 
 #ifndef INC_ONEBUTTON_H_

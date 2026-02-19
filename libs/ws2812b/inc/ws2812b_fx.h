@@ -1,28 +1,12 @@
 /**
  * @file ws2812b_fx.h
- * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief WS2812B lighting effects library - Ported from Arduino WS2812FX
- * @version 0.1
- * @date 15-04-2025
- * 
- * Library based on
- * https://github.com/lamik/WS2812B_STM32_HAL
- * 
- * @copyright The MIT License (MIT) Copyright (c) 2025
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * @brief WS2812B lighting effects library - Ported from Arduino WS2812FX Library based on https://github.com/lamik/WS2812B_STM32_HAL
+ * @details see more information in section: @ref ws2812b_fx 
  * 
  * @defgroup ws2812b_fx WS2812B Effects Library
- * @ingroup ws2812b_if
+ * @ingroup libs
+ * @brief WS2812B lighting effects library - Ported from Arduino WS2812FX Library based on https://github.com/lamik/WS2812B_STM32_HAL
+ * @details
  * @{
  * 
  * @section ws2812b_fx_desc Description
@@ -89,6 +73,11 @@
  * WS2812BFX_SetMode(1, FX_MODE_FIRE_FLICKER);
  * WS2812BFX_Start(1);
  * @endcode
+ * 
+ * @version 0.1
+ * @date 15-04-2025
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license 
  */
 
 #ifndef WS2812B_FX_H_
@@ -152,6 +141,10 @@
 #define FADE_RATE 2
 
 /**
+ * @}
+ */
+
+/**
  * @defgroup ws2812b_fx_colors Predefined Colors
  * @brief Common color constants in 0x00RRGGBB format
  * @{
@@ -168,10 +161,6 @@
 #define PURPLE  (uint32_t)0x400080   ///< Purple (dark magenta)
 #define ORANGE  (uint32_t)0xFF3000   ///< Orange (red + some green)
 #define PINK    (uint32_t)0xFF1493   ///< Pink (hot pink shade)
-
-/**
- * @}
- */
 
 /**
  * @}

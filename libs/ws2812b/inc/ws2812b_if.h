@@ -1,25 +1,12 @@
 /**
  * @file ws2812b_if.h
- * @author Jan Łukaszewicz (pldevluk@gmail.com)
  * @brief WS2812B driver interface - Hardware abstraction layer
- * @version 0.1
- * @date 15-04-2025
- * 
- * @copyright The MIT License (MIT) Copyright (c) 2025
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * @details see more information in section: @ref ws2812b_if 
  * 
  * @defgroup ws2812b_if WS2812B Interface Layer
- * @ingroup libs
+ * @ingroup ws2812b_fx
+ * @brief WS2812B driver interface - Hardware abstraction layer
+ * @details
  * @{
  * 
  * @section ws2812b_if_desc Description
@@ -40,6 +27,11 @@
  * // Update strip
  * driver->Refresh();
  * @endcode
+ * 
+ * @version 0.1
+ * @date 15-04-2025
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license 
  */
 
 #ifndef WS2812B_IF_H_
