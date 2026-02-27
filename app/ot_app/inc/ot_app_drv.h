@@ -446,7 +446,6 @@ typedef struct ot_app_devDrv_t{
 * @}
 */
 ot_app_devDrv_t *ot_app_drv_getInstance(void);
-void ot_app_drv_task(void);
 void ot_app_drv_tick(void);
 
 #endif  /* OT_APP_DRV_H_ */

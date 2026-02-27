@@ -70,6 +70,8 @@
     * - Initialize driver API instance via ot_app_drv_getInstance()
     * - Set TLV data, MAC address, device name and register callbacks
     * - Initialize modules: Pairing, COAP, SRP client, CLI (platform dependent)
+    * - **Conditional Task Creation:** Framework checks if `drv->task` is defined by the device. 
+    * If `drv->task != NULL`, it automatically spawns the internal `otapp_drv_task` FreeRTOS task.
  * - Enter idle / listen state:
     * - Listen for OpenThread events (DNS, COAP messages, device state changes)
  * - DNS / service handling:
@@ -88,8 +90,10 @@
         * - obs_subscribedUri_clb() for URI updates
         * - obs_pairedDevice_clb() when a new device is successfully paired
  * - Periodic device task:
-    * - Application main loop or RTOS task periodically calls ot_app_drv_task()
-    * - ot_app_drv_task() invokes drv->task() when provided by the device driver
+   * - If created, the framework's internal FreeRTOS task loops every 1ms.
+   * - It calls `ot_app_drv_task()`, which safely executes the user's `drv->task()` callback.
+   * - **Note:** If the specific device implementation (e.g., in `ot_device`) does not require 
+      * polling, the user simply leaves `drv->task = NULL` and no background task is created.
  *
  * This flow ensures that hardware devices are discovered, paired, registered in DNS,
  * and controlled via COAP URIs using a unified driver API.

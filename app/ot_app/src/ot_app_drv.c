@@ -64,13 +64,6 @@ static ot_app_devDrv_t ot_app_devDrv = {
     },
 };
 
-
-void ot_app_drv_task(void)
-{
-    if(ot_app_devDrv.task != NULL) 
-    ot_app_devDrv.task();
-}
-
 void ot_app_drv_tick(void)
 {
     if(ot_app_devDrv.tick != NULL) 

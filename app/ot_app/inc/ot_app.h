@@ -68,6 +68,20 @@
 #define OTAPP_DEVICE_NAME_FULL_SIZE OTAPP_DNS_SRV_LABEL_SIZE
 ///@}
 
+/** @name Driver task config */
+///@{
+
+/** * @brief Stack size (in words) for the internal driver polling task. 
+ */
+#define OTAPP_DRV_TASK_STACK        128
+
+/** * @brief Priority for the internal driver polling task. 
+ * @details Should be relatively low to allow the OpenThread network stack 
+ * and higher priority events to process efficiently.
+ */
+#define OTAPP_DRV_TASK_PRIORITY     1
+///@}
+
 typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
 
 /**
@@ -155,8 +169,13 @@ const otExtAddress *otapp_macAddrGet(void);
 
 /**
  * @brief Main initialization of the OpenThread Application Framework.
- * Initializes the driver instance, OpenThread instance (port), 
- * pairing module, and shared buffers.
+ * @details Performs the following sequence:
+ * 1. Initializes the driver singleton instance.
+ * 2. Initializes platform-specific ports (RTOS/OpenThread).
+ * 3. Sets up shared buffers and pairing modules.
+ * 4. **Spawns the internal Driver Task (Conditional)**: Automatically creates a FreeRTOS 
+ * task (`otapp_drv_task`) **ONLY IF** the application developer has assigned a valid 
+ * function pointer to the `drv->task` callback during device initialization. 
  * @return int8_t @ref OTAPP_OK on success.
  */
 int8_t otapp_init(void);

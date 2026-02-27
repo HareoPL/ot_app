@@ -213,6 +213,18 @@ static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context
     }
 }
 
+void otapp_drv_task(void *pvParameters)
+{
+    for(;;)
+    {
+        if(otapp_devDrv->task != NULL)
+        {
+            otapp_devDrv->task();
+        } 
+
+        vTaskDelay(pdMS_TO_TICKS(1));
+    }
+}
 
 ///////////////////////
 //
@@ -234,6 +246,11 @@ int8_t otapp_init() //app init
 
     openThreadInstance = otapp_port_openthread_get_instance();
     
+    if(otapp_devDrv->task != NULL)
+    {
+        xTaskCreate(otapp_drv_task, "otapp_drv_task", OTAPP_DRV_TASK_STACK, NULL, OTAPP_DRV_TASK_PRIORITY,NULL);
+    }
+
 	#ifdef ESP_PLATFORM
 		otapp_cli_init();
 	#else
