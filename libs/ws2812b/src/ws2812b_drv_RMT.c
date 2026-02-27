@@ -60,7 +60,8 @@ const ws2812b_drv_t ws2812b_if_DrvRMT = {
 
     WS2812B_if_SetOneDiode,
     WS2812B_if_SetOneDiodeRGB,
-    WS2812B_if_SetDiodeColorStruct
+    WS2812B_if_SetDiodeColorStruct,
+    ws2812b_if_init
 };
 
 const ws2812b_drv_t *ws2812b_if_getDrvRMT(void)

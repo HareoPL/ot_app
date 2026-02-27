@@ -219,7 +219,8 @@ FX_STATUS WS2812BFX_Init(const ws2812b_drv_t *drv, uint16_t Segments)
     return FX_ERROR;
   } 
   wsDrv = drv;
-
+  wsDrv->drvInitHW();
+  
 	if(Segments == 0) return FX_ERROR;
 	if(Segments > (wsDrv->GetNumberOfLeds() / 2))
 	{

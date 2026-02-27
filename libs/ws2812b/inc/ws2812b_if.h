@@ -179,6 +179,7 @@ typedef struct
      */
     void (*SetDiodeColorStruct)(int16_t DiodeID, ws2812b_color colorStruct);
     
+    void (*drvInitHW)(void);
 } ws2812b_drv_t;
 
 #endif /* WS2812B_IF_H_ */

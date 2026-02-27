@@ -308,3 +308,7 @@ void WS2812BFX_HSVtoRGB(uint16_t h, uint8_t s, uint8_t v, uint8_t *r, uint8_t *g
 
 
 #endif  /* WS2812B_FX_H_ */
+
+/**
+ * @}
+ */
