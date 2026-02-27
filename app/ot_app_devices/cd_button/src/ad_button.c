@@ -23,6 +23,7 @@
 #include "ad_button.h"
 #include "ad_btn_assign.h"
 #include "ad_btn_uri.h"
+#include "ws2812b_fx.h"
 
 #include "string.h"
 #include "ot_app_drv.h"
@@ -275,6 +276,12 @@ void ad_button_subscribedUrisCallback(oac_uri_dataPacket_t *data)
 void ad_button_task()
 {
     ad_btn_task();
+    WS2812BFX_Callback(); // FX effects calllback
+}
+
+void ad_button_tick()
+{
+    WS2812BFX_SysTickCallback();
 }
 
 //////////////////////
@@ -314,4 +321,5 @@ void ad_button_Init(char *deviceNameGroup)
     drv->deviceName = ad_button_deviceNameTab;
     drv->deviceType = &ad_button_deviceType;
     drv->task = ad_button_task;
+    drv->tick = ad_button_tick;
 }

@@ -25,6 +25,7 @@
 #include "string.h"
 #include "ot_app_drv.h"
 #include "ad_light_uri.h"
+#include "ws2812b_fx.h"
 
 #define TAG "ad_light "
 
@@ -106,7 +107,12 @@ void ad_light_subscribedUrisCallback(oac_uri_dataPacket_t *data)
 
 void ad_light_task()
 {
-   
+    WS2812BFX_Callback(); // FX effects calllback
+}
+
+void ad_light_tick()
+{
+    WS2812BFX_SysTickCallback();	                
 }
 
 //////////////////////
@@ -136,5 +142,6 @@ void ad_light_init(char *deviceNameGroup)
     drv->deviceName = ad_button_deviceNameTab;
     drv->deviceType = &ad_light_deviceType;
     drv->task = ad_light_task;
+    drv->tick = ad_light_tick;
 }
 
