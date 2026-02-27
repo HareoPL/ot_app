@@ -61,6 +61,14 @@
  * }
  * @endcode
  * 
+ * @warning remember to implement of GPDMA1_Channel2_IRQHandler:
+ * @code
+ * void GPDMA1_Channel2_IRQHandler(void)
+ * {
+ *   WS2812B_interrupt();
+ * }
+ * @endcode 
+ * 
  * @version 0.1
  * @date 15-04-2025
  * @author Jan Łukaszewicz (plhareo@gmail.com)
