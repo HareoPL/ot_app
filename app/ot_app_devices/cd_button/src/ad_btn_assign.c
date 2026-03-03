@@ -643,7 +643,9 @@ int8_t ad_btn_init(ot_app_devDrv_t *drvPtr)
 
     ad_btn_initGpio();
     ad_btn_initOnoButton();   
-    OneButtonSetTimerLongPressTick(&ot_btn_OB_handleList[1], 100); //  // ot_btn_gpioList GPIO_9
+    OneButtonSetTimerLongPressTick(&ot_btn_OB_handleList[0], OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTN1); // GPIO_3
+    OneButtonSetTimerLongPressTick(&ot_btn_OB_handleList[1], OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTN2); // GPIO_9
+    OneButtonSetTimerLongPressTick(&ot_btn_OB_handleList[2], OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTN3); // GPIO_15
 
     // load eui from nvs
     ad_btn_settingsLoad();

@@ -73,7 +73,7 @@
 
 /** * @brief Stack size (in words) for the internal driver polling task. 
  */
-#define OTAPP_DRV_TASK_STACK        128
+#define OTAPP_DRV_TASK_STACK        (3*1024)
 
 /** * @brief Priority for the internal driver polling task. 
  * @details Should be relatively low to allow the OpenThread network stack 

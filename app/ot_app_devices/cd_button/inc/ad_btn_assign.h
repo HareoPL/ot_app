@@ -24,6 +24,10 @@
 #define OT_BTN_OB_ONE_CLICK     1
 #define OT_BTN_OB_LONG_PRESS    2
 
+#define OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTN1 100 //ot_btn_gpioList[0] GPIO_3
+#define OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTN2 100 //ot_btn_gpioList[1] GPIO_9
+#define OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTN3 100 //ot_btn_gpioList[2] GPIO_15
+
 void ad_btn_task(void);
 int8_t ad_btn_init(ot_app_devDrv_t *drvPtr);
 int8_t ad_btn_assignDevice(otapp_pair_Device_t *newDevice);
