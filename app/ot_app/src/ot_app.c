@@ -27,6 +27,7 @@
 #include "ot_app_srp_client.h"
 #include "ot_app_drv.h"
 #include "ot_app_buffer.h"
+#include "ot_app_version.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -213,6 +214,16 @@ static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context
     }
 }
 
+static void ot_app_print_version(void) 
+{
+    #ifdef ESP_PLATFORM
+        OTAPP_PRINTF(TAG, "\n      [Platform ESP     version: %s]\n      [Framework ot_app version: %s]\n\n", PLATFORM_GIT_VERSION, OT_APP_GIT_VERSION);
+    #else
+        OTAPP_PRINTF(TAG, "\n      [Platform stm     version: %s]\n      [Framework ot_app version: %s]\n\n", PLATFORM_GIT_VERSION, OT_APP_GIT_VERSION);
+    #endif
+   
+}
+
 void otapp_drv_task(void *pvParameters)
 {
     for(;;)
@@ -231,7 +242,7 @@ void otapp_drv_task(void *pvParameters)
 // init functions
 //
 void otapp_network_init() // this function will be initialize in ot_task_worker rtos task (esp_ot_cli.c)
-{
+{       
     otapp_setDataset_tlv();
     
     otapp_macAddrInit();
@@ -261,6 +272,8 @@ int8_t otapp_init() //app init
 
     otapp_pair_init(otapp_devDrv);
     otapp_buffer_init();
+
+    ot_app_print_version();
 
     return OTAPP_OK;
 }
