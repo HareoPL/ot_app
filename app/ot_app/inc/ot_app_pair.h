@@ -72,7 +72,7 @@
 ///@{
 #define OTAPP_PAIR_QUEUE_LENGTH         10          ///< Depth of the pairing event queue
 #define OTAPP_PAIR_TASK_STACK_DEPTH     (128 * 17)  ///< Stack size for the pairing RTOS task
-#define OTAPP_PAIR_TASK_PRIORITY        5           ///< Priority of the pairing RTOS task
+#define OTAPP_PAIR_TASK_PRIORITY        9           ///< Priority of the pairing RTOS task
 ///@}
 
 /** @name Pairing Rules Configuration */

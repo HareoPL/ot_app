@@ -209,7 +209,7 @@ void OneButtonCallbackLongPressStop(OneButton_t *Btn, CallBackFunLongPressStop_t
 	Btn->TimerDoubleClick = 350;
 	Btn->TimerLongPressStart = 700;
 	Btn->TimerLongPressTick = 500;
-#ifdef OB_STM32_PLATFORM
+#ifdef STM_PLATFORM
 	 Btn->GpioPort = GpioPort;
 #endif
 	

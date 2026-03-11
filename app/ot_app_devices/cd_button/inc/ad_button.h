@@ -434,17 +434,57 @@
 
 #include "ot_app_drv.h"
 
-// #include "driver/gpio.h"
-#include "hal/gpio_types.h"
+#ifdef ESP_PLATFORM
+	#include "hal/gpio_types.h"
+
+	#define OT_BTN_GPIO_1_PIN 		GPIO_NUM_3
+	#define OT_BTN_GPIO_2_PIN 		GPIO_NUM_9
+	#define OT_BTN_GPIO_3_PIN 		GPIO_NUM_15
+
+	#define AD_BUTTON_NUM_OF_BUTTONS 3  ///< Total number of physical buttons
+	const static gpio_num_t ot_btn_gpioList[] = {OT_BTN_GPIO_1_PIN, OT_BTN_GPIO_2_PIN, OT_BTN_GPIO_3_PIN};
+
+#elif defined(STM_PLATFORM)
+	#include "main.h"
+
+	#define OT_BTN_GPIO_CLOCK_EN() 				\
+			do { 								\
+				__HAL_RCC_GPIOB_CLK_ENABLE();	\
+				__HAL_RCC_GPIOC_CLK_ENABLE();	\
+			} while(0)
+
+	
+	/* STM32WBA65xx */
+	#define OT_BTN_GPIO_1_PIN 			GPIO_PIN_13
+	#define OT_BTN_GPIO_1_PORT 			GPIOC
+	// #define OT_BTN_GPIO_1_EXTI_LINE    	EXTI_LINE_13
+	// #define OT_BTN_GPIO_1_EXTI_IRQn  	EXTI13_IRQn
+
+	#define OT_BTN_GPIO_2_PIN 			GPIO_PIN_5
+	#define OT_BTN_GPIO_2_PORT 			GPIOC
+	// #define OT_BTN_GPIO_2_EXTI_LINE    	EXTI_LINE_5
+	// #define OT_BTN_GPIO_2_EXTI_IRQn   	EXTI5_IRQn
+
+	#define OT_BTN_GPIO_3_PIN 			GPIO_PIN_4
+	#define OT_BTN_GPIO_3_PORT 			GPIOB
+	// #define OT_BTN_GPIO_3_EXTI_LINE   	EXTI_LINE_4
+	// #define OT_BTN_GPIO_3_EXTI_IRQn     EXTI4_IRQn
+
+	#define AD_BUTTON_NUM_OF_BUTTONS 3  ///< Total number of physical buttons. MAX 3 buttons
+
+
+#else
+  #error "Unsupported platform. Define ESP_PLATFORM or STM_PLATFORM"
+#endif
 
 /**
  * @defgroup def_factory_sec Defines for factory reset settings
  * @{
  */
-#define OT_BTN_RESET_LONGPRESS_GPIO  GPIO_NUM_9  ///< First button GPIO pin (must be held continuously)
-#define OT_BTN_RESET_ONE_CLICK_GPIO  GPIO_NUM_3  ///< Second button GPIO pin (clicked multiple times)
-#define OT_BTN_RESET_OC_CNT_RESET    5           ///< Number of one-click presses to trigger factory reset
-#define OT_BTN_RESET_TIME_MS         10000       ///< Time window in milliseconds to perform reset sequence
+#define OT_BTN_RESET_LONGPRESS_GPIO  OT_BTN_GPIO_2_PIN  ///< First button GPIO pin (must be held continuously)
+#define OT_BTN_RESET_ONE_CLICK_GPIO  OT_BTN_GPIO_1_PIN  ///< Second button GPIO pin (clicked multiple times)
+#define OT_BTN_RESET_OC_CNT_RESET    5           		///< Number of one-click presses to trigger factory reset
+#define OT_BTN_RESET_TIME_MS         10000      		///< Time window in milliseconds to perform reset sequence
 /**
  * @}
  */
@@ -463,8 +503,9 @@
  * @note Selected GPIO pins must support input mode with internal pull-up resistors
  * @{
  */
-#define AD_BUTTON_NUM_OF_BUTTONS 3  ///< Total number of physical buttons
-const static gpio_num_t ot_btn_gpioList[] = {GPIO_NUM_3, GPIO_NUM_9, GPIO_NUM_15};  ///< GPIO pin mapping for buttons
+// #define AD_BUTTON_NUM_OF_BUTTONS 3  ///< Total number of physical buttons
+// const static gpio_num_t ot_btn_gpioList[] = {OT_BTN_GPIO_1, OT_BTN_GPIO_2, OT_BTN_GPIO_3};
+
 /**
  * @}
  */

@@ -188,10 +188,8 @@
 #ifndef INC_ONEBUTTON_H_
 #define INC_ONEBUTTON_H_
 
-#include "driver/gpio.h" // for esp
 
 
-// #include "main.h"
 
 /**
  * @defgroup onebutton_platform_select Platform Selection
@@ -221,6 +219,10 @@
 
 #ifdef STM_PLATFORM
 
+ #include "main.h"
+ #include "FreeRTOS.h"
+ #include "task.h"
+
 /**
  * @brief Read GPIO pin state (STM32 HAL)
  * @return GPIO_PinState (GPIO_PIN_RESET or GPIO_PIN_SET)
@@ -231,7 +233,8 @@
  * @brief Get system tick in milliseconds (STM32 HAL)
  * @return uint32_t System time in milliseconds
  */
-#define OB_GET_TICK()            HAL_GetTick()
+// #define OB_GET_TICK()            HAL_GetTick()
+#define OB_GET_TICK()            xTaskGetTickCount()
 
 /**
  * @brief Logic level when button is pressed (STM32 - active low with pull-up)
@@ -246,7 +249,7 @@
 #endif // STM_PLATFORM
 
 #ifdef ESP_PLATFORM
-
+#include "driver/gpio.h" // for esp
 #include "xtimers.h"
 #include "ot_app.h"
 

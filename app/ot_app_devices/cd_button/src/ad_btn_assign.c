@@ -67,7 +67,11 @@ static const uint32_t rgbColorTab[OT_BTN_MAX_RGB_SWITCH_COLOR] = {
 };
 
 typedef struct {
-    gpio_num_t       gpioNum;
+    #ifdef ESP_PLATFORM
+        gpio_num_t       gpioNum;
+    #elif defined(STM_PLATFORM)
+        uint16_t        gpioNum;
+    #endif
     uint8_t         isMarkedAssign    : 1;  // button marked to be assigned to a device
 }ad_btn_btnIteams_t;
 
@@ -92,6 +96,11 @@ static softTim_t ad_btn_assignTime;
 
 typedef uint32_t (*ad_btn_uriState_callback)(uint8_t btnListId, otapp_deviceType_t uriDevType);
 void ad_btn_coapResHandle(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aResult){}
+
+#ifdef STM_PLATFORM
+	static uint16_t 		 ot_btn_gpioList[AD_BUTTON_NUM_OF_BUTTONS] 	   = {OT_BTN_GPIO_1_PIN, OT_BTN_GPIO_2_PIN, OT_BTN_GPIO_3_PIN};
+	static GPIO_TypeDef 	*ot_btn_gpioPortList[AD_BUTTON_NUM_OF_BUTTONS] = {OT_BTN_GPIO_1_PORT, OT_BTN_GPIO_2_PORT, OT_BTN_GPIO_3_PORT};
+#endif
 
 void ad_btn_task(void)
 {   
@@ -382,7 +391,7 @@ static void ad_btn_assignSetFalseAll(void)
     }
     
     ad_btn_resetStop(&ad_btn_resHandle, OT_BTN_RESET_LONGPRESS_GPIO); // stop reset sequence
-    OTAPP_PRINTF(TAG, "assignTimer stoped \n");    
+    // OTAPP_PRINTF(TAG, "assignTimer stoped \n");    
 }
 
 static int8_t ad_btn_assignNewDeviceToBtnList(otapp_pair_Device_t *newDevice)
@@ -612,29 +621,78 @@ static void ad_btn_longPressStop(uint16_t gpioNum)
 ////////////////////////////////
 // init functions
 
-static void ad_btn_initGpio(void)
-{
-    for (uint8_t i = 0; i < OT_BTN_GPIO_QTY; i++)
+#ifdef ESP_PLATFORM
+    static void ad_btn_initGpio(void)
     {
-        gpio_reset_pin(ot_btn_gpioList[i]);                         // reset to default state
-        gpio_set_direction(ot_btn_gpioList[i], GPIO_MODE_INPUT);    // set gpio as input    
-        gpio_pullup_en(ot_btn_gpioList[i]);                         // set pull-up
+        for (uint8_t i = 0; i < OT_BTN_GPIO_QTY; i++)
+        {
+            gpio_reset_pin(ot_btn_gpioList[i]);                         // reset to default state
+            gpio_set_direction(ot_btn_gpioList[i], GPIO_MODE_INPUT);    // set gpio as input    
+            gpio_pullup_en(ot_btn_gpioList[i]);                         // set pull-up
 
-        btnList[i].btn.gpioNum = ot_btn_gpioList[i];                // assigned GPIO num from gpioList. it is phisical GPIO selected 
-    }   
-}
+            btnList[i].btn.gpioNum = ot_btn_gpioList[i];                // assigned GPIO num from gpioList. it is phisical GPIO selected 
+        }   
+    }
 
-static void ad_btn_initOnoButton()
-{
-    for (uint16_t i = 0; i < OT_BTN_GPIO_QTY; i++)
+    static void ad_btn_initOnoButton()
     {
-        OneButtonInit(&ot_btn_OB_handleList[i], ot_btn_gpioList[i]);
-        OneButtonCallbackOneClick(&ot_btn_OB_handleList[i], ad_btn_oneClick);
-        OneButtonCallbackDoubleClick(&ot_btn_OB_handleList[i], ad_btn_doubleClick);
-        OneButtonCallbackLongPressStart(&ot_btn_OB_handleList[i], ad_btn_longPressStart); // the function will repeat itself until you release the button
-        OneButtonCallbackLongPressStop(&ot_btn_OB_handleList[i], ad_btn_longPressStop);
-    }       
-}
+        for (uint16_t i = 0; i < OT_BTN_GPIO_QTY; i++)
+        {
+            OneButtonInit(&ot_btn_OB_handleList[i], ot_btn_gpioList[i]);
+            OneButtonCallbackOneClick(&ot_btn_OB_handleList[i], ad_btn_oneClick);
+            OneButtonCallbackDoubleClick(&ot_btn_OB_handleList[i], ad_btn_doubleClick);
+            OneButtonCallbackLongPressStart(&ot_btn_OB_handleList[i], ad_btn_longPressStart); // the function will repeat itself until you release the button
+            OneButtonCallbackLongPressStop(&ot_btn_OB_handleList[i], ad_btn_longPressStop);
+
+            OneButtonSetTimerDebounce(&ot_btn_OB_handleList[i], OT_BTN_OB_DEBOUNCE);
+            OneButtonSetTimerLongPressTick(&ot_btn_OB_handleList[i], OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTNS);
+        }       
+    }
+
+#elif defined(STM_PLATFORM)
+
+
+/*
+	GPIOA->MODER &= ~(GPIO_MODER_MODE2); 	// clear 
+	GPIOA->MODER |= GPIO_MODER_MODE2_1; 	// set: 10: Alternate function mode
+	GPIOA->AFR[0] &= ~(GPIO_AFRL_AFSEL2); 	// clear AF2
+	GPIOA->AFR[0] |= (2 << GPIO_AFRL_AFSEL2_Pos); 	// set: AF2 for TIM3_CH1 on PA2
+*/
+    static void ad_btn_initGpio(void)
+    {
+        GPIO_InitTypeDef      GPIO_Init;
+
+        OT_BTN_GPIO_CLOCK_EN();
+
+        for (uint8_t i = 0; i < OT_BTN_GPIO_QTY; i++)
+        {
+            GPIO_Init.Pin   = ot_btn_gpioList[i];
+            GPIO_Init.Pull  = GPIO_PULLUP;
+            GPIO_Init.Speed = GPIO_SPEED_FREQ_HIGH;
+            GPIO_Init.Mode  = GPIO_MODE_INPUT;
+
+            HAL_GPIO_Init(ot_btn_gpioPortList[i], &GPIO_Init);
+
+            btnList[i].btn.gpioNum = ot_btn_gpioList[i];                // assigned GPIO num from gpioList. it is phisical GPIO selected 
+        }   
+    }
+
+    static void ad_btn_initOnoButton()
+    {
+        for (uint16_t i = 0; i < OT_BTN_GPIO_QTY; i++)
+        {
+            OneButtonInit(&ot_btn_OB_handleList[i], ot_btn_gpioPortList[i], ot_btn_gpioList[i]);
+            OneButtonCallbackOneClick(&ot_btn_OB_handleList[i], ad_btn_oneClick);
+            OneButtonCallbackDoubleClick(&ot_btn_OB_handleList[i], ad_btn_doubleClick);
+            OneButtonCallbackLongPressStart(&ot_btn_OB_handleList[i], ad_btn_longPressStart); // the function will repeat itself until you release the button
+            OneButtonCallbackLongPressStop(&ot_btn_OB_handleList[i], ad_btn_longPressStop);
+
+            OneButtonSetTimerDebounce(&ot_btn_OB_handleList[i], OT_BTN_OB_DEBOUNCE);
+            OneButtonSetTimerLongPressTick(&ot_btn_OB_handleList[i], OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTNS); // GPIO_3
+        }       
+    }
+
+#endif
 
 int8_t ad_btn_init(ot_app_devDrv_t *drvPtr)
 {
@@ -643,10 +701,7 @@ int8_t ad_btn_init(ot_app_devDrv_t *drvPtr)
 
     ad_btn_initGpio();
     ad_btn_initOnoButton();   
-    OneButtonSetTimerLongPressTick(&ot_btn_OB_handleList[0], OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTN1); // GPIO_3
-    OneButtonSetTimerLongPressTick(&ot_btn_OB_handleList[1], OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTN2); // GPIO_9
-    OneButtonSetTimerLongPressTick(&ot_btn_OB_handleList[2], OT_BTN_OB_LONG_PRESS_TICK_DELEY_BTN3); // GPIO_15
-
+    
     // load eui from nvs
     ad_btn_settingsLoad();
     SoftTim_init(&ad_btn_assignTime, ad_btn_assignSetFalseAll, 1);

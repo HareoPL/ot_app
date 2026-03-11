@@ -79,7 +79,7 @@
  * @details Should be relatively low to allow the OpenThread network stack 
  * and higher priority events to process efficiently.
  */
-#define OTAPP_DRV_TASK_PRIORITY     1
+#define OTAPP_DRV_TASK_PRIORITY     6
 ///@}
 
 typedef struct ot_app_devDrv_t ot_app_devDrv_t; // forward declaration
