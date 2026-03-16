@@ -26,6 +26,8 @@
 #include "ot_app_deviceName.h"
 #include "ot_app_srp_client.h"
 #include "ot_app_drv.h"
+#include "ot_app_buffer.h"
+#include "ot_app_version.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,11 +53,6 @@ static otInstance *openThreadInstance;
 const static otIp6Address *otapp_Ip6Address;
 
 static otExtAddress otapp_factoryEUI_64;
-
-static char otapp_charBuf[OTAPP_CHAR_BUFFER_SIZE];
-static SemaphoreHandle_t otapp_mutexBuf;
-
-
 
 static const otIp6Address ot_app_multicastAddr = {
     .mFields.m8 = {
@@ -127,22 +124,6 @@ ot_app_devDrv_t *otapp_getDevDrvInstance(void)
     return otapp_devDrv;
 }
 
-/////////////////////////
-// char buffer
-//
-char *otapp_charBufGet_withMutex()
-{
-    if(xSemaphoreTake(otapp_mutexBuf, portMAX_DELAY) == pdTRUE)
-    {
-        return otapp_charBuf;
-    }
-    return NULL; // it should never come here
-}
-
-void otapp_charBufRelease()
-{
-    xSemaphoreGive(otapp_mutexBuf);
-}
 
 #ifdef ESP_PLATFORM
 	void otapp_cli_init(void)
@@ -211,12 +192,16 @@ static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context
 
     if (flags & OT_CHANGED_THREAD_RLOC_ADDED) 
     {
-        otapp_coapSendDeviceNamePut();
         otapp_srpClientUpdateHostAddress(otapp_getOpenThreadInstancePtr());
         
         result = otapp_pair_subSendUpdateIP(otapp_pair_getHandle());
         if(result != OTAPP_PAIR_ERROR)
         {
+            if(result == 0)
+            {
+                otapp_coapSendDeviceNamePut();
+            }
+            
             OTAPP_PRINTF(TAG, "Num of updated sub: %d\n", result);
         }
 
@@ -229,13 +214,35 @@ static void otapp_deviceStateChangedCallback(otChangedFlags flags, void *context
     }
 }
 
+static void ot_app_print_version(void) 
+{
+    #ifdef ESP_PLATFORM
+        OTAPP_PRINTF(TAG, "\n      [Platform ESP     version: %s]\n      [Framework ot_app version: %s]\n\n", PLATFORM_GIT_VERSION, OT_APP_GIT_VERSION);
+    #else
+        OTAPP_PRINTF(TAG, "\n      [Platform stm     version: %s]\n      [Framework ot_app version: %s]\n\n", PLATFORM_GIT_VERSION, OT_APP_GIT_VERSION);
+    #endif
+   
+}
+
+void otapp_drv_task(void *pvParameters)
+{
+    for(;;)
+    {
+        if(otapp_devDrv->task != NULL)
+        {
+            otapp_devDrv->task();
+        } 
+
+        vTaskDelay(pdMS_TO_TICKS(1));
+    }
+}
 
 ///////////////////////
 //
 // init functions
 //
 void otapp_network_init() // this function will be initialize in ot_task_worker rtos task (esp_ot_cli.c)
-{
+{       
     otapp_setDataset_tlv();
     
     otapp_macAddrInit();
@@ -250,6 +257,11 @@ int8_t otapp_init() //app init
 
     openThreadInstance = otapp_port_openthread_get_instance();
     
+    if(otapp_devDrv->task != NULL)
+    {
+        xTaskCreate(otapp_drv_task, "otapp_drv_task", OTAPP_DRV_TASK_STACK, NULL, OTAPP_DRV_TASK_PRIORITY,NULL);
+    }
+
 	#ifdef ESP_PLATFORM
 		otapp_cli_init();
 	#else
@@ -257,8 +269,11 @@ int8_t otapp_init() //app init
 	#endif
 
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
-    otapp_mutexBuf = xSemaphoreCreateMutex();
+
     otapp_pair_init(otapp_devDrv);
-    
+    otapp_buffer_init();
+
+    ot_app_print_version();
+
     return OTAPP_OK;
 }

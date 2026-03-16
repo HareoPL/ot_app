@@ -1,14 +1,11 @@
 /**
  * @mainpage OpenThread Application Framework
  * @section intro_sec Introduction
- * 
  * Welcome to the **OpenThread Application Framework** documentation!
- * 
  * The OpenThread Application Framework is a comprehensive middleware solution for building
  * Thread-based IoT devices. It provides a clean abstraction layer between OpenThread/CoAP
  * protocols and device-specific hardware implementations, enabling rapid development of
  * smart home devices such as buttons, lights, switches, and sensors.
- * 
  * **Key Features:**
  * - ✅ Device abstraction layer with unified API
  * - ✅ Automatic device discovery and pairing
@@ -20,12 +17,9 @@
  * - ✅ Configurable pairing rules and device filtering
  * - ✅ Factory reset capability
  * - ✅ Multi-platform support (STM32, ESP32)
- * 
  * @section framework_architecture Framework Architecture
- * 
  * The framework follows a layered architecture that separates concerns and provides
  * clear abstraction boundaries:
- * 
  * ```
  * ┌────────────────────────────────────────────────────────────┐
  * │              Application/Device Layer                      │
@@ -52,13 +46,13 @@
  * │  │  - Device lifecycle management                       │  │
  * │  └──────────────────────────────────────────────────────┘  │
  * ├────────────────────────────────────────────────────────────┤
- * │           Protocol Stack (OpenThread + CoAP)               │
+ * │            Protocol Stack (OpenThread + CoAP)              │
  * │  - Thread mesh networking                                  │
  * │  - IPv6 addressing                                         │
  * │  - CoAP protocol                                           │
  * │  - Network commissioning                                   │
  * ├────────────────────────────────────────────────────────────┤
- * │         Hardware Abstraction Layer (HAL)                   │
+ * │          Hardware Abstraction Layer (HAL)                  │
  * │  - GPIO drivers (buttons, LEDs)                            │
  * │  - Timer drivers                                           │
  * │  - Peripheral drivers (SPI, I2C, UART)                     │
@@ -66,347 +60,298 @@
  * └────────────────────────────────────────────────────────────┘
  * ```
  * @section app_flow Application Flow
-*
-* The application is built around the OpenThread Application Framework and the device driver API
-* defined in @ref ot_app_device_api.
-*
-* **High-level runtime flow:**
-* - OpenThread APP init:
-*   - Configure Thread stack and commissioning modules
-*   - Initialize driver API instance via ot_app_drv_getInstance()
-*   - Set TLV data, MAC address, device name and register callbacks
-*   - Initialize modules: Pairing, COAP, SRP client, CLI (platform dependent)
-* - Enter idle / listen state:
-*   - Listen for OpenThread events (DNS, COAP messages, device state changes)
-* - DNS / service handling:
-*   - If DNS server is online, add services to DNS server and periodically check leases
-*   - Browse services and update pairing state if RLOC changes
-* - Device pairing and observer registration:
-*   - Process responses from OpenThread and add URI indexes to the device list
-*   - Register observers for paired devices and subscribed URIs
-* - COAP message processing:
-*   - Handle COAP messages from DNS and direct device URIs
-*   - Route requests to:
-*     - pairing_services URIs,
-*     - subscribed_uris,
-*     - device-specific URIs (device API)
-*   - For paired devices call:
-*     - obs_subscribedUri_clb() for URI updates
-*     - obs_pairedDevice_clb() when a new device is successfully paired
-* - Periodic device task:
-*   - Application main loop or RTOS task periodically calls ot_app_drv_task()
-*   - ot_app_drv_task() invokes drv->task() when provided by the device driver
-*
-* This flow ensures that hardware devices are discovered, paired, registered in DNS,
-* and controlled via COAP URIs using a unified driver API.
-*
-* <a href="app_flow.png" target="_blank">
-*   <img src="app_flow.png" alt="OpenThread app flow" width="600">
-* </a>
-*
-*
+ *
+ * The application is built around the OpenThread Application Framework and the device driver API
+ * defined in @ref ot_app_device_api.
+ *
+ * **High-level runtime flow:**
+ * - OpenThread APP init:
+    * - Configure Thread stack and commissioning modules
+    * - Initialize driver API instance via ot_app_drv_getInstance()
+    * - Set TLV data, MAC address, device name and register callbacks
+    * - Initialize modules: Pairing, COAP, SRP client, CLI (platform dependent)
+    * - **Conditional Task Creation:** Framework checks if `drv->task` is defined by the device. 
+    * If `drv->task != NULL`, it automatically spawns the internal `otapp_drv_task` FreeRTOS task.
+ * - Enter idle / listen state:
+    * - Listen for OpenThread events (DNS, COAP messages, device state changes)
+ * - DNS / service handling:
+    * - If DNS server is online, add services to DNS server and periodically check leases
+    * - Browse services and update pairing state if RLOC changes
+ * - Device pairing and observer registration:
+    * - Process responses from OpenThread and add URI indexes to the device list
+    * - Register observers for paired devices and subscribed URIs
+ * - COAP message processing:
+    * - Handle COAP messages from DNS and direct device URIs
+    * - Route requests to:
+        * - pairing_services URIs,
+        * - subscribed_uris,
+        * - device-specific URIs (device API)
+    * - For paired devices call:
+        * - obs_subscribedUri_clb() for URI updates
+        * - obs_pairedDevice_clb() when a new device is successfully paired
+ * - Periodic device task:
+   * - If created, the framework's internal FreeRTOS task loops every 1ms.
+   * - It calls `ot_app_drv_task()`, which safely executes the user's `drv->task()` callback.
+   * - **Note:** If the specific device implementation (e.g., in `ot_device`) does not require 
+      * polling, the user simply leaves `drv->task = NULL` and no background task is created.
+ *
+ * This flow ensures that hardware devices are discovered, paired, registered in DNS,
+ * and controlled via COAP URIs using a unified driver API.
+ *
+ * <a href="app_flow.png" target="_blank">
+ * <img src="app_flow.png" alt="OpenThread app flow" width="600">
+ * </a>
+ *
+ *
  * @section quick_start Quick Start
-*
-* This section shows how to configure and run a simple OpenThread setup with:
-* - Controller device: Button device (ad_button)
-* - Target device: RGB light device (ad_light + ad_light_control + WS2812B)
-*
-* **1. Hardware Setup (example ESP32-C6):**
-* - Connect 3 momentary buttons to GPIOs, with pull‑ups enabled:
-*   - BUTTON_1 → GPIO 3
-*   - BUTTON_2 → GPIO 9
-*   - BUTTON_3 → GPIO 15
-*
-* @see @ref device_button Button Device
-*
-* - Connect RGB LED strip (WS2812B) data line to a single GPIO used by the RMT driver:
-*   - WS2812B DIN → GPIO 8 
-*
-* @see @ref device_light Light Device
-*
-* **2. Software Integration – Light Device (target, based on main.c):**
-* The main application initializes the light device, OpenThread framework, WS2812B driver and timers 
-* @code{.c}
-*
-* void app_main(void)
-* {
-* //////////////////////////////////////////////////
-* // add device init here
-* 
-*    // ad_button_Init("device1");
-*    ad_light_init("device1");
-* 
-* //////////////////////////////////////////////////
-* // DO NOT EDIT BELOW //
-* 
-*     otapp_init();    
-* 
-*     xTim_Init();                                // init freeRTOS soft timers
-* 
-*     ws2812b_if_init();                          // init interface - RMT
-*     WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);  // init ws leds
-*     
-*     WS2812BFX_SetSpeed(0, 100);	                // Speed of segment 0
-*     WS2812BFX_SetColorRGB(0, 0, 0, 5);	        // Set color 0
-*     WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	// Set mode segment 0
-*     WS2812BFX_Start(0);	                        // Start segment 0       
-*     
-*     while (1) 
-*     {
-*         WS2812BFX_Callback();	                // FX effects calllback     
-*         ot_app_drv_task();
-*         vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog
-*     }
-* }
-* @endcode
-*
-* **3. Software Integration – Button Device (controller):**
-* On another node, use the button device as controller 
-* @code{.c}
-*
-* void app_main(void)
-* {
-* //////////////////////////////////////////////////
-* // add device init here
-* 
-*    ad_button_Init("device1");
-*    // ad_light_init("device1");
-* 
-* //////////////////////////////////////////////////
-* // DO NOT EDIT BELOW //
-* 
-*     otapp_init();    
-* 
-*     xTim_Init();                                // init freeRTOS soft timers
-* 
-*     ws2812b_if_init();                          // init interface - RMT
-*     WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);  // init ws leds
-*     
-*     WS2812BFX_SetSpeed(0, 100);	                // Speed of segment 0
-*     WS2812BFX_SetColorRGB(0, 0, 0, 5);	        // Set color 0
-*     WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);	// Set mode segment 0
-*     WS2812BFX_Start(0);	                        // Start segment 0       
-*     
-*     while (1) 
-*     {
-*         WS2812BFX_Callback();	                // FX effects calllback     
-*         ot_app_drv_task();
-*         vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog
-*     }
-* }
-* @endcode
-*
-* **4. Pair and Control Devices:**
-* - Ensure both devices use the same device name group, e.g. "device1" 
-* - On the button device, perform the pairing procedure described in @ref pairing_procedure "Procedure for Assigning a New Device to a Button" .
-* - After successful pairing:
-*   - Button clicks are mapped to URIs defined in @ref device_btn_uri and @ref device_butn_dim.
-*   - The light device handles URIs defined in @ref device_light_uri and updates RGB output via @ref ad_light_control and WS2812B driver.
-*
-*
-* @see @ref ot_app_device_api "Device API (ot_app_drv.h)" - main API for OpenThread hardware application
-* @see @ref device_button for button device implementation
-* @see @ref device_light for light device implementation
- * 
+ *
+ * This section shows how to configure and run a simple OpenThread setup with:
+ * - Controller device: Button device (ad_button)
+ * - Target device: RGB light device (ad_light + ad_light_control + WS2812B)
+ *
+ * **1. Hardware Setup (example ESP32-C6):**
+ * - Connect 3 momentary buttons to GPIOs, with pull‑ups enabled:
+ * - BUTTON_1 → GPIO 3
+ * - BUTTON_2 → GPIO 9
+ * - BUTTON_3 → GPIO 15
+ *
+ * @see @ref device_button Button Device
+ *
+ * - Connect RGB LED strip (WS2812B) data line to a single GPIO used by the RMT driver:
+ * - WS2812B DIN → GPIO 8 
+ *
+ * @see @ref device_light Light Device
+ *
+ * **2. Software Integration – Light Device (target, based on main.c):**
+ * The main application initializes the light device, OpenThread framework, WS2812B driver and timers 
+ * @code{.c}
+ *
+ * void app_main(void)
+ * {
+ * //////////////////////////////////////////////////
+ * // add device init here
+ * // ad_button_Init("device1");
+ * ad_light_init("device1");
+ * //////////////////////////////////////////////////
+ * // DO NOT EDIT BELOW //
+ * otapp_init();    
+ * xTim_Init();                                // init freeRTOS soft timers
+ * ws2812b_if_init();                          // init interface - RMT
+ * WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);  // init ws leds
+ * WS2812BFX_SetSpeed(0, 100);                 // Speed of segment 0
+ * WS2812BFX_SetColorRGB(0, 0, 0, 5);          // Set color 0
+ * WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);   // Set mode segment 0
+ * WS2812BFX_Start(0);                         // Start segment 0       
+ * while (1) 
+ * {
+ * WS2812BFX_Callback();                   // FX effects calllback     
+ * ot_app_drv_task();
+ * vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog
+ * }
+ * }
+ * @endcode
+ *
+ * **3. Software Integration – Button Device (controller):**
+ * On another node, use the button device as controller 
+ * @code{.c}
+ *
+ * void app_main(void)
+ * {
+ * //////////////////////////////////////////////////
+ * // add device init here
+ * ad_button_Init("device1");
+ * // ad_light_init("device1");
+ * //////////////////////////////////////////////////
+ * // DO NOT EDIT BELOW //
+ * otapp_init();    
+ * xTim_Init();                                // init freeRTOS soft timers
+ * ws2812b_if_init();                          // init interface - RMT
+ * WS2812BFX_Init(ws2812b_if_getDrvRMT(), 1);  // init ws leds
+ * WS2812BFX_SetSpeed(0, 100);                 // Speed of segment 0
+ * WS2812BFX_SetColorRGB(0, 0, 0, 5);          // Set color 0
+ * WS2812BFX_SetMode(0, FX_MODE_COLOR_WIPE);   // Set mode segment 0
+ * WS2812BFX_Start(0);                         // Start segment 0       
+ * while (1) 
+ * {
+ * WS2812BFX_Callback();                   // FX effects calllback     
+ * ot_app_drv_task();
+ * vTaskDelay(pdMS_TO_TICKS(1));           // this has to be here for refresch watchdog
+ * }
+ * }
+ * @endcode
+ *
+ * **4. Pair and Control Devices:**
+ * - Ensure both devices use the same device name group, e.g. "device1" 
+ * - On the button device, perform the pairing procedure described in @ref pairing_procedure "Procedure for Assigning a New Device to a Button" .
+ * - After successful pairing:
+    * - Button clicks are mapped to URIs defined in @ref device_btn_uri and @ref device_butn_dim.
+    * - The light device handles URIs defined in @ref device_light_uri and updates RGB output via @ref ad_light_control and WS2812B driver.
+ *
+ *
+ * @see @ref ot_app_device_api "Device API (ot_app_drv.h)" - main API for OpenThread hardware application
+ * @see @ref device_button for button device implementation
+ * @see @ref device_light for light device implementation
  * @subsection feature_device_abstraction Device Abstraction
- * 
  * The framework provides a unified API for creating different device types:
  * - **Button devices** - Control switches with single/double/long-press
  * - **Light devices** - Dimmable and color-changing lights
  * - **Sensor devices** - Temperature, humidity, motion sensors
  * - **Custom devices** - Extend framework for new device types
- * 
  * @subsection feature_auto_pairing Automatic Device Pairing
- * 
  * Built-in discovery and pairing mechanisms:
  * - **Device discovery** - Automatic detection of OpenThread devices
  * - **Device name groups** - Logical grouping for controlled pairing
  * - **Pairing rules** - Configurable device type filtering
  * - **Persistent storage** - NVS-based pairing data persistence
- * 
  * @subsection feature_coap_api CoAP Application API
- * 
  * Simplified CoAP resource management:
  * - **URI registration** - Easy endpoint definition
  * - **CoAP Observe** - Subscribe to device state changes
  * - **Request handlers** - GET/POST/PUT method support
  * - **Response builders** - Simplified payload creation
- * 
  * @subsection feature_hw_abstraction Hardware Abstraction
- * 
  * Clean separation between application and hardware:
  * - **Driver interface** - Platform-independent API
  * - **Callback system** - Event-driven architecture
  * - **Multi-platform** - ESP32, STM32, portable to others
  * - **Hardware libraries** - OneButton, WS2812B, timers, etc.
- * 
  * @section device_grouping Device Name Grouping
- * 
  * The framework supports **device name groups** for organized pairing and network segmentation.
- * 
  * **What is a Device Name Group?**
  * - A string identifier (max 9 characters) that groups related devices
  * - Enables pairing only between devices in the same group
  * - Prevents accidental pairing across different rooms or zones
- * 
  * **Common Grouping Strategies:**
- * 
  * **Room-Based Grouping:**
  * @code{.c}
  * ad_button_Init("kitchen");   // Kitchen devices
  * ad_button_Init("bedroom1");  // Bedroom 1 devices
  * ad_button_Init("garage");    // Garage devices
  * @endcode
- * 
  * **Function-Based Grouping:**
  * @code{.c}
  * ad_button_Init("lights");    // All lighting control
  * ad_button_Init("security");  // Security system
  * ad_button_Init("climate");   // HVAC control
  * @endcode
- * 
  * **Building-Based Grouping:**
  * @code{.c}
  * ad_button_Init("house_a");   // Main house
  * ad_button_Init("house_b");   // Guest house
  * ad_button_Init("workshop");  // Workshop building
  * @endcode
- * 
  * @note Both controller and target device must have matching name groups to pair
  * @see @ref device_naming for detailed device name group guide
- * 
  * @section modules_sec Framework Modules
- * 
- * ### Core Framework Components
- * - **Device Management** - Discovery, pairing, device lifecycle
- * - **CoAP Application Layer** - URI handlers, observers, resource management
- * - **Device Driver Interface** - Callback system, task management
- * 
+ *
+ * ### Core & Infrastructure
+ * - @ref ot_app_core "Application Core" – System initialization, global configuration, and core type definitions. 
+ * - @ref ot_app_buffer "Shared Buffer Management" – Thread-safe, key-based memory pool for zero-copy data processing. 
+ * - @ref ot_app_msg_tlv "TLV Message Buffer" – Serialization engine for Type-Length-Value data structures in constrained payloads. 
+ *
+ * ### CoAP Communication Stack
+ * - @ref ot_app_coap "CoAP Server Engine" – Unified interface for sending responses (ACK/DATA) and handling UDP traffic. 
+ * - @ref ot_app_coap_handlers "Resource Handlers" – Application-specific URI handlers for hardware control and pairing services. 
+ * - @ref ot_app_coap_obs "Observe Registry" – Server-side registry managing remote subscribers and asynchronous notifications. 
+ *
+ * ### Discovery & Network Identity
+ * - @ref ot_app_deviceName "Device Naming" – Unique hostname generation and group-based filtering for organized pairing. 
+ * - @ref ot_app_srp "SRP Client" – Automated service registration (Advertising) for device discoverability.
+ * - @ref ot_app_dns "DNS Discovery" – Active scanning (Browsing) and hostname resolution for finding remote services.
+ * - @ref ot_app_dataset "Dataset Management" – Storage and application of operational network credentials. 
+ *
+ * ### Pairing & Hardware Abstraction
+ * - @ref ot_app_pair "Device Pairing" – Rule-based pairing logic, trusted device list management, and capability exchange. 
+ * - @ref ot_app_device_api "Device Driver Interface" – Unified singleton API bridging network logic and physical hardware.
+ *
+ * ### Platform Porting Layer
+ * - @ref ot_app_port_rtos "RTOS Port" – Unified inclusion of FreeRTOS headers for multi-platform compatibility.
+ * - @ref ot_app_port_ot "OpenThread Port" – Abstraction for OpenThread stack instance retrieval.
+ * - @ref ot_app_port_nvs "NVS Storage Port" – Abstraction layer for persistent storage (Flash/EEPROM).
+ *
+ * </br> see more: - @ref ot_app "OTApp modules details"
+ *
  * ### Device Implementations
  * - @ref device_button "Button Device" - Three-button control device
  * - @ref device_btn_assign "Button Assignment" - Device pairing and button mapping
  * - @ref device_btn_uri "URI Management" - CoAP endpoint handlers
  * - @ref device_butn_dim "Brightness Control" - Adaptive dimming algorithm
- * 
  * ### Hardware Libraries
  * - @ref libs "Utility Libraries" - OneButton, Software Timers, SPIFFS, WS2812B
  * - @ref drivers "Hardware Drivers" - GPIO, timers, peripheral drivers
- * 
  * @section button_functions Button Functions (Example Device)
- * 
  * Each button supports multiple interaction types:
- * 
  * | Button Action | Function | Example Use Case |
  * |---------------|----------|------------------|
  * | **Single-click** | Toggle on/off | Turn light on or off |
  * | **Double-click** | Change mode/color | Cycle through light colors |
  * | **Long-press** | Continuous adjustment | Dim or brighten light |
- * 
  * @section pairing_rules Flexible Pairing Rules
- * 
  * Three predefined pairing rule sets:
  * - **Custom Rules** - Allow only specific device types (default: lighting devices)
  * - **Allow All** - Pair with any OpenThread device
  * - **Block All** - Disable pairing (security/maintenance mode)
- * 
  * @section coap_integration CoAP Integration
- * 
  * Example device endpoints:
  * - `btn/state` - Button state queries and notifications
  * - `light/state` - Light on/off state
  * - `light/brightness` - Brightness control
  * - `light/color` - RGB color control
- * 
  * All endpoints support CoAP Observe for real-time updates.
- * 
  * @section platform_support Platform Support
- * 
  * The framework provides multi-platform support through compile-time configuration:
- * 
  * | Platform | Microcontroller | SDK/HAL | Status |
  * |----------|----------------|---------|--------|
  * | **ESP32** | ESP32-C6 | ESP-IDF | ✅ Active |
  * | **STM32** | STM32 series | STM32 HAL | ⏳ In progress |
  * | **Custom** | Any | User-defined | 🔧 Portable |
- * 
  * @section documentation_pages Documentation Pages
- * * - @subpage getting_started "Getting Started Guide"
+ * - @subpage getting_started "Getting Started Guide"
  * <br>Step-by-step guide: configuring the ESP-IDF environment, building a project for various roles (Border Router, Control Panel, Controller) and the first run of hardware examples.
- * * - @subpage architecture_and_design_patterns "Architecture and Design Patterns"
+ * - @subpage architecture_and_design_patterns "Architecture and Design Patterns"
  * <br>Detailed technical documentation describing the framework architecture, design patterns used (including Singleton, Observer, Facade) and RTOS techniques (queues, mutexes) and driver structures.
- * * - @subpage device_naming "Device Name Group Guide"
+ * - @subpage device_naming "Device Name Group Guide"
  * - @subpage platform_setup "Platform Setup Instructions"
  * - @subpage configuration "Configuration Guide"
  * - @subpage api_reference "API Reference"
  * - @subpage examples "Code Examples"
- * 
  * @section resources_sec Additional Resources
- * 
  * - **OpenThread Official Site:** https://openthread.io/
  * - **ESP-IDF Documentation:** https://docs.espressif.com/projects/esp-idf/
  * - **STM32 HAL Documentation:** https://www.st.com/
  * - **Thread Group:** https://www.threadgroup.org/
- * 
- * * @section unit_tests Unit Tests
+ * @section unit_tests Unit Tests
  *
- * The OpenThread Application Framework is covered by a set of unit tests
- * that verify core functionality of pairing, URI handling, device names
- * and RTOS integration.
+ * The OpenThread Application Framework is covered by a comprehensive set of unit tests
+ * that verify core functionality of pairing, URI handling, device names, 
+ * memory management, and RTOS integration.
  *
  * **Available test modules:**
  * - `ot_app_pair_test.c` – tests device pairing logic, device lists and rules
  * - `ot_app_pair_uri_test.c` – tests URI pairing, URI ID lookup and mappings
  * - `ot_app_coap_uri_obs_test.c` – tests CoAP URI observe handling, subscription
- *   updates and observer callbacks
+ * updates and observer callbacks
  * - `ot_app_deviceName_test.c` – tests device name parsing, EUI extraction
- *   and comparison functions
+ * and comparison functions
  * - `ot_app_pair_rtos_test.c` – tests pairing behavior and callbacks in an
- *   RTOS/task-based environment
+ * RTOS/task-based environment
+ * - `ot_app_buffer_test.c` – verifies thread-safe shared buffer operations, mutex
+ * locking mechanics, boundary protection, and race condition resilience
+ * - `ot_app_msg_tlv_test.c` – validates TLV serialization logic, packed
+ * structure handling, and buffer boundary enforcement
  *
- * The tests are designed to run on the host using a UNITY framework, fff framework
+ * The tests are designed to run on the host using the UNITY framework, fff mocking framework,
  * and mocked OpenThread / platform APIs. They serve as executable
  * documentation for the behavior of the core modules.
  *
  * @see ot_app_pair.h for pairing data structures and APIs
  * @see ot_app_coap_uri_obs.h for URI observe management
+ * @see ot_app_buffer.h for shared buffer safety mechanisms
  * @see ot_app_drv.h for driver API used by the tests
  *
  *
  * @section author_sec Author & License
- * 
- * **Author:** Jan Łukaszewicz (pldevluk@gmail.com)
- * 
- * **License:** MIT License
- * 
- * Copyright (c) 2025
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
- * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license 
  * @note This documentation was generated using Doxygen
  */
-  
-
-/**
- * @defgroup devices Device Implementations
- * @brief Hardware device implementations using the framework
- * 
- * Concrete device implementations built on top of the OpenThread Application Framework.
- */
-
-/**
- * @defgroup libs Utility Libraries
- * @brief Reusable libraries and utilities
- * 
- * Platform-portable libraries for hardware abstraction and common functionality.
- */
-
-

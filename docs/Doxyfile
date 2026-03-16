@@ -1004,8 +1004,22 @@ WARN_LOGFILE           =
 # directories like /usr/src/myproject. Separate the files or directories with
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
-
-INPUT                  = C:/.Code/ESP32/esp32-c6_apps/esp32-c6_devices/
+# INPUT                  = C:/.Code/ESP32/ot_app/
+INPUT                  = ../ \
+                         ./docs \
+                         ./app/ot_app \
+                         ./app/ot_app/src \
+                         ./app/ot_app/inc \
+                         ./app/ot_app/port \
+                         ./app/ot_app_devices_example \
+                         ./app/ot_app_devices_example/cd_button \
+                         ./app/ot_app_devices_example/cd_button/inc \
+                         ./app/ot_app_devices_example/cd_button/src \
+                         ./app/ot_app_devices_example/ed_light/inc \
+                         ./app/ot_app_devices_example/ed_light/src \
+                         ./app/utils \
+                         ./unit_test \
+                         mainPage.dox
 
 # This tag can be used to specify the character encoding of the source files
 # that Doxygen parses. Internally Doxygen uses the UTF-8 encoding. Doxygen uses
@@ -1045,7 +1059,11 @@ INPUT_FILE_ENCODING    =
 # provided as Doxygen C comment), *.py, *.pyw, *.f90, *.f95, *.f03, *.f08,
 # *.f18, *.f, *.for, *.vhd, *.vhdl, *.ucf, *.qsf and *.ice.
 
-FILE_PATTERNS          = *.c *.h *.cpp *.dox *.md
+FILE_PATTERNS          = *.c \
+                         *.h \
+                         *.cpp \
+                         *.dox \
+                         *.md
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.

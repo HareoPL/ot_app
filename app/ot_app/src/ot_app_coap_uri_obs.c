@@ -25,7 +25,7 @@
 
 static oac_uri_observer_t oac_obsSubList[OAC_URI_OBS_SUBSCRIBERS_MAX_NUM];
 static oac_uri_dataPacket_t oac_dataPacket;
-static uint8_t oac_txRxBuffer[OAC_URI_OBS_TX_BUFFER_SIZE];
+static uint8_t oac_txRxBuffer[OAC_URI_OBS_TX_BUFFER_SIZE]; // todo replace ot_app_buffer.h
 
 ///////////////////////
 // fn for devName
@@ -600,6 +600,7 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, const otIp6Address 
 {
 
     uint16_t numOfnotifications = 0;
+    uint16_t dataSendSize = 0;
     if(subListHandle == NULL || dataToNotify == NULL || uriIndex == 0)
     {
         return OAC_URI_OBS_ERROR;
@@ -634,13 +635,14 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, const otIp6Address 
 
                         // copy token to tx buffer
                         memcpy(oac_txRxBuffer, subListHandle[i].uri[j].token, OAC_URI_OBS_TOKEN_LENGTH);
-                        
+                        dataSendSize = OAC_URI_OBS_TOKEN_LENGTH;
+
                         // increase tx buffer ptr about token lenght
                         // copy dataToNotify to tx buffer 
                         memcpy(oac_txRxBuffer + OAC_URI_OBS_TOKEN_LENGTH, dataToNotify, dataSize);
-
+                        dataSendSize += dataSize;
                         // send data to subscriber
-                        otapp_coapSendPutUri_subscribed_uris(&subListHandle[i].ipAddr, oac_txRxBuffer, sizeof(oac_txRxBuffer));
+                        otapp_coapSendPutUri_subscribed_uris(&subListHandle[i].ipAddr, oac_txRxBuffer, dataSendSize);
                         numOfnotifications++;
                         
                     }
@@ -653,9 +655,9 @@ int8_t oac_uri_obs_notify(oac_uri_observer_t *subListHandle, const otIp6Address 
     return numOfnotifications;
 }
 
-int8_t oac_uri_obs_parseMessageFromNotify(const uint8_t *inBuffer, oac_uri_dataPacket_t *out)
+int8_t oac_uri_obs_parseMessageFromNotify(const uint8_t *inBuffer, const uint16_t dataSize, oac_uri_dataPacket_t *out)
 {
-    if(inBuffer == NULL || out == NULL)
+    if(inBuffer == NULL || out == NULL || dataSize == 0 || dataSize <= OAC_URI_OBS_TOKEN_LENGTH)
     {
         return OAC_URI_OBS_ERROR; 
     }
@@ -667,7 +669,7 @@ int8_t oac_uri_obs_parseMessageFromNotify(const uint8_t *inBuffer, oac_uri_dataP
     memcpy(out->token, bufPtr, OAC_URI_OBS_TOKEN_LENGTH); // OAC_URI_OBS_TOKEN_LENGTH
     
     bufPtr += OAC_URI_OBS_TOKEN_LENGTH;
-    memcpy(out->buffer, bufPtr, OAC_URI_OBS_BUFFER_SIZE); // OAC_URI_OBS_BUFFER_SIZE
+    memcpy(out->buffer, bufPtr, dataSize - OAC_URI_OBS_TOKEN_LENGTH); // OAC_URI_OBS_BUFFER_SIZE
 
     return OAC_URI_OBS_OK;
 }

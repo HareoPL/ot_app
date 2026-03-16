@@ -1,0 +1,8 @@
+#ifndef OT_APP_VERSION_H
+#define OT_APP_VERSION_H
+
+/* This file is generated automatically by CMake. Don't edit it manually in the build folder! */
+#define PLATFORM_GIT_VERSION "@PLATFORM_VERSION@"
+#define OT_APP_GIT_VERSION "@OT_APP_VERSION@"
+
+#endif // OT_APP_VERSION_H

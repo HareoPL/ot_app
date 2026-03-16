@@ -1,19 +1,13 @@
 /**
- * 
  * @file ot_app_drv.h
- * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @version 0.1
- * @date 08-09-2025
+ * @brief Main API for OpenThread hardware application device driver.
+ * @details see more information in section: @ref ot_app_device_api
  * 
  * @defgroup ot_app_device_api main API for OpenThread hardware application
- * @{
+ * @ingroup ot_app
  * @brief Main API for OpenThread hardware application device driver.
- * 
- * This file is part of the OpenThread Application Framework.
- * Licensed under the MIT License; see the LICENSE file for details.
- *
- * @see @ref author_sec "Author & License"
- *
+ * @details
+ * @{
  * @section description Description
  *
  * Main API for OpenThread hardware application device driver.
@@ -63,7 +57,12 @@
  *
  * @see ot_app_devDrv_t for complete driver structure
  * @see ot_app_drv_getInstance() for singleton access
- * @see ad_button_Init() for full example implementation [file:1]
+ * @see ad_button_Init() for full example implementation 
+ * 
+ * @version 0.1
+ * @date 08-09-2025
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license
  */
 
 #ifndef OT_APP_DRV_H_
@@ -238,7 +237,7 @@ typedef uint8_t ot_app_size_t;
 typedef otapp_pair_rule_t *(*pairRuleGet_callback_t)(void);
 typedef otapp_coap_uri_t *(*uriGet_callback_t)(void);
 typedef void (*subscribedUris_callback_t)(oac_uri_dataPacket_t *dataPacket);
-typedef void (*mainTask_callback_t)(void);
+typedef void (*app_callback_t)(void);
 
 typedef struct ot_app_devDrv_t{
     subscribedUris_callback_t     obs_subscribedUri_clb; // it will be called from subscribed_uris uri
@@ -393,7 +392,26 @@ typedef struct ot_app_devDrv_t{
      *
      * @see ad_button_task() for reference implementation example
      */
-    mainTask_callback_t     task;
+    app_callback_t     task;
+
+    /**
+     * @brief System tick callback for higher-level application logic (ot_device).
+     * @details
+     * This callback provides a synchronized time base for higher-level device logic 
+     * (the @ref devices layer). It is intended for implementations that require 
+     * precise, high-frequency periodic execution.
+     *
+     * **Usage Rules:**
+     * - **Optional Implementation:** If your specific device implementation (e.g., a simple 
+     * sensor) does not require a system tick, you do not need to implement this.
+     * - **Framework Independence:** The core framework application (`ot_app`) does not 
+     * rely on this tick for its internal logic; it is strictly for the application-level driver.
+     * - **Integration:** If used, the developer must call @ref ot_app_drv_tick() from 
+     * the platform's tick handler (e.g., FreeRTOS Tick Hook).
+     *
+     * @note This is typically executed in an ISR context. It must be non-blocking.
+     */
+    app_callback_t     tick;
     
     /**
      * @brief Application device driver API structure.
@@ -428,6 +446,6 @@ typedef struct ot_app_devDrv_t{
 * @}
 */
 ot_app_devDrv_t *ot_app_drv_getInstance(void);
-void ot_app_drv_task(void);
+void ot_app_drv_tick(void);
 
 #endif  /* OT_APP_DRV_H_ */

@@ -28,6 +28,8 @@ list(APPEND SRCS
 	../../../app/ot_app/src/ot_app_pair.c
 	# ../../../components/open_thread/ot_app/src/ot_app_deviceName.c
 	../../../app/ot_app/src/ot_app_coap_uri_obs.c
+	../../../app/ot_app/src/ot_app_msg_tlv.c
+	../../../app/ot_app/src/ot_app_buffer.c
 	../../../app/utils/hro_utils.c
 	# ../../../main/main.c
 

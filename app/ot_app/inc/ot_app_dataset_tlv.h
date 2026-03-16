@@ -1,30 +1,51 @@
-/**
+/** 
  * @file ot_app_dataset_tlv.h
- * @author Jan Łukaszewicz (pldevluk@gmail.com)
- * @brief 
+ * @brief Pre-configured Operational Dataset TLVs for initializing the Thread network.
+ * @details see more information in section: @ref ot_app_dataset
+ * 
+ * @defgroup ot_app_dataset Dataset Management
+ * @ingroup ot_app
+ * @brief Pre-configured Operational Dataset TLVs for initializing the Thread network.
+ * @details
+ * @{
+ * This module provides static definitions for the OpenThread Operational Dataset using the 
+ * Type-Length-Value (TLV) format. This dataset includes critical network parameters required 
+ * for a device to attach to or form a specific Thread network.
+ * **Dataset Components:**
+ * The binary blob `otapp_dataset_tlv` typically contains:
+ * - **Active Timestamp:** Timestamp of the dataset generation.
+ * - **Channel:** The IEEE 802.15.4 channel to operate on.
+ * - **PAN ID:** Personal Area Network Identifier.
+ * - **Network Key (Master Key):** 16-byte key for encryption.
+ * - **Network Name:** Human-readable string identifying the network.
+ * - **Extended PAN ID:** 64-bit unique identifier.
+ * - **Mesh-Local Prefix:** IPv6 prefix for mesh-local addresses.
+ * **Usage:**
+ * This constant is used by @ref otapp_setDataset_tlv during the initialization phase 
+ * (`otapp_network_init`) to provision the OpenThread stack if no dataset is currently active.
+ * 
  * @version 0.1
  * @date 31-07-2025
- * 
- * @copyright The MIT License (MIT) Copyright (c) 2025 
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”),
- * to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. 
- * IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, 
- * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. 
- * 
+ * @author Jan Łukaszewicz (plhareo@gmail.com)
+ * @copyright © 2025 MIT @ref prj_license 
  */
+
 #ifndef OT_APP_DATASET_TLV_H_
 #define OT_APP_DATASET_TLV_H_
 
 #include "stdint.h"
 #include "openthread/dataset.h"
 
+/**
+ * @brief Default Operational Dataset encoded as TLV byte array.
+ * @details This structure holds the serialized dataset that defines the network credentials.
+ * It is applied to the OpenThread stack via `otDatasetSetActiveTlvs()`.
+ * **Contents:**
+ * - `.mTlvs`: The raw byte array containing the TLV sequence.
+ * - `.mLength`: The total length of the valid data in the byte array (111 bytes).
+ * @note This dataset corresponds to a specific pre-defined network configuration. 
+ * Changing these bytes will change the network the device attempts to join.
+ */
 const otOperationalDatasetTlvs otapp_dataset_tlv = {
     .mTlvs = {
         0x0e, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x13, 0x4a,
@@ -39,3 +60,7 @@ const otOperationalDatasetTlvs otapp_dataset_tlv = {
 };
 
 #endif  /* OT_APP_DATASET_TLV_H_ */
+
+/**
+ * @}
+ */

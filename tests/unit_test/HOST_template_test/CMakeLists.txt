@@ -14,11 +14,13 @@ list(APPEND INCLUDE_DIRS
 	../../../app/ot_app/inc/
 	../../../app/ot_app/port/
 	../../../app/utils
+	../HOST_ot_app_common/mocks/
 	# ../../../main
 )
 
 file(GLOB_RECURSE SRCS
-    # ../../../components/open_thread/ot_app/src/*.c  
+    # ../../../components/open_thread/ot_app/src/*.c 
+	../HOST_ot_app_common/mocks/*.c  
 )
 
 list(APPEND SRCS

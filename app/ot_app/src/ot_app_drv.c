@@ -34,6 +34,7 @@ static ot_app_devDrv_t ot_app_devDrv = {
     .deviceType = NULL,             
 
     .task = NULL,
+    .tick = NULL,
 
     .uriGetListSize = 0,
 
@@ -63,11 +64,10 @@ static ot_app_devDrv_t ot_app_devDrv = {
     },
 };
 
-
-void ot_app_drv_task(void)
+void ot_app_drv_tick(void)
 {
-    if(ot_app_devDrv.task != NULL) 
-    ot_app_devDrv.task();
+    if(ot_app_devDrv.tick != NULL) 
+    ot_app_devDrv.tick();
 }
 
 ot_app_devDrv_t *ot_app_drv_getInstance()
