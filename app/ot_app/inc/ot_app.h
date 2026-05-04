@@ -119,6 +119,8 @@ typedef enum {
     OTAPP_DOOR_SENSOR,          ///< Reed switch / door open sensor
     OTAPP_ALARM,                ///< Siren or alarm system
 
+    OTAPP_GATEWAY, 
+
     OTAPP_END_OF_DEVICE_TYPE    ///< Sentinel value
 } otapp_deviceType_t;
 

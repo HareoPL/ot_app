@@ -74,7 +74,7 @@ void otapp_srpServiceLeaseCheckTask(void *arg)
     while (1)
     {
         otapp_srpServiceLeaseCountDecrease();
-        OTAPP_PRINTF(TAG, "Current SRP lease interval: %lu seconds", otapp_srpServiceLeaseGetCount());
+        OTAPP_PRINTF(TAG, "Current SRP lease interval: %lu seconds \n", otapp_srpServiceLeaseGetCount());
 
         if (otapp_srpServiceLeaseCheckExpiry(otapp_srpServiceLeaseGetCount()))
         {

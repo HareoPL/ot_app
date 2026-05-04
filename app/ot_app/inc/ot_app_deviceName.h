@@ -65,6 +65,8 @@
 #define OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE           (2 * OTAPP_DEVICENAME_FULL_SIZE) ///< Buffer safety margin for DNS domain
 ///@}
 
+char *otapp_getNoGroupNamePtr(void);
+
 /**
  * @brief Sets the device Group Name and Type, generating the Full Name.
  * @details Constructs the full unique identifier string using the provided user name, 

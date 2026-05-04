@@ -59,7 +59,7 @@ static char ad_button_deviceNameTab[OTAPP_DEVICENAME_SIZE];
  * @brief Device type identifier
  * @note Declared as OTAPP_SWITCH to indicate this is a switch/button control device
  */
-static const otapp_deviceType_t ad_button_deviceType = OTAPP_SWITCH;
+static const otapp_deviceType_t deviceType = OTAPP_SWITCH;
 
 /**
  * @brief Static pointer to device driver instance
@@ -85,7 +85,7 @@ static ot_app_devDrv_t *drv;
  * @note OTAPP_PAIR_RULES_ALLOWED_SIZE = 10 (maximum rules per set)
  * @see ad_button_pairRulesGetList_all_allowed()
  */
-static otapp_pair_rule_t ad_button_deviceRules_all_allowed = {
+static otapp_pair_rule_t deviceRules_all_allowed = {
     .allowed = {OTAPP_PAIR_NO_RULES, OTAPP_PAIR_END_OF_RULES} // NO RULES, pair every incoming device
 };
 
@@ -136,9 +136,9 @@ static otapp_pair_rule_t ad_button_deviceRules = {
  * 
  * @see ad_button_deviceRules_all_allowed
  */
-otapp_pair_rule_t *ad_button_pairRulesGetList_all_allowed()
+otapp_pair_rule_t *pairRulesGetList_all_allowed()
 {
-    return &ad_button_deviceRules_all_allowed;
+    return &deviceRules_all_allowed;
 }
 
 /**
@@ -319,7 +319,7 @@ void ad_button_Init(char *deviceNameGroup)
 
     // Set device name gropu. length of it should be max OTAPP_DEVICENAME_SIZE - 1 (9 bytes)
     drv->deviceName = ad_button_deviceNameTab;
-    drv->deviceType = &ad_button_deviceType;
+    drv->deviceType = &deviceType;
     drv->task = ad_button_task;
     drv->tick = ad_button_tick;
 }

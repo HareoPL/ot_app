@@ -29,6 +29,13 @@
 static char otapp_deviceName[OTAPP_DNS_SRV_LABEL_SIZE]; // = "device1_1_588c81fffe301ea4"
 static const char *otapp_deviceName_domain = ".default.service.arpa.";
 
+static char noGroupDeviceName[] = "no_group"; ///< specific device name with accepts other devices groups.
+
+char *otapp_getNoGroupNamePtr(void)
+{
+    return noGroupDeviceName;
+}
+
 int8_t otapp_deviceNameSet(const char *deviceName, const otapp_deviceType_t deviceType)
 {
     if(deviceName == NULL || deviceType >= OTAPP_DEVICENAME_MAX_DEVICE_TYPE || deviceType == OTAPP_NO_DEVICE_TYPE)
@@ -116,7 +123,7 @@ int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength)
     strtok(inDeviceName, "_");
     strtok(curDeviceName, "_");
 
-    if(strcmp(inDeviceName, curDeviceName) == 0)
+    if(strcmp(inDeviceName, curDeviceName) == 0 || strcmp(curDeviceName, otapp_getNoGroupNamePtr())) // accept devices from this same device group or if current device name equal no_group. 
     {
         return OTAPP_DEVICENAME_IS;
     }

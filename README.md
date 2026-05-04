@@ -12,6 +12,67 @@
 ![Status](https://img.shields.io/badge/Status-Active_Development-brightgreen.svg?style=flat&logo=github&logoColor=white)
 ![](https://img.shields.io/badge/Roadmap-New_Devices_%26_Modules-blueviolet?style=flat&logo=gitbook&logoColor=white)
 
+### 🚧 Active Development: MQTT GSM Gateway
+
+An advanced Edge Gateway module currently in development, serving as a robust bridge between the local **OpenThread mesh network** (Actuators, Sensors) and the **Cloud (MQTT Broker)** via **GSM/GPRS** connectivity.
+
+**Key Hardware & Software Architectures:**
+* **Custom Hardware Design:** Built on a proprietary **PCB** featuring an industrial-grade **12V power supply** circuit. This stage is specifically designed with localized decoupling to maintain voltage integrity and handle high current spikes (up to 2A) during peak GSM transmissions.
+
+![SIM800 GSM Gateway Module](https://github.com/HareoPL/ESP-CAN-RF/blob/master/IMG/sim800_module.jpg?raw=true)
+
+* **Protocol Bridging & Topic Mapping:** The gateway automatically maps local CoAP URIs of discovered devices to standardized MQTT topics. For example, a node `device1` with the URI `light/rgb` dynamically generates the MQTT topic `device1/light/rgb`.
+* **Default Network Interface Override:** OpenThread can sometimes hijack default routing. To guarantee MQTT traffic routes via the cellular network, the driver performs a hard-override (`esp_netif_set_default_netif`) the exact moment the `IP_EVENT_PPP_GOT_IP` is triggered.
+
+![GSM Gateway Schematic](https://github.com/HareoPL/ESP-CAN-RF/blob/master/IMG/schematic_gsm.png?raw=true)
+
+* **Hardware Watchdog (Exponential Backoff):** If the physical modem fails to boot, the hardware initialization task actively cuts power and multiplies the waiting delay (e.g., 20s -> 40s -> 80s). This infinite cold boot loop prevents the device from bricking in remote locations.
+* **MQTT-Driven Auto-Recovery:** The driver actively monitors the MQTT state. If the client throws an `MQTT_EVENT_DISCONNECTED` event or LwIP drops the IP, it immediately triggers the re-establishment of the physical cellular tunnel.
+* **Graceful Shutdown:** Prevents auto-recovery from fighting intentional device sleep modes. It gracefully disconnects MQTT, deregisters from the cell tower (`AT+COPS=2`), and powers down the modem (`AT+CPOWD=1`).
+
+#### 📟 System Execution Flow & Real-World Logs
+The following console output demonstrates the actual system handling a hardware boot struggle with exponential backoff, followed by a TCP socket error and immediate auto-recovery:
+
+```text
+$$ ad_gateway_drv_esp32  &&--> Enable modem power...
+$$ ad_gateway_drv_esp32  &&--> modem is not responding... Attempt: 15/15
+$$ ad_gateway_drv_esp32  &&--> ERROR modem did not get up. Hardware ERROR
+$$ ad_gateway_drv_esp32  &&--> Disable modem power...
+$$ ad_gateway_drv_esp32  &&--> Waiting 20000 ms before next boot attempt...
+$$ ad_gateway_drv_esp32  &&--> Enable modem power...
+$$ ad_gateway_drv_esp32  &&--> modem is not responding... Attempt: 15/15
+$$ ad_gateway_drv_esp32  &&--> ERROR modem did not get up. Hardware ERROR
+$$ ad_gateway_drv_esp32  &&--> Disable modem power...
+$$ ad_gateway_drv_esp32  &&--> Waiting 40000 ms before next boot attempt...
+$$ ad_gateway_drv_esp32  &&--> Enable modem power...
+$$ ad_gateway_drv_esp32  &&--> hardware woken up. Lanch modem_conn_task (PPP)
+$$ ad_gateway_drv_esp32  &&--> Logged in to the network! (Status: 1)
+$$ ad_mqtt_gateway       &&--> got ip addr
+$$ ad_gateway_drv_esp32  &&--> IP: 10.114.144.240
+$$ ad_mqtt_gateway       &&--> MQTT connected with broker
+...
+E (133866) transport_base: tcp_read error, errno=Software caused connection abort
+$$ ad_mqtt_gateway       &&--> MQTT error
+$$ ad_gateway_drv_esp32  &&--> modem connect task is running
+$$ ad_mqtt_gateway       &&--> MQTT disconnected
+$$ ad_gateway_drv_esp32  &&--> Whait when SIM CARD will connect to network ...
+$$ ad_gateway_drv_esp32  &&--> Logged in to the network! (Status: 1)
+$$ ad_gateway_drv_esp32  &&--> switch to DATA mode(PPP)...
+$$ ad_mqtt_gateway       &&--> got ip addr
+$$ ad_gateway_drv_esp32  &&--> IP: 10.77.128.254
+$$ ad_mqtt_gateway       &&--> MQTT connected with broker
+```
+
+### 📨 Demonstration: MQTT Message Reception
+The image below demonstrates the gateway in action. It shows a publish message being sent from the **MQTT-Explorer** application to the broker, followed by the GSM module receiving this data and displaying it within the device logs.
+
+![MQTT Publish Demonstration](components/ot_app_sb/app/ot_app_devices/ad_mqtt_gateway/img/mqtt_publish_test.jpg/mqtt_publish_test.jpg)
+
+🔗 **Source Code (Feature Branch):** [MQTT GSM Gateway Development](https://github.com/HareoPL/ot_app/tree/feature/ot_app/mqtt-gsm-gateway/app/ot_app_devices/ad_mqtt_gateway)  
+📚 **Technical Documentation:** [MQTT Gateway API Reference](https://hareo.pl/otapp/group__device__mqtt__gateway.html)
+
+---
+
 
 <details><summary><b>🇵🇱 Wersja Polska</b></summary><br>
 
@@ -56,6 +117,41 @@ Wraz z wersją **v2.0.0**, projekt przekształcił się w dojrzałe, wieloplatfo
 * ✅ **Architektura zdarzeniowa:** System oparty na callbackach i asynchronicznym przetwarzaniu zadań (Producer-Consumer). Wersja 2.0 automatyzuje to za pomocą wbudowanego taska frameworka.
 * ✅ **State Persistence:** Automatyczny zapis konfiguracji sieciowej i tablicy parowania w pamięci nieulotnej (NVS). Gwarantuje przywrócenie pełnej funkcjonalności urządzenia natychmiast po restarcie.
 * ✅ **Standard-compliant SRP:** Pełna implementacja klienta **Service Registration Protocol**. Urządzenia dynamicznie rejestrują swoje usługi (`_coap._udp`) w sieci Thread, co zapewnia ich widoczność przez Border Routery.
+
+## 🔌 Implementacja sprzętowa
+
+Port obsługuje obecnie następujące implementacje `ot_device`:
+
+* kontroler z trzema przyciskami,
+* węzeł oświetlenia RGB (Light Node),
+* bramkę MQTT GSM (w trakcie prac).
+
+Oba urządzenia używają tej samej **grupy nazw urządzeń** do parowania (np. `"device1"`) i muszą zostać zainicjowane przez `ad_button_Init()` lub `ad_light_init()` przed pętlą główną.
+
+**Wyjątkiem jest bramka MQTT GSM**, która działa całkowicie niezależnie od nazwy grupy i nasłuchuje/przyjmuje komunikaty ze wszystkich grup w sieci. Musi zostać zainicjowana za pomoca funkcji `ad_gatewayInit(gateway_drvEsp32)`, która przyjmuje wskaźnik na sterownik modemu. 
+
+### Kontroler przycisków (Button Controller)
+
+Trzy fizyczne przyciski z obsługą wielu funkcji (pojedyncze kliknięcie, podwójne kliknięcie, długie naciśnięcie) przy użyciu przenośnej biblioteki OneButton dla platform STM32/ESP32.
+
+Pełna konfiguracja GPIO, schemat połączeń i makra platformy znajdują się w dokumentacji:
+
+👉 zobacz więcej: [Dokumentacja urządzenia Button](https://hareo.pl/otapp/group__device__button.html)
+
+### Węzeł oświetlenia RGB (RGB Light Device)
+
+Udostępnia URI CoAP dla funkcji włącz/wyłącz, ściemniania i kontroli kolorów za pomocą diody LED WS2812B (zarezerwowane GPIO8). Obsługuje obserwatorów parowania i trwałe przechowywanie danych w NVS.
+
+Pełna lista URI oraz szczegóły inicjalizacji znajdują się w dokumentacji:
+
+👉 zobacz więcej: [Dokumentacja urządzenia Light](https://hareo.pl/otapp/group__device__light.html)
+
+### Bramka MQTT GSM (MQTT GSM Gateway) 🚧 *W budowie*
+
+Rozwijany moduł bramki, który pozwala na dwukierunkową komunikację pomiędzy siecią OpenThread a chmurą (brokerem MQTT) przy wykorzystaniu modułu komórkowego (np. SIM800). Oparty o uniwersalny, obiektowy sterownik.
+
+👉 Zobacz kod źródłowy na gałęzi roboczej: [ad_mqtt_gateway](https://github.com/HareoPL/ot_app/tree/feature/ot_app/mqtt-gsm-gateway/app/ot_app_devices/ad_mqtt_gateway)
+
 
 ---
 
@@ -368,6 +464,39 @@ With the release of **v2.0.0**, the project has evolved into a mature, multi-pla
 * ✅ **Event-Driven Architecture:** System based on callbacks and asynchronous task processing (Producer-Consumer). In v2.0, this is fully managed by an internal framework task.
 * ✅ **State Persistence:** Automatic storage of network configuration and pairing tables in Non-Volatile Storage (NVS). Guarantees full functionality restoration immediately after reboot.
 * ✅ **Standard-compliant SRP:** Full implementation of the **Service Registration Protocol** client. Devices dynamically register their services (`_coap._udp`) within the Thread network, ensuring visibility to Border Routers.
+
+## 🔌 Hardware Implementation
+
+The port currently supports the following `ot_device` implementations:
+
+* a three-button controller,
+* an RGB light node,
+* an MQTT GSM gateway (work in progress).
+
+These devices use the same **device name group** for pairing (e.g. `"device1"`) and must be initialized via `ad_button_Init()` or `ad_light_init()` before the main loop.
+
+**An exception is the MQTT GSM gateway**, which operates completely independently of the group name and accepts messages from all groups in the network. It must by initialized via `ad_gatewayInit(gateway_drvEsp32)`.
+
+### Button Controller
+
+Three physical buttons with multi‑function support (single‑click, double‑click, long‑press) using the portable OneButton library for STM32/ESP32 platforms.  
+
+See full GPIO config, wiring, and platform macros in documentation:  
+👉 see more:  [Button Device Docs](https://hareo.pl/otapp/group__device__button.html)
+
+
+### RGB Light Node
+
+Exposes CoAP URIs for on/off, dimming, and color control via WS2812B LED (GPIO8 is reserved). Handles pairing observers and persistent NVS storage.  
+
+See full URI list and initialization details in documentation:  
+👉 see more: [Light Device Docs](https://hareo.pl/otapp/group__device__light.html)
+ 
+### MQTT GSM Gateway 🚧 *In progress*
+
+An actively developed gateway module that enables bidirectional communication between the OpenThread network and the cloud (MQTT broker) using a cellular module (e.g., SIM800). Based on an abstract, object-oriented driver.
+
+👉 See the source code on the working branch: [ad_mqtt_gateway](https://github.com/HareoPL/ot_app/tree/feature/ot_app/mqtt-gsm-gateway/app/ot_app_devices/ad_mqtt_gateway)
 
 ---
 

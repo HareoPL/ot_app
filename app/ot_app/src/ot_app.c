@@ -241,8 +241,35 @@ void otapp_drv_task(void *pvParameters)
 //
 // init functions
 //
+
+#include "openthread/thread.h"
+#include "openthread/link.h"
+
+
+// Konfiguracja OpenThread jako SED (Sleepy End Device)
+void configure_openthread_sed(otInstance *instance) {
+    otError error;
+    otLinkModeConfig mode;
+
+    // Konfiguracja trybu uśpionego
+    mode.mRxOnWhenIdle = false; // Radio wyłączone, gdy układ śpi
+    mode.mDeviceType = false;   // MTD (nie FTD)
+    mode.mNetworkData = false;  // Brak pełnych danych routingu
+
+    error = otThreadSetLinkMode(instance, mode);
+    if (error == OT_ERROR_NONE) {
+        printf("Skonfigurowano tryb Sleepy End Device.\n");
+    }
+
+
+    otLinkSetPollPeriod(instance, 5000); 
+}
+
 void otapp_network_init() // this function will be initialize in ot_task_worker rtos task (esp_ot_cli.c)
 {       
+    configure_openthread_sed(openThreadInstance);    
+    otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
+    
     otapp_setDataset_tlv();
     
     otapp_macAddrInit();
@@ -250,6 +277,8 @@ void otapp_network_init() // this function will be initialize in ot_task_worker 
     otapp_coap_init(otapp_devDrv);    
     otapp_srpInit();
 }
+
+TaskHandle_t otapp_drv_task_handle = NULL;
 
 int8_t otapp_init() //app init
 {    
@@ -259,7 +288,7 @@ int8_t otapp_init() //app init
     
     if(otapp_devDrv->task != NULL)
     {
-        xTaskCreate(otapp_drv_task, "otapp_drv_task", OTAPP_DRV_TASK_STACK, NULL, OTAPP_DRV_TASK_PRIORITY,NULL);
+        xTaskCreate(otapp_drv_task, "otapp_drv_task", OTAPP_DRV_TASK_STACK, NULL, OTAPP_DRV_TASK_PRIORITY,&otapp_drv_task_handle);
     }
 
 	#ifdef ESP_PLATFORM
@@ -268,7 +297,7 @@ int8_t otapp_init() //app init
 		otapp_network_init();
 	#endif
 
-    otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
+    // otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
 
     otapp_pair_init(otapp_devDrv);
     otapp_buffer_init();
@@ -277,3 +306,5 @@ int8_t otapp_init() //app init
 
     return OTAPP_OK;
 }
+
+

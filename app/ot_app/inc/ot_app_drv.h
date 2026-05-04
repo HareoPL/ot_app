@@ -161,6 +161,8 @@ typedef struct ot_app_drv_devName_t{
      * @return int8_t           [out] OTAPP_DEVICENAME_IS OTAPP_DEVICENAME_IS_NOT OTAPP_DEVICENAME_ERROR
      */
     int8_t (*devNameEuiIsSame)(const char *deviceNameFull, const char *eui);
+
+    char* (*getNoGroupNamePtr)(void);
 }ot_app_drv_devName_t;
 
 

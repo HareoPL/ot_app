@@ -101,6 +101,8 @@ void ad_temp_uri_well_knownCoreHandle(void *aContext, otMessage *request, const 
     if (request && devDrv_)
     {
         // Retrieve the URI list defined in the device driver
+        if(devDrv_->uriGetList_clb == NULL) return;
+        
         urisList = devDrv_->uriGetList_clb();
         uriListSize = devDrv_->uriGetListSize;
         if(urisList == NULL || uriListSize == 0) return;

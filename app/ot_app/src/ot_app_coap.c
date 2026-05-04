@@ -339,7 +339,9 @@ void otapp_coapSendtoTestGet()
 // char *charLed = {"device/led"};
 char *charLedPayload = {"LED_ON"};
 void otapp_coapSendtoTestPut()
-{
+{   
+    if(drv->uriGetList_clb == NULL) return;
+    
     otapp_coap_uri_t *uri = drv->uriGetList_clb();
     if(uri == NULL) return;
     // otapp_coap_clientSendPutChar(otapp_multicastAddressGet(), otapp_coap_getUriNameFromDefault(OTAPP_URI_TEST_LED), charLedPayload, otapp_coap_responseHandler);
@@ -502,10 +504,14 @@ int8_t otapp_coap_init(ot_app_devDrv_t *devDriver)
        return OTAPP_COAP_URI_ERROR;
     }
 
-    if (otapp_coap_initCoapResource(devDriver->uriGetList_clb(), devDriver->uriGetListSize) != OTAPP_COAP_URI_OK)
-	{
-	   return OTAPP_COAP_URI_ERROR;
-	}
+    if(devDriver->uriGetList_clb != NULL)
+    {
+        if (otapp_coap_initCoapResource(devDriver->uriGetList_clb(), devDriver->uriGetListSize) != OTAPP_COAP_URI_OK)
+        {
+            return OTAPP_COAP_URI_ERROR;
+        }
+    }
+    
 
 
     return OTAPP_COAP_URI_OK;

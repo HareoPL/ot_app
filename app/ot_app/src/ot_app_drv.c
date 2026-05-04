@@ -47,6 +47,7 @@ static ot_app_devDrv_t ot_app_devDrv = {
     .api.devName = {
         .devNameFullToEUI = otapp_deviceNameFullToEUI,
         .devNameEuiIsSame = otapp_deviceNameEuiIsSame,
+        .getNoGroupNamePtr =  otapp_getNoGroupNamePtr,
     },
 
     .api.nvs = {
