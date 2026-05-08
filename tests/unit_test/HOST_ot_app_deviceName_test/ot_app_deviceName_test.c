@@ -16,6 +16,8 @@ static char *deviceName_to_long = {"name11_byte"};
 
 static char *deviceNameFull_to_long = {"device1_1_588c81fffe301ea4_too_long"};
 static char *deviceNameFull_not_same = {"device2_1_588c81fffe301ea4"};
+static char *deviceNameFull_bad_devNameToLong = {"device2899_1_588c81fffe301ea4"};
+static char *deviceNameFull_bad_devNameToLongWithZero = {"device2890_1_588c81fffe301ea4"};
 static char *deviceNameFull_device1_type0_fakeAddr = {"device1_0_0011223344556677"};
 static char *deviceNameFull_device1_type0_fakeAddr_too_long = {"device1_0_001122334455667799000000"};
 static char *deviceNameFull_device1_type0_fakeAddr_too_short = {"device1_0_0011223"};
@@ -200,6 +202,14 @@ TEST(ot_app_deviceName, GivenNotSameDevNameFull_WhenIsCallingDeviceNameIsSame_Th
     otapp_deviceNameSet(deviceName_device1, UT_DN_OK_DEVICE_TYPE_1);    
     result = otapp_deviceNameIsSame(deviceNameFull_not_same, strlen(deviceNameFull_not_same));
     TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_IS_NOT, result);
+}
+
+TEST(ot_app_deviceName, GivenNoGroupName_WhenIsCallingDeviceNameIsSame_ThenReturnYES)
+{
+    int8_t result;
+    otapp_deviceNameSet(otapp_getNoGroupNamePtr(), UT_DN_OK_DEVICE_TYPE_1);    
+    result = otapp_deviceNameIsSame(deviceNameFull_not_same, strlen(deviceNameFull_not_same));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_IS, result);
 }
 
 TEST(ot_app_deviceName, GivenSameDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnYES)
@@ -392,3 +402,49 @@ TEST(ot_app_deviceName, GivenTrueArgs_WhenIsCallingDeviceNameFullToEUI_ThenRetur
     TEST_ASSERT_EQUAL_STRING(deviceNameFull_device1_type0_fakeAddr_eui, EuiPtrStr);
     
 }
+
+// otapp_getDeviceGroupName
+TEST(ot_app_deviceName, GivenNullArgs_WhenIsCallingGetDeviceGroupName_ThenReturnError)
+{
+    int8_t result;   
+    char groupNameBuf[OTAPP_DEVICENAME_SIZE];
+
+    result = otapp_getDeviceGroupName(NULL, groupNameBuf, sizeof(groupNameBuf));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+    
+    result = otapp_getDeviceGroupName(deviceNameFull_device1_type0_fakeAddr, NULL, sizeof(groupNameBuf));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}
+
+TEST(ot_app_deviceName, GivenTooSmallBuffer_WhenIsCallingGetDeviceGroupName_ThenReturnError)
+{
+    int8_t result;   
+    char groupNameBuf[OTAPP_DEVICENAME_SIZE];
+
+    result = otapp_getDeviceGroupName(deviceNameFull_device1_type0_fakeAddr, groupNameBuf, (OTAPP_DEVICENAME_SIZE - 1));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_BUFFER_TOO_SMALL, result);
+}
+
+TEST(ot_app_deviceName, GivenIncorrectDevNameFull_WhenIsCallingGetDeviceGroupName_ThenReturnError)
+{
+    int8_t result;   
+    char groupNameBuf[OTAPP_DEVICENAME_SIZE];
+
+    result = otapp_getDeviceGroupName(deviceNameFull_bad_devNameToLong, groupNameBuf, sizeof(groupNameBuf));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+
+    result = otapp_getDeviceGroupName(deviceNameFull_bad_devNameToLongWithZero, groupNameBuf, sizeof(groupNameBuf));
+    TEST_ASSERT_EQUAL(OTAPP_DEVICENAME_ERROR, result);
+}
+
+
+TEST(ot_app_deviceName, GivenCorrectDevNameFull_WhenIsCallingGetDeviceGroupName_ThenReturnOK)
+{
+    int8_t charSize;   
+    char groupNameBuf[OTAPP_DEVICENAME_SIZE];
+
+    charSize = otapp_getDeviceGroupName(deviceNameFull_device1_type0_fakeAddr, groupNameBuf, sizeof(groupNameBuf));
+    TEST_ASSERT_EQUAL(strlen(deviceName_device1), charSize);
+    TEST_ASSERT_EQUAL_STRING(deviceName_device1, groupNameBuf);
+}
+

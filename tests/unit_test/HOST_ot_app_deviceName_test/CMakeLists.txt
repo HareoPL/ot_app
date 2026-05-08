@@ -13,7 +13,7 @@ list(APPEND INCLUDE_DIRS
 	# ADD your include dir here
 	../../../app/ot_app/inc/
 	../../../app/ot_app/port/
-	../../../app/utils
+	../../../utils
 	../HOST_ot_app_common/mocks/
 	# ../../../main
 )
@@ -24,7 +24,7 @@ file(GLOB_RECURSE SRCS
 
 list(APPEND SRCS
 	# ADD your source file here ex. ../test.c	
-	../../../app/utils/hro_utils.c
+	../../../utils/hro_utils.c
 	../../../app/ot_app/src/ot_app_deviceName.c
 	../HOST_ot_app_common/mocks/mock_mocks.c
 	# ../../../main/main.c

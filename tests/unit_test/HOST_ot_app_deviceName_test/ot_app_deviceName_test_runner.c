@@ -27,6 +27,7 @@ TEST_GROUP_RUNNER(ot_app_deviceName)
    RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnError);
    RUN_TEST_CASE(ot_app_deviceName, GivenTooShortDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnError);
    RUN_TEST_CASE(ot_app_deviceName, GivenNotSameDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnNOT);
+   RUN_TEST_CASE(ot_app_deviceName, GivenNoGroupName_WhenIsCallingDeviceNameIsSame_ThenReturnYES);
    RUN_TEST_CASE(ot_app_deviceName, GivenSameDevNameFull_WhenIsCallingDeviceNameIsSame_ThenReturnYES);
 
    // otapp_deviceNameGetDevId
@@ -59,6 +60,14 @@ TEST_GROUP_RUNNER(ot_app_deviceName)
    RUN_TEST_CASE(ot_app_deviceName, GivenTooLongDevNameArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnERROR);
    RUN_TEST_CASE(ot_app_deviceName, GivenTooShortDevNameArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnERROR);
    RUN_TEST_CASE(ot_app_deviceName, GivenTrueArgs_WhenIsCallingDeviceNameFullToEUI_ThenReturnOK);
+
+   // otapp_getDeviceGroupName
+   RUN_TEST_CASE(ot_app_deviceName, GivenNullArgs_WhenIsCallingGetDeviceGroupName_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenTooSmallBuffer_WhenIsCallingGetDeviceGroupName_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenIncorrectDevNameFull_WhenIsCallingGetDeviceGroupName_ThenReturnError);
+   RUN_TEST_CASE(ot_app_deviceName, GivenCorrectDevNameFull_WhenIsCallingGetDeviceGroupName_ThenReturnOK);
+
+
 
 }
 

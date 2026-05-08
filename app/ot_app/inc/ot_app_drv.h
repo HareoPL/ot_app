@@ -163,6 +163,18 @@ typedef struct ot_app_drv_devName_t{
     int8_t (*devNameEuiIsSame)(const char *deviceNameFull, const char *eui);
 
     char* (*getNoGroupNamePtr)(void);
+
+    /**
+     * @brief Extracts the Group Name from a Full Name string.
+     * @details Parses the string to isolate the group name (before the first '_').
+     * @param deviceNameFull [in] Full name string.
+     * @param groupNameBuf   [out] Buffer to store the extracted group name.
+     * @param bufSize        [in] Size of the output buffer.
+     * @return int8_t        Number of characters copied, or error code: OTAPP_DEVICENAME_ERROR OTAPP_DEVICENAME_BUFFER_TOO_SMALL.
+     */
+    int8_t (*getDeviceGroupName)(const char *deviceNameFull, char *groupNameBuf, uint8_t bufSize);
+
+    
 }ot_app_drv_devName_t;
 
 

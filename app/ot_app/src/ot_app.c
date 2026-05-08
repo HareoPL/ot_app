@@ -247,27 +247,27 @@ void otapp_drv_task(void *pvParameters)
 
 
 // Konfiguracja OpenThread jako SED (Sleepy End Device)
-void configure_openthread_sed(otInstance *instance) {
-    otError error;
-    otLinkModeConfig mode;
+// void configure_openthread_sed(otInstance *instance) {
+//     otError error;
+//     otLinkModeConfig mode;
 
-    // Konfiguracja trybu uśpionego
-    mode.mRxOnWhenIdle = false; // Radio wyłączone, gdy układ śpi
-    mode.mDeviceType = false;   // MTD (nie FTD)
-    mode.mNetworkData = false;  // Brak pełnych danych routingu
+//     // Konfiguracja trybu uśpionego
+//     mode.mRxOnWhenIdle = false; // Radio wyłączone, gdy układ śpi
+//     mode.mDeviceType = false;   // MTD (nie FTD)
+//     mode.mNetworkData = false;  // Brak pełnych danych routingu
 
-    error = otThreadSetLinkMode(instance, mode);
-    if (error == OT_ERROR_NONE) {
-        printf("Skonfigurowano tryb Sleepy End Device.\n");
-    }
+//     error = otThreadSetLinkMode(instance, mode);
+//     if (error == OT_ERROR_NONE) {
+//         printf("Skonfigurowano tryb Sleepy End Device.\n");
+//     }
 
 
-    otLinkSetPollPeriod(instance, 5000); 
-}
+//     otLinkSetPollPeriod(instance, 5000); 
+// }
 
 void otapp_network_init() // this function will be initialize in ot_task_worker rtos task (esp_ot_cli.c)
 {       
-    configure_openthread_sed(openThreadInstance);    
+    // configure_openthread_sed(openThreadInstance);    
     otSetStateChangedCallback(otapp_getOpenThreadInstancePtr(),otapp_deviceStateChangedCallback, NULL);
     
     otapp_setDataset_tlv();

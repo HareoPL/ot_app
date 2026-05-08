@@ -151,6 +151,9 @@ Rozwijany moduł bramki, który pozwala na dwukierunkową komunikację pomiędzy
 
 👉 Zobacz kod źródłowy na gałęzi roboczej: [ad_mqtt_gateway](https://github.com/HareoPL/ot_app/tree/feature/ot_app/mqtt-gsm-gateway/app/ot_app_devices/ad_mqtt_gateway)
 
+### Current hardware ecosystem demonstration
+
+![Open Thread Networked Device Cluster](https://github.com/HareoPL/ot_app/blob/feature/ot_app/mqtt-gsm-gateway/img/ot_app_all_dev.jpg?raw=true)
 
 ---
 
@@ -497,6 +500,9 @@ An actively developed gateway module that enables bidirectional communication be
 
 👉 See the source code on the working branch: [ad_mqtt_gateway](https://github.com/HareoPL/ot_app/tree/feature/ot_app/mqtt-gsm-gateway/app/ot_app_devices/ad_mqtt_gateway)
 
+### Current hardware ecosystem demonstration
+
+![Open Thread Networked Device Cluster](https://github.com/HareoPL/ot_app/blob/feature/ot_app/mqtt-gsm-gateway/img/ot_app_all_dev.jpg?raw=true)
 ---
 
 ## 📺 Demo & Operation

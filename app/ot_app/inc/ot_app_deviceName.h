@@ -60,12 +60,23 @@
     #define OTAPP_DEVICENAME_FULL_SIZE OTAPP_DNS_SRV_LABEL_SIZE ///< Max size for full label (32 bytes)
 #endif
 
+#define OTAPP_EUI_STRING_SIZE               (2 * OT_EXT_ADDRESS_SIZE) 
 #define OTAPP_DEVICENAME_SIZE               (OTAPP_DEVICENAME_FULL_SIZE - 22) ///< Max user GroupName length (~10 chars)
 #define OTAPP_DEVICENAME_MIN_SIZE           (OTAPP_DEVICENAME_FULL_SIZE - OTAPP_DEVICENAME_SIZE + 1) ///< Min required size for metadata
 #define OTAPP_DEVICENAME_MIN_ADD_DOMAIN_BUFFER_SIZE           (2 * OTAPP_DEVICENAME_FULL_SIZE) ///< Buffer safety margin for DNS domain
 ///@}
 
 char *otapp_getNoGroupNamePtr(void);
+
+/**
+ * @brief Extracts the Group Name from a Full Name string.
+ * @details Parses the string to isolate the group name (before the first '_').
+ * @param deviceNameFull [in] Full name string.
+ * @param groupNameBuf   [out] Buffer to store the extracted group name.
+ * @param bufSize        [in] Size of the output buffer.
+ * @return int8_t        Number of characters copied, or error code: OTAPP_DEVICENAME_ERROR OTAPP_DEVICENAME_BUFFER_TOO_SMALL.
+ */
+int8_t otapp_getDeviceGroupName(const char *deviceNameFull, char *groupNameBuf, uint8_t bufSize);
 
 /**
  * @brief Sets the device Group Name and Type, generating the Full Name.
