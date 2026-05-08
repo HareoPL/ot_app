@@ -66,7 +66,7 @@ $$ ad_mqtt_gateway       &&--> MQTT connected with broker
 ### 📨 Demonstration: MQTT Message Reception
 The image below demonstrates the gateway in action. It shows a publish message being sent from the **MQTT-Explorer** application to the broker, followed by the GSM module receiving this data and displaying it within the device logs.
 
-![MQTT Publish Demonstration](components/ot_app_sb/app/ot_app_devices/ad_mqtt_gateway/img/mqtt_publish_test.jpg/mqtt_publish_test.jpg)
+![MQTT Publish Demonstration](components/ot_app_sb/app/ot_app_devices/ad_mqtt_gateway/img/mqtt_publish_test.jpg)
 
 🔗 **Source Code (Feature Branch):** [MQTT GSM Gateway Development](https://github.com/HareoPL/ot_app/tree/feature/ot_app/mqtt-gsm-gateway/app/ot_app_devices/ad_mqtt_gateway)  
 📚 **Technical Documentation:** [MQTT Gateway API Reference](https://hareo.pl/otapp/group__device__mqtt__gateway.html)
