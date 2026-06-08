@@ -711,9 +711,9 @@ PRIVATE int8_t otapp_pair_tokenIsSame(otapp_pair_DeviceList_t *pairDeviceList, i
 }
 
 // return uriLIstId or error
-otapp_pair_uris_t *otapp_pair_tokenGetUriIteams(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token)
+int8_t otapp_pair_tokenSearChDevListIdUriListId(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token, uint8_t *devListId_OUT, uint8_t *uriListId_OUT)
 {
-    if(pairDeviceList == NULL || token == NULL) return NULL; 
+    if(pairDeviceList == NULL || token == NULL || devListId_OUT == NULL || uriListId_OUT == NULL) return OTAPP_PAIR_ERROR; 
 
     if(otapp_pair_uriTokenIsValid(token) == OTAPP_PAIR_IS)          // check if token is not empty
     {
@@ -725,7 +725,9 @@ otapp_pair_uris_t *otapp_pair_tokenGetUriIteams(otapp_pair_DeviceList_t *pairDev
                 {
                    if(otapp_pair_tokenIsSame(pairDeviceList, i, j, token) == OTAPP_PAIR_IS)
                    {
-                       return &pairDeviceList->list[i].urisList[j]; // return uriList ptr
+                        *devListId_OUT = i;
+                        *uriListId_OUT = j;                         
+                        return OTAPP_PAIR_OK;
                    }
                 }
                 
@@ -733,6 +735,23 @@ otapp_pair_uris_t *otapp_pair_tokenGetUriIteams(otapp_pair_DeviceList_t *pairDev
         }
     }
 
+    return OTAPP_PAIR_ERROR;
+}
+
+otapp_pair_uris_t *otapp_pair_tokenGetUriIteams(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token)
+{
+    if(pairDeviceList == NULL || token == NULL) return NULL; 
+    
+    uint8_t devListId = 0;
+    uint8_t uriListId = 0;
+
+    if(otapp_pair_tokenSearChDevListIdUriListId(pairDeviceList,token, &devListId, &uriListId) == OTAPP_PAIR_OK)
+    {
+        return &pairDeviceList->list[devListId].urisList[uriListId]; // return uriList ptr
+    }
+   
+    return NULL;
+}
     return NULL;
 }
 

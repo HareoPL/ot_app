@@ -139,6 +139,14 @@ typedef struct ot_app_drv_pair_t{
      */
     int8_t (*uriGetIdList)(otapp_pair_Device_t *deviceHandle, otapp_deviceType_t uriDevType);
 
+    /**
+     * @brief get URI items for a given token
+     * 
+     * @param pairDeviceList [in] ptr to Pair devices list
+     * @param token          [in] ptr to token
+     * @return otapp_pair_uris_t [out] URI items for the given token
+     */
+    otapp_pair_uris_t *(*tokenGetUriIteams)(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token);
 }ot_app_drv_pair_t;
 
 typedef struct ot_app_drv_devName_t{
