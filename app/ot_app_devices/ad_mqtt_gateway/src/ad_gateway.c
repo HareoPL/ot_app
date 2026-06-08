@@ -179,12 +179,29 @@ static int8_t mqttMakeTopic(char *devNameFull, char *uri, char *buffer, uint16_t
  */
 static void pairedCallback(otapp_pair_Device_t *device)
 {        
-    // ad_btn_assignDevice(device);
-
+    
     OTAPP_PRINTF(TAG, "Detect DEVICE! %s \n", device->devNameFull);
-    OTAPP_PRINTF(TAG, "      uri 0: %s\n", device->urisList[0].uri);
-    OTAPP_PRINTF(TAG, "      uri 1: %s\n", device->urisList[1].uri);
-    OTAPP_PRINTF(TAG, "      uri 2: %s\n", device->urisList[2].uri);
+            
+    for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
+    {
+        if(device->urisList[i].uri[0] != '\0') // Check if URI is not empty
+        {
+            if(mqttMakeTopic(device->devNameFull, device->urisList[i].uri, mqttTopicBuffer, sizeof(mqttTopicBuffer)) != 0)
+            {
+                return;
+            }
+         
+            if(gw->mqtt.subscribeSingle(mqttTopicBuffer, 1) == 0)
+            {
+                OTAPP_PRINTF(TAG, "MQTT: Subscribed to URI: %s\n", mqttTopicBuffer);
+            }
+            else
+            {
+                OTAPP_PRINTF(TAG, "MQTT: Failed to subscribe to URI: %s\n", mqttTopicBuffer);
+            }
+        }
+    }
+    
 }
 
 /**
