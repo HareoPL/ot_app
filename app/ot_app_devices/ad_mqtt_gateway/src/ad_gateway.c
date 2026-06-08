@@ -124,7 +124,54 @@ static otapp_pair_rule_t *pairRulesGetList_all_allowed()
 //////////////////////
 // OBSERVER CALLBACKS
 //////////////////////
+char mqttTopicBuffer[OTAPP_DEVICENAME_SIZE + OTAPP_EUI_STRING_SIZE + OTAPP_URI_MAX_NAME_LENGHT + 1]; 
 
+static int8_t mqttMakeTopic(char *devNameFull, char *uri, char *buffer, uint16_t bufferSize)
+{
+    if(devNameFull == NULL || uri == NULL || buffer == NULL) return -1;
+
+    int8_t result = 0;
+    int8_t devGroupLen = 0;
+    uint8_t bufferIndex = 0;
+    char *eui = NULL;
+    
+    memset(buffer, 0, bufferSize); // clear buffer
+
+    devGroupLen = drv->api.devName.getDeviceGroupName(devNameFull, buffer, bufferSize); // extract and add device group name to start of buffer
+    if(devGroupLen > 0) // Check if group name is not empty
+    {
+        OTAPP_PRINTF(TAG, "Group Name: %s, length: %d \n", buffer, devGroupLen);
+    }
+    else
+    {
+        OTAPP_PRINTF(TAG, "Failed to get group name from device name full\n");
+    }  
+
+    result = drv->api.devName.devNameFullToEUI(devNameFull, strlen(devNameFull), &eui); // extracta and EUI ptr frome device name
+    if(result == OTAPP_DEVICENAME_OK && eui != NULL)
+    {
+        OTAPP_PRINTF(TAG, "EUI: %s \n", eui);
+    }
+    else
+    {
+        OTAPP_PRINTF(TAG, "Failed to decode EUI from device name full\n");
+    }
+
+    bufferIndex = devGroupLen;                                  // start after group name
+
+    buffer[bufferIndex] = '/';                                  // add separator between group name and EUI, 
+    bufferIndex ++;                                             // move pointer after separator
+
+    memcpy(buffer + bufferIndex, eui, OTAPP_EUI_STRING_SIZE);   // copy EUI to topic buffer after group name, it should looks like gropu_name/eui
+    bufferIndex += OTAPP_EUI_STRING_SIZE;                       // move pointer after EUI
+
+    buffer[bufferIndex] = '/';                                  // add separator between group name and EUI, we will add URI path later in the loop
+    bufferIndex ++;                                             // move pointer after separator
+
+    memcpy(buffer + bufferIndex, uri, strlen(uri));             // Build MQTT topic by appending URI path to the base topic (group/EUI/URI)
+    
+    return 0;
+}
 /**
  * @brief Callback invoked when a device is successfully paired
  * 
