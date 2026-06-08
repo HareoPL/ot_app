@@ -752,6 +752,19 @@ otapp_pair_uris_t *otapp_pair_tokenGetUriIteams(otapp_pair_DeviceList_t *pairDev
    
     return NULL;
 }
+
+char *otapp_pair_tokenGetDevNameFull(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token)
+{
+    if(pairDeviceList == NULL || token == NULL) return NULL; 
+    
+    uint8_t devListId = 0;
+    uint8_t uriListId = 0;
+
+    if(otapp_pair_tokenSearChDevListIdUriListId(pairDeviceList,token, &devListId, &uriListId) == OTAPP_PAIR_OK)
+    {
+        return pairDeviceList->list[devListId].devNameFull;
+    }
+   
     return NULL;
 }
 

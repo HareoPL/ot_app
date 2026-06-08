@@ -43,6 +43,7 @@ static ot_app_devDrv_t ot_app_devDrv = {
         .uriStateSet = otapp_pair_uriStateSet,
         .uriGetIdList = otapp_pair_uriGetIdList,
         .tokenGetUriIteams = otapp_pair_tokenGetUriIteams,
+        .tokenGetDevNameFull = otapp_pair_tokenGetDevNameFull,
     },
 
     .api.devName = {

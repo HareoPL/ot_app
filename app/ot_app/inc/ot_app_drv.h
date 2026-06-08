@@ -147,6 +147,17 @@ typedef struct ot_app_drv_pair_t{
      * @return otapp_pair_uris_t [out] URI items for the given token
      */
     otapp_pair_uris_t *(*tokenGetUriIteams)(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token);
+
+    /**
+     * @brief Returns the device full name associated with a token.
+     * @details Searches the paired device list for a URI entry matching the given
+     *          Observe token and returns the full device name for that device.
+     * @param pairDeviceList Handle to the device list.
+     * @param token          Token used to identify the URI subscription.
+     * @return char*         Pointer to the device full name string or NULL if not found.
+     */
+    char *(*tokenGetDevNameFull)(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token);
+
 }ot_app_drv_pair_t;
 
 typedef struct ot_app_drv_devName_t{

@@ -59,6 +59,10 @@ TEST_GROUP_RUNNER(ot_app_pair)
    RUN_TEST_CASE(ot_app_pair, GivenTrueArgsButOtherToken_WhenCallingTokenGetUriIteams_ThenReturn_NULL);
    RUN_TEST_CASE(ot_app_pair, GivenTrueArgsAnd2DiffrentTokenOnLIst_WhenCallingTokenGetUriIteams_ThenReturn_ptrToData);
 
+   // otapp_pair_tokenGetDevNameFull
+   RUN_TEST_CASE(ot_app_pair, GivenNullArgs_WhenCallingtokenGetDevNameFull_ThenReturnError);
+   RUN_TEST_CASE(ot_app_pair, GivenTrueArgs_WhenCallingtokenGetDevNameFull_ThenReturnPtrToDevNameFull);
+
    // otapp_pair_uriStateSet
    RUN_TEST_CASE(ot_app_pair, GivenNullArgs_WhenCallingUriStateSet_ThenReturnError);
    RUN_TEST_CASE(ot_app_pair, GivenTrueArgs_WhenCallingUriStateSet_ThenReturnOK);

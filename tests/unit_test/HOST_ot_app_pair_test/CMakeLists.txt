@@ -14,7 +14,7 @@ list(APPEND INCLUDE_DIRS
 	# ADD your include dir here
 	../../../app/ot_app/inc/
 	../../../app/ot_app/port/
-	../../../app/utils
+	../../../utils
 	../HOST_ot_app_common/mocks/
 	# ../../../main
 )
@@ -30,7 +30,7 @@ list(APPEND SRCS
 	../../../app/ot_app/src/ot_app_coap_uri_obs.c
 	../../../app/ot_app/src/ot_app_msg_tlv.c
 	../../../app/ot_app/src/ot_app_buffer.c
-	../../../app/utils/hro_utils.c
+	../../../utils/hro_utils.c
 	# ../../../main/main.c
 
 )

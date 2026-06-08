@@ -363,6 +363,16 @@ int8_t otapp_pair_subSendUpdateIP(otapp_pair_DeviceList_t *pairDeviceList);
 otapp_pair_uris_t *otapp_pair_tokenGetUriIteams(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token);
 
 /**
+ * @brief Returns the device full name associated with a token.
+ * @details Searches the paired device list for a URI entry matching the given
+ *          Observe token and returns the full device name for that device.
+ * @param pairDeviceList Handle to the device list.
+ * @param token          Token used to identify the URI subscription.
+ * @return char*         Pointer to the device full name string or NULL if not found.
+ */
+char *otapp_pair_tokenGetDevNameFull(otapp_pair_DeviceList_t *pairDeviceList, const oacu_token_t *token);
+
+/**
  * @brief Searches for a specific device function type within a device's URI list.
  * @param deviceHandle  [in] Pointer to the device structure.
  * @param uriDevType    [in] Function type to look for (e.g. LIGHTING_ON_OFF).

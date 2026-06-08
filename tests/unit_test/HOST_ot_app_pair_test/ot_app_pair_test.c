@@ -621,6 +621,36 @@ TEST(ot_app_pair, GivenTrueArgsAnd2DiffrentTokenOnLIst_WhenCallingTokenGetUriIte
     TEST_ASSERT_EQUAL_UINT8_ARRAY(&ut_oap_uriData_1, uriIteam, sizeof(&ut_oap_uriData_1));
 }
 
+// otapp_pair_tokenGetDevNameFull
+TEST(ot_app_pair, GivenNullArgs_WhenCallingtokenGetDevNameFull_ThenReturnError)
+{
+    char *devNameFull = NULL;
+    ut_oap_deviceAddFullFill();
+    otapp_pair_DeviceList_t *deviceListHandle = otapp_pair_getHandle();
+    otapp_pair_Device_t *newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_0);   
+
+    otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_devicetoken_4Byte);
+
+    devNameFull = otapp_pair_tokenGetDevNameFull(NULL, ut_oap_devicetoken_4Byte);
+    TEST_ASSERT_NULL(devNameFull);
+
+    devNameFull = otapp_pair_tokenGetDevNameFull(deviceListHandle, NULL);
+    TEST_ASSERT_NULL(devNameFull);
+}
+
+TEST(ot_app_pair, GivenTrueArgs_WhenCallingtokenGetDevNameFull_ThenReturnPtrToDevNameFull)
+{
+    char *devNameFull = NULL;
+    ut_oap_deviceAddFullFill();
+    otapp_pair_DeviceList_t *deviceListHandle = otapp_pair_getHandle();
+    otapp_pair_Device_t *newDevice = otapp_pair_DeviceGet(deviceListHandle, deviceNameFull_0);   
+
+    otapp_pair_uriAdd(&newDevice->urisList[0], &ut_oap_uriData_1, ut_oap_devicetoken_4Byte);
+
+    devNameFull = otapp_pair_tokenGetDevNameFull(deviceListHandle, ut_oap_devicetoken_4Byte);
+    TEST_ASSERT_NOT_NULL(devNameFull);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(deviceNameFull_0, devNameFull, strlen(deviceNameFull_0));
+}
 
 // otapp_pair_uriStateSet
 TEST(ot_app_pair, GivenNullArgs_WhenCallingUriStateSet_ThenReturnError)
