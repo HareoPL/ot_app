@@ -227,6 +227,34 @@ static void subscribedUrisCallback(oac_uri_dataPacket_t *data)
     OTAPP_PRINTF(TAG, " @ message from subs: \n");
     OTAPP_PRINTF(TAG, " @--> token: 0x%x 0x%x 0x%x 0x%x\n", data->token[0], data->token[1], data->token[2], data->token[3]);
     OTAPP_PRINTF(TAG, " @--> data: %ld\n", uriState_);
+   
+    // send update state by MQTT
+   
+    char *devNameFull = NULL;
+    devNameFull = drv->api.pair.tokenGetDevNameFull(pairHandle, data->token);                   // get devNameFull ptr using token
+
+    otapp_pair_uris_t *uriItems = drv->api.pair.tokenGetUriIteams(pairHandle, data->token);     // get URI items for this token
+    if(uriItems == NULL) 
+    {
+        OTAPP_PRINTF(TAG, "ERROR NULL uriItems \n");
+        return; 
+    }
+        
+    if(mqttMakeTopic(devNameFull, uriItems->uri, mqttTopicBuffer, sizeof(mqttTopicBuffer)) != 0)    // build topic. it should looks like: device1/588c81fffe3035a4/light/on_off
+    {
+        return;
+    }
+
+    if(gw->mqtt.publish(mqttTopicBuffer, (uint8_t*)&uriItems->uriState, sizeof(uriItems->uriState), 1, 1) == 0) // publish to MQTT broker // trzeba to zmienic dane w buforze powinny byc wysylane TLV, a nie surowy stan, TREBA TO ZMIENIC w framework. todo
+    {
+        OTAPP_PRINTF(TAG, "MQTT: Published to URI: %s, DATA: %ld\n", mqttTopicBuffer, uriItems->uriState);
+    }
+    else
+    {
+        OTAPP_PRINTF(TAG, "MQTT: Failed to publish to URI: %s\n", mqttTopicBuffer);
+    }
+
+    
 }
 
 /**
