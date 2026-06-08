@@ -120,9 +120,10 @@ static int8_t mqtt_publish(const char *topic, const uint8_t *payload, uint16_t l
 
     if (mqtt_client) 
     {        
-        esp_mqtt_client_publish(mqtt_client, topic, (const char*)payload, len, qos, retain);  
-        
-        return 0;
+        if(esp_mqtt_client_publish(mqtt_client, topic, (const char*)payload, len, qos, retain) >= ESP_OK)
+        {
+            return 0;
+        }
     }
 
     return -1;
@@ -132,9 +133,10 @@ static int8_t mqtt_subscribeSingle(const char *topic, uint8_t qos)
 {
     if (mqtt_client) 
     {        
-        esp_mqtt_client_subscribe_single(mqtt_client, topic, qos);
-        
-        return 0;
+        if(esp_mqtt_client_subscribe_single(mqtt_client, topic, qos) >= ESP_OK)
+        {
+            return 0;
+        }
     }
 
     return -1;
@@ -144,9 +146,10 @@ static int8_t mqtt_unSubscribeSingle(const char *topic)
 {
     if (mqtt_client) 
     {   
-        esp_mqtt_client_unsubscribe(mqtt_client, topic);
-        
-        return 0;
+        if(esp_mqtt_client_unsubscribe(mqtt_client, topic) >= ESP_OK)
+        {
+            return 0;
+        }
     }
 
     return -1;
