@@ -29,7 +29,7 @@
 static char otapp_deviceName[OTAPP_DNS_SRV_LABEL_SIZE]; // = "device1_1_588c81fffe301ea4"
 static const char *otapp_deviceName_domain = ".default.service.arpa.";
 
-static char noGroupDeviceName[] = "no_group"; ///< specific device name with accepts other devices groups.
+static char noGroupDeviceName[] = "no-group"; ///< specific device name with accepts other devices groups.
 
 char *otapp_getNoGroupNamePtr(void)
 {
@@ -91,6 +91,39 @@ int8_t otapp_deviceNameFullIsSame(const char *deviceNameFull)
     return OTAPP_DEVICENAME_IS_NOT;
 }
 
+int8_t otapp_getDeviceGroupName(const char *deviceNameFull, char *groupNameBuf, uint8_t bufSize)
+{
+    if(deviceNameFull == NULL || groupNameBuf == NULL)
+    {
+        return OTAPP_DEVICENAME_ERROR;
+    }
+
+    if(bufSize < OTAPP_DEVICENAME_SIZE)
+    {
+        return OTAPP_DEVICENAME_BUFFER_TOO_SMALL;
+    }
+
+    char deviceNameCopy[OTAPP_DEVICENAME_FULL_SIZE];
+    strncpy(deviceNameCopy, deviceNameFull, OTAPP_DEVICENAME_FULL_SIZE );
+
+    char *groupName = NULL;
+    groupName = strtok(deviceNameCopy, "_");
+    if(groupName == NULL)
+    {
+        return OTAPP_DEVICENAME_ERROR;
+    }
+
+    size_t len = strnlen(groupName, OTAPP_DEVICENAME_SIZE - 1); // 9 characters allowed of device name group. 10th character must be null terminator.
+    if (groupName[len] != '\0') 
+    {
+        return OTAPP_DEVICENAME_ERROR;
+    }
+    memcpy(groupNameBuf, groupName, len);
+    groupNameBuf[len] = '\0'; // for safety, ensure null termination of the output buffer
+
+    return len;
+}
+
 int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength)
 {
     if(deviceNameFull == NULL )
@@ -117,13 +150,11 @@ int8_t otapp_deviceNameIsSame(const char *deviceNameFull, uint8_t stringLength)
         return OTAPP_DEVICENAME_CALL_DEVICE_NAME_SET_FN;
     }
 
-    strncpy(inDeviceName, deviceNameFull, stringLength);
-    strncpy(curDeviceName, curDeviceNamePtr, strlen(curDeviceNamePtr));
-    
-    strtok(inDeviceName, "_");
-    strtok(curDeviceName, "_");
+    otapp_getDeviceGroupName(deviceNameFull, inDeviceName, OTAPP_DEVICENAME_SIZE);
+    otapp_getDeviceGroupName(curDeviceNamePtr, curDeviceName, OTAPP_DEVICENAME_SIZE);
+   
 
-    if(strcmp(inDeviceName, curDeviceName) == 0 || strcmp(curDeviceName, otapp_getNoGroupNamePtr())) // accept devices from this same device group or if current device name equal no_group. 
+    if(strcmp(inDeviceName, curDeviceName) == 0 || strcmp(curDeviceName, otapp_getNoGroupNamePtr()) == 0) // accept devices from this same device group or if current device name equal no_group. 
     {
         return OTAPP_DEVICENAME_IS;
     }
