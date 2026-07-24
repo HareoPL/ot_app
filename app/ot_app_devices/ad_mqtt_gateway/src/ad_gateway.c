@@ -124,52 +124,231 @@ static otapp_pair_rule_t *pairRulesGetList_all_allowed()
 //////////////////////
 // OBSERVER CALLBACKS
 //////////////////////
-char mqttTopicBuffer[OTAPP_DEVICENAME_SIZE + OTAPP_EUI_STRING_SIZE + OTAPP_URI_MAX_NAME_LENGHT + 1]; 
+/**
+ * 
+ * @brief MQTT Topic Architecture based on Sparkplug B standard.
+ *
+ * @details This component manages bidirectional MQTT communication over GSM,
+ * routing downstream commands to the OpenThread network and pushing upstream
+ * telemetry/lifecycle states up to the cloud.
+ * * To eliminate packet echo and optimize GSM bandwidth, both the Border Router
+ * and the Controlling Devices use specific asymmetrical subscription matrices.
+ *
+ * ### Sparkplug B Topic Scheme:
+ * @code
+ * spBv1.0 / [Group_ID] / [Message_Type] / [Edge_Node_ID] / [Device_ID]
+ * @endcode
+ *
+ * ### Mapping for OpenThread Network:
+ * - [Group_ID]     : Variable location (e.g., device1, room1, room2), maks size OTAPP_DEVICENAME_SIZE
+ * - [Edge_Node_ID] : Shortened Border Router ID (br_gsm), const size 
+ * - [Device_ID]    : Dynamic thread node resource ([EUI]/[Type]/[Param], e.g., 588c81fffe3035a4/light/on_off), maks size OTAPP_EUI_STRING_SIZE + OTAPP_URI_MAX_NAME_LENGHT
+ *
+ * ### MQTT Traffic, Subscription & Action Matrix:
+ * @code
+ * +--------------+------+----------+----------------------------------------+-----------+-----------------------------------------+
+ * | DEVICE TYPE  | I/O  | MSG TYPE | MQTT TOPIC PATTERN                     | ACTION    | PURPOSE / DESCRIPTION                   |
+ * +==============+======+==========+========================================+===========+=========================================+
+ * |              | IN   | NCMD     | spBv1.0/+/NCMD/br_gsm                  | SUBSCRIBE | Direct action on BR (Reboot, GSM cfg).  |
+ * | Border       | IN   | DCMD     | spBv1.0/+/DCMD/br_gsm/#                | SUBSCRIBE | Forward payload to OpenThread node.     |
+ * | Router       |------+----------+----------------------------------------+-----------+-----------------------------------------+
+ * | (br_gsm)     | OUT  | NDATA    | spBv1.0/[Room_ID]/NDATA/br_gsm         | PUBLISH   | Pushes BR diagnostics (RSSI, RAM, etc). |
+ * |              | OUT  | DDATA    | spBv1.0/[Room_ID]/DDATA/br_gsm/#       | PUBLISH   | Pushes actual state from Thread node.   |
+ * +--------------+------+----------+----------------------------------------+-----------+-----------------------------------------+
+ * |              | IN   | BIRTH   | spBv1.0/+/BIRTH/#                       | SUBSCRIBE | Detects BR online and new Thread nodes. |
+ * | Controlling  | IN   | DEATH   | spBv1.0/+/DEATH/#                       | SUBSCRIBE | Detects BR offline (LWT) and lost nodes.|
+ * | Device       | IN   | DATA    | spBv1.0/+/DATA/#                        | SUBSCRIBE | Receives all live telemetry and states. |
+ * | (PC/App/LCD) |------+---------+-----------------------------------------+-----------+-----------------------------------------+
+ * |              | OUT  |N/DCMD |spBv1.0/[Room_ID]/[NCMD_or_DCMD]/br_gsm/...| PUBLISH  | Dispatches control commands downstream. |
+ * +--------------+------+----------+----------------------------------------+-----------+-----------------------------------------+
+ *  controlling example topic "spBv1.0/device1/DCMD/br_gsm/588c81fffe3035a4/light/on_off"
+ * 
+ *  @endcode
+ *
+ * @note [Border Router] Subscribing only to CMD branches prevents receiving an echo of its own data payloads.
+ * @note [Controlling Device] Subscribing to +BIRTH/DEATH/DATA text-matching wildcards filters out downstream 
+ * command echoes, avoiding UI feedback loops without extra code overhead.
+ */
 
-static int8_t mqttMakeTopic(char *devNameFull, char *uri, char *buffer, uint16_t bufferSize)
+#define MQTT_TOPIC_SUBSCRIBE_NCMD       "spBv1.0/+/NCMD/br_gsm"
+#define MQTT_TOPIC_SUBSCRIBE_SIZE_NCMD  (sizeof(MQTT_TOPIC_SUBSCRIBE_NCMD) - 1)
+
+#define MQTT_TOPIC_SUBSCRIBE_DCMD       "spBv1.0/+/DCMD/br_gsm/#"
+#define MQTT_TOPIC_SUBSCRIBE_SIZE_DCMD  (sizeof(MQTT_TOPIC_SUBSCRIBE_DCMD) - 1)
+
+
+#define MQTT_TOPIC_PREFIX                     "spBv1.0/"
+#define MQTT_TOPIC_PREFIX_SIZE                (sizeof(MQTT_TOPIC_PREFIX) - 1)
+
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_NCMD   "/NCMD/"  // cmd to br_gsm
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_DCMD   "/DCMD/"  // cmd to devices in openthread
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_NDATA  "/NDATA/" // NODE eg br_gsm
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_DDATA  "/DDATA/" // devices eg light
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_BIRTH  "/BIRTH/" // devices eg light when it has been turned on 
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_DEATH  "/DEATH/" // devices eg light when it has been turned on 
+
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_SIZE_CMD     (sizeof(MQTT_TOPIC_MESSAGE_TYPE_PREFIX_DCMD) - 1)
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_MAX_SIZE     (sizeof(MQTT_TOPIC_MESSAGE_TYPE_PREFIX_DDATA) - 1)
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_SIZE_DATA    MQTT_TOPIC_MESSAGE_TYPE_PREFIX_MAX_SIZE
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_SIZE_BIRTH   MQTT_TOPIC_MESSAGE_TYPE_PREFIX_MAX_SIZE
+#define MQTT_TOPIC_MESSAGE_TYPE_PREFIX_SIZE_DEATH   MQTT_TOPIC_MESSAGE_TYPE_PREFIX_MAX_SIZE
+
+#define MQTT_TOPIC_EDGE_NODE_ID_PREFIX        "br_gsm/"
+#define MQTT_TOPIC_EDGE_NODE_ID_PREFIX_SIZE   (sizeof(MQTT_TOPIC_EDGE_NODE_ID_PREFIX) - 1)
+#define MQTT_TOPIC_URI_SEPARATOR_SIZE         1
+#define MQTT_TOPIC_TERMINATOR_SIZE            1
+#define MQTT_TOTAL_BUFFER_SIZE ( \
+    MQTT_TOPIC_PREFIX_SIZE            + \
+    OTAPP_DEVICENAME_SIZE             + \
+    MQTT_TOPIC_MESSAGE_TYPE_PREFIX_MAX_SIZE + \
+    MQTT_TOPIC_EDGE_NODE_ID_PREFIX_SIZE + \
+    OTAPP_EUI_STRING_SIZE             + \
+    MQTT_TOPIC_URI_SEPARATOR_SIZE     + \
+    OTAPP_URI_MAX_NAME_LENGHT         + \
+    MQTT_TOPIC_TERMINATOR_SIZE          \
+)
+
+typedef enum{
+    // for MQTT received topic
+    NCMD = 0,   ///> command to NODE rg br_gsm
+    DCMD,       ///> command to devices in openthread
+
+    // for MQTT publish topic
+    NDATA, ///> NODE eg br_gsm
+    DDATA, ///> devices eg light
+    BIRTH, ///> devices and NODE eg light, br_gsm when it has been turned on
+    DEATH  ///> devices and NODE eg light, br_gsm when it has been turned off
+}mqttMessageType_t;
+
+/**
+ * @brief MQTT topic buffer for Sparkplug B format
+ * 
+ * @details Buffer size calculation for topic:
+ * spBv1.0 / [Group_ID] / DDATA / br_gsm / [EUI] / [URI]
+ */
+static char mqttTopicBuffer[MQTT_TOTAL_BUFFER_SIZE]; 
+
+/**
+ * @brief Build MQTT topic following Sparkplug B standard
+ * 
+ * @details
+ * Constructs topic in format: spBv1.0/[Group_ID]/DDATA/br_gsm/[EUI]/[URI]
+ * 
+ * This function is used for publishing device state and subscribing to device updates.
+ * The DDATA (Device Data) message type is used for both operations.
+ * 
+ * @param[in] devNameFull Full device name to extract Group_ID and EUI from
+ * @param[in] uri Resource URI path (e.g., "light/on_off")
+ * @param[out] buffer Output buffer where topic string will be written
+ * @param[in] bufferSize Maximum size of output buffer
+ * 
+ * @return 0 on success, -1 on failure (invalid input or insufficient buffer size)
+ * 
+ * @example
+ * Topic built: "spBv1.0/device1/DDATA/br_gsm/588c81fffe3035a4/light/on_off"
+ * where device1 = Group_ID, 588c81fffe3035a4 = EUI, light/on_off = URI
+ */
+
+ 
+// todo przemyslec bo DEATH BIRTH nie maja uri wiec uri moze byc null !!
+static int8_t mqttMakeTopicPublish(char *devNameFull, char *uri, char *buffer, uint16_t bufferSize, mqttMessageType_t messageType)
 {
     if(devNameFull == NULL || uri == NULL || buffer == NULL) return -1;
 
     int8_t result = 0;
     int8_t devGroupLen = 0;
-    uint8_t bufferIndex = 0;
+    uint16_t bufferIndex = 0;
     char *eui = NULL;
+    uint16_t uriLen = 0;
     
     memset(buffer, 0, bufferSize); // clear buffer
 
-    devGroupLen = drv->api.devName.getDeviceGroupName(devNameFull, buffer, bufferSize); // extract and add device group name to start of buffer
+    // Validate buffer size is sufficient
+    uriLen = strlen(uri);
+    if(bufferSize < (
+            MQTT_TOPIC_PREFIX_SIZE +
+            OTAPP_DEVICENAME_SIZE +
+            MQTT_TOPIC_MESSAGE_TYPE_PREFIX_MAX_SIZE +
+            MQTT_TOPIC_EDGE_NODE_ID_PREFIX_SIZE +
+            OTAPP_EUI_STRING_SIZE +
+            MQTT_TOPIC_URI_SEPARATOR_SIZE +
+            uriLen +
+            MQTT_TOPIC_TERMINATOR_SIZE)) {
+        OTAPP_PRINTF(TAG, "Error: Buffer too small for topic\n");
+        return -1;
+    }
+
+    // Start with "spBv1.0/"
+    memcpy(buffer, MQTT_TOPIC_PREFIX, MQTT_TOPIC_PREFIX_SIZE);
+    bufferIndex = MQTT_TOPIC_PREFIX_SIZE;
+
+    // Extract and add device group name
+    devGroupLen = drv->api.devName.getDeviceGroupName(devNameFull, buffer + bufferIndex, bufferSize - bufferIndex);
     if(devGroupLen > 0) // Check if group name is not empty
     {
-        OTAPP_PRINTF(TAG, "Group Name: %s, length: %d \n", buffer, devGroupLen);
+        OTAPP_PRINTF(TAG, "Group Name: %s, length: %d\n", buffer + bufferIndex, devGroupLen);
+        bufferIndex += devGroupLen;
     }
     else
     {
-        OTAPP_PRINTF(TAG, "Failed to get group name from device name full\n");
-    }  
+        OTAPP_PRINTF(TAG, "Error: Failed to get group name from device name full\n");
+        return -1;
+    }
 
-    result = drv->api.devName.devNameFullToEUI(devNameFull, strlen(devNameFull), &eui); // extracta and EUI ptr frome device name
+    switch (messageType)
+    {
+        case NDATA:
+            memcpy(buffer + bufferIndex, MQTT_TOPIC_MESSAGE_TYPE_PREFIX_NDATA, MQTT_TOPIC_MESSAGE_TYPE_PREFIX_SIZE_DATA);
+            break;
+
+        case DDATA:
+            memcpy(buffer + bufferIndex, MQTT_TOPIC_MESSAGE_TYPE_PREFIX_DDATA, MQTT_TOPIC_MESSAGE_TYPE_PREFIX_SIZE_DATA);
+            break;
+
+        case BIRTH:
+            memcpy(buffer + bufferIndex, MQTT_TOPIC_MESSAGE_TYPE_PREFIX_BIRTH, MQTT_TOPIC_MESSAGE_TYPE_PREFIX_SIZE_BIRTH);
+            break;
+
+        case DEATH:
+            memcpy(buffer + bufferIndex, MQTT_TOPIC_MESSAGE_TYPE_PREFIX_DEATH, MQTT_TOPIC_MESSAGE_TYPE_PREFIX_SIZE_DEATH);
+            break;
+
+        default:
+            return -1;
+    }
+
+    bufferIndex += MQTT_TOPIC_MESSAGE_TYPE_PREFIX_SIZE_DATA;
+    
+    // Add "br_gsm/"
+    memcpy(buffer + bufferIndex, MQTT_TOPIC_EDGE_NODE_ID_PREFIX, MQTT_TOPIC_EDGE_NODE_ID_PREFIX_SIZE);
+    bufferIndex += MQTT_TOPIC_EDGE_NODE_ID_PREFIX_SIZE;
+
+    // Extract and add EUI
+    result = drv->api.devName.devNameFullToEUI(devNameFull, strlen(devNameFull), &eui);
     if(result == OTAPP_DEVICENAME_OK && eui != NULL)
     {
-        OTAPP_PRINTF(TAG, "EUI: %s \n", eui);
+        OTAPP_PRINTF(TAG, "EUI: %s\n", eui);
+        memcpy(buffer + bufferIndex, eui, OTAPP_EUI_STRING_SIZE);
+        bufferIndex += OTAPP_EUI_STRING_SIZE;
     }
     else
     {
-        OTAPP_PRINTF(TAG, "Failed to decode EUI from device name full\n");
+        OTAPP_PRINTF(TAG, "Error: Failed to decode EUI from device name full\n");
+        return -1;
     }
 
-    bufferIndex = devGroupLen;                                  // start after group name
+    // Add "/"
+    buffer[bufferIndex] = '/';
+    bufferIndex++;
 
-    buffer[bufferIndex] = '/';                                  // add separator between group name and EUI, 
-    bufferIndex ++;                                             // move pointer after separator
+    // Add URI path (e.g., "light/on_off")
+    memcpy(buffer + bufferIndex, uri, uriLen);
+    bufferIndex += uriLen;
 
-    memcpy(buffer + bufferIndex, eui, OTAPP_EUI_STRING_SIZE);   // copy EUI to topic buffer after group name, it should looks like gropu_name/eui
-    bufferIndex += OTAPP_EUI_STRING_SIZE;                       // move pointer after EUI
-
-    buffer[bufferIndex] = '/';                                  // add separator between group name and EUI, we will add URI path later in the loop
-    bufferIndex ++;                                             // move pointer after separator
-
-    memcpy(buffer + bufferIndex, uri, strlen(uri));             // Build MQTT topic by appending URI path to the base topic (group/EUI/URI)
+    // Null terminate
+    buffer[bufferIndex] = '\0';
     
+    OTAPP_PRINTF(TAG, "Topic: %s\n", buffer);
     return 0;
 }
 /**
@@ -178,30 +357,8 @@ static int8_t mqttMakeTopic(char *devNameFull, char *uri, char *buffer, uint16_t
  * @param[in] device Pointer to paired device information structure
  */
 static void pairedCallback(otapp_pair_Device_t *device)
-{        
-    
+{ 
     OTAPP_PRINTF(TAG, "Detect DEVICE! %s \n", device->devNameFull);
-            
-    for (uint8_t i = 0; i < OTAPP_PAIR_URI_MAX; i++)
-    {
-        if(device->urisList[i].uri[0] != '\0') // Check if URI is not empty
-        {
-            if(mqttMakeTopic(device->devNameFull, device->urisList[i].uri, mqttTopicBuffer, sizeof(mqttTopicBuffer)) != 0)
-            {
-                return;
-            }
-         
-            if(gw->mqtt.subscribeSingle(mqttTopicBuffer, 1) == 0)
-            {
-                OTAPP_PRINTF(TAG, "MQTT: Subscribed to URI: %s\n", mqttTopicBuffer);
-            }
-            else
-            {
-                OTAPP_PRINTF(TAG, "MQTT: Failed to subscribe to URI: %s\n", mqttTopicBuffer);
-            }
-        }
-    }
-    
 }
 
 /**
@@ -240,7 +397,7 @@ static void subscribedUrisCallback(oac_uri_dataPacket_t *data)
         return; 
     }
         
-    if(mqttMakeTopic(devNameFull, uriItems->uri, mqttTopicBuffer, sizeof(mqttTopicBuffer)) != 0)    // build topic. it should looks like: device1/588c81fffe3035a4/light/on_off
+    if(mqttMakeTopicPublish(devNameFull, uriItems->uri, mqttTopicBuffer, sizeof(mqttTopicBuffer), DDATA) != 0)  // build topic. it should looks like: device1/588c81fffe3035a4/light/on_off
     {
         return;
     }
@@ -298,8 +455,13 @@ static void ad_gw_mqttParseTask(void *pvParameters)
     {
         if (xQueueReceive(mqtt_queue, &rx_msg, portMAX_DELAY) == pdPASS) 
         {
+            // WYSYLAMY DANE DO SIECI OPENTHREAD. napisac parser 
+            // spBv1.0 / [Group_ID] / [Message_Type] / [Edge_Node_ID] / [Device_ID]     / URI
+            // spBv1.0 / device1    / DCMD           / br_gsm         /588c81fffe3035a4 / light/on_off   // dla urzadzen w openthread
+            // spBv1.0 / device1    / DCMD           / br_gsm         /588c81fffe3035a4 /                // dla border routhera gsm tego urzadzenia
+            
             OTAPP_PRINTF(TAG,"Topic: %s\n", rx_msg.topic);
-            OTAPP_PRINTF(TAG,"Datad:  %s\n", rx_msg.data);            
+            OTAPP_PRINTF(TAG,"Data:  %s\n", rx_msg.data);
         }
     }
 }
@@ -318,7 +480,26 @@ static void ad_gateway_event(ad_gw_drv_event_t event, void *context)
 
     if(event == AD_GW_DRV_MQTT_CONNECTED)
     {
-        if(gw->mqtt.subscribeSingle != NULL) gw->mqtt.subscribeSingle("hro/t1/test", 1);
+        if(gw->mqtt.subscribeSingle != NULL)
+        {
+            if(gw->mqtt.subscribeSingle(MQTT_TOPIC_SUBSCRIBE_NCMD, 1) == 0)
+            {
+                OTAPP_PRINTF(TAG, "MQTT: Subscribed: %s\n", MQTT_TOPIC_SUBSCRIBE_NCMD);
+            }
+            else
+            {
+                OTAPP_PRINTF(TAG, "MQTT: ERROR NOT subscribed: %s\n", MQTT_TOPIC_SUBSCRIBE_NCMD);
+            }
+    
+            if(gw->mqtt.subscribeSingle(MQTT_TOPIC_SUBSCRIBE_DCMD, 1) == 0)
+            {
+                OTAPP_PRINTF(TAG, "MQTT: Subscribed: %s\n", MQTT_TOPIC_SUBSCRIBE_DCMD);
+            }
+            else
+            {
+                OTAPP_PRINTF(TAG, "MQTT: ERROR NOT subscribed: %s\n", MQTT_TOPIC_SUBSCRIBE_DCMD);
+            }
+        } 
     }       
 }
 

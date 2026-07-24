@@ -129,7 +129,8 @@
 /* -------------------------------------------------------------------------
  * MQTT CONFIGURATION
  * ------------------------------------------------------------------------- */
-#define MQTT_BROKER                     ("mqtt://35.157.202.98") ///< Target MQTT broker URI (e.g., broker.hivemq.com).
+// #define MQTT_BROKER                     ("mqtt://35.157.202.98") ///< Target MQTT broker URI (e.g., broker.hivemq.com).
+#define MQTT_BROKER                     ("mqtt://3.124.246.66") ///< Target MQTT broker URI (e.g., broker.hivemq.com).
 #define MQTT_KEEPALIVE                  60                       ///< MQTT ping keep-alive interval in seconds.
 #define MQTT_TIMEOUT_MS                 10000                    ///< Network timeout for MQTT operations in milliseconds.
 #define MQTT_BUFFER_TX_RX_SIZE          1024                     ///< Size of the allocated MQTT TX/RX heap buffer.
